@@ -684,13 +684,13 @@ int Build_RKData(
     Link **my_sys, unsigned int my_N,
     char rk_filename[],
     int* assignments, short int* getting,
+    const Lookup * const id_to_loc,
     GlobalVars *globals,
     ErrorData* error_data,
     RKMethod** methods,
     unsigned int* num_methods)
 {
-    FILE* rkdata;
-    double *filedata_abs, *filedata_rel, *filedata_abs_dense, *filedata_rel_dense;
+    FILE* rkdata = NULL;
 
     //Build all the RKMethods
     static RKMethod rk_methods[4];
@@ -713,72 +713,99 @@ int Build_RKData(
 
     if (rk_filename[0] != '\0')
     {
-        unsigned int *link_ids = (unsigned int*)malloc(N * sizeof(unsigned int));
-        unsigned int *rk_methods_idx;
-        unsigned int num_states;
+        //.rkd file: tolerances and method for each link. Format:
+        //  {number of links} {number of states}
+        //  then, for each link (any order):
+        //  {link id} {abstol x states} {reltol x states} {abstol dense x states} {reltol dense x states} {method index}
+        unsigned int num_states = 0;
+        unsigned int error = 0;
+        unsigned int *rk_methods_idx = malloc(N * sizeof(unsigned int));
+        double *filedata = NULL;    //[N][4][num_states]: abs, rel, abs dense, rel dense, by location in system
 
         if (my_rank == 0)
         {
+            unsigned int n = 0;
             rkdata = fopen(rk_filename, "r");
             if (rkdata == NULL)
             {
                 printf("Error: file %s not found for .rkd file\n", rk_filename);
-                return 1;
+                error = 1;
             }
-            if (CheckWinFormat(rkdata))
+            else if (CheckWinFormat(rkdata))
             {
                 printf("Error: File %s appears to be in Windows format. Try converting to unix format using 'dos2unix' at the command line.\n", rk_filename);
-                fclose(rkdata);
-                return 1;
+                error = 1;
             }
-
-            unsigned int n;
-            fscanf(rkdata, "%u %u", &n, &num_states);
-            if (n != N)
+            else if (fscanf(rkdata, "%u %u", &n, &num_states) != 2)
+            {
+                printf("Error reading .rkd file %s: the first line must give the number of links and of states.\n", rk_filename);
+                error = 1;
+            }
+            else if (n != N)
             {
                 printf("Error: the number of links in the rkd file differ from the number in the topology data (Got %u, expected %u).\n", n, N);
-                return 1;
+                error = 1;
             }
-
-            MPI_Bcast(&num_states, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
-            filedata_abs = (double*)malloc(N*num_states * sizeof(double));
-            filedata_rel = (double*)malloc(N*num_states * sizeof(double));
-            filedata_abs_dense = (double*)malloc(N*num_states * sizeof(double));
-            filedata_rel_dense = (double*)malloc(N*num_states * sizeof(double));
-            rk_methods_idx = (unsigned int*)malloc(num_states * sizeof(unsigned int));
-
-            //Read the file
-            for (unsigned int i = 0; i < N; i++)
+            else if (num_states < globals->min_error_tolerances)
             {
-                if (fscanf(rkdata, "%u", &(link_ids[i])) == 0)
-                {
-                    printf("Error reading .rkd file: Not enough links in file (expected %u, got %u).\n", N, i);
-                    return 1;
-                }
-                for (unsigned int j = 0; j < num_states; i++)	fscanf(rkdata, "%lf", &(filedata_abs[i*num_states + j]));
-                for (unsigned int j = 0; j < num_states; i++)	fscanf(rkdata, "%lf", &(filedata_rel[i*num_states + j]));
-                for (unsigned int j = 0; j < num_states; i++)	fscanf(rkdata, "%lf", &(filedata_abs_dense[i*num_states + j]));
-                for (unsigned int j = 0; j < num_states; i++)	fscanf(rkdata, "%lf", &(filedata_rel_dense[i*num_states + j]));
-                fscanf(rkdata, "%u", &(rk_methods_idx[i]));
+                printf("Error: %s gives %u error tolerances per link, model %hu needs at least %u.\n", rk_filename, num_states, globals->model_uid, globals->min_error_tolerances);
+                error = 1;
             }
+            else
+            {
+                short int *seen = calloc(N, sizeof(short int));
+                filedata = malloc(N * 4 * num_states * sizeof(double));
+                for (unsigned int i = 0; i < N && !error; i++)
+                {
+                    unsigned int id, loc;
+                    if (fscanf(rkdata, "%u", &id) != 1)
+                    {
+                        printf("Error reading .rkd file %s: not enough links in file (expected %u, got %u).\n", rk_filename, N, i);
+                        error = 1;
+                        break;
+                    }
+                    loc = find_link_by_idtoloc(id, id_to_loc, N);
+                    if (loc >= N || seen[loc])
+                    {
+                        printf("Error reading .rkd file %s: link id %u is %s.\n", rk_filename, id, loc >= N ? "not in the network" : "given twice");
+                        error = 1;
+                        break;
+                    }
+                    seen[loc] = 1;
+                    for (unsigned int j = 0; j < 4 * num_states; j++)
+                        if (fscanf(rkdata, "%lf", &filedata[loc * 4 * num_states + j]) != 1)
+                        {
+                            printf("Error reading .rkd file %s: link id %u needs %u error tolerances.\n", rk_filename, id, 4 * num_states);
+                            error = 1;
+                            break;
+                        }
+                    if (!error && fscanf(rkdata, "%u", &rk_methods_idx[loc]) != 1)
+                    {
+                        printf("Error reading .rkd file %s: missing method index for link id %u.\n", rk_filename, id);
+                        error = 1;
+                    }
+                }
+                free(seen);
+            }
+            if (rkdata)
+                fclose(rkdata);
         }
-        else
+
+        //All processes learn whether the file could be read
+        MPI_Bcast(&error, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+        if (error)
         {
-            MPI_Bcast(&num_states, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
-            filedata_abs = (double*)malloc(N*num_states * sizeof(double));
-            filedata_rel = (double*)malloc(N*num_states * sizeof(double));
-            filedata_abs_dense = (double*)malloc(N*num_states * sizeof(double));
-            filedata_rel_dense = (double*)malloc(N*num_states * sizeof(double));
-            rk_methods_idx = (unsigned int*)malloc(num_states * sizeof(unsigned int));
+            free(filedata);
+            free(rk_methods_idx);
+            return 1;
         }
 
         //Broadcast data
-        MPI_Bcast(link_ids, N, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
-        MPI_Bcast(filedata_abs, N*num_states, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        MPI_Bcast(filedata_rel, N*num_states, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        MPI_Bcast(filedata_abs_dense, N*num_states, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        MPI_Bcast(filedata_rel_dense, N*num_states, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        MPI_Bcast(methods, N, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&num_states, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+        if (my_rank != 0)
+            filedata = malloc(N * 4 * num_states * sizeof(double));
+        MPI_Bcast(filedata, N * 4 * num_states, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Bcast(rk_methods_idx, N, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
 
         //Construct error data at each link
         for (unsigned int i = 0; i < N; i++)
@@ -786,30 +813,35 @@ int Build_RKData(
             Link *current = &system[i];
             if (assignments[i] == my_rank || getting[i])
             {
-                current->my->error_data->abstol = calloc(num_states, sizeof(double));
-                current->my->error_data->reltol = calloc(num_states, sizeof(double));
-                current->my->error_data->abstol_dense = calloc(num_states, sizeof(double));
-                current->my->error_data->reltol_dense = calloc(num_states, sizeof(double));
-                current->my->error_data->facmax = error_data->facmax;
-                current->my->error_data->facmin = error_data->facmin;
-                current->my->error_data->fac = error_data->fac;
-
-                for (unsigned int j = 0; j < num_states; j++)
-                {
-                    current->my->error_data->abstol[j] = filedata_abs[i*num_states + j];
-                    current->my->error_data->reltol[j] = filedata_rel[i*num_states + j];
-                    current->my->error_data->abstol_dense[j] = filedata_abs_dense[i*num_states + j];
-                    current->my->error_data->reltol_dense[j] = filedata_rel_dense[i*num_states + j];
-                }
                 if (!IsUsableRKMethod(rk_methods, *num_methods, rk_methods_idx[i]))
                 {
                     printf("[%i]: Error: numerical solver index %u given for link %u in %s is not valid. %s\n",
                         my_rank, rk_methods_idx[i], current->ID, rk_filename, USABLE_RK_METHODS_MSG);
+                    free(filedata);
+                    free(rk_methods_idx);
                     return 1;
                 }
+
+                const double *row = filedata + i * 4 * num_states;
+                ErrorData *err = malloc(sizeof(ErrorData));
+                err->facmax = error_data->facmax;
+                err->facmin = error_data->facmin;
+                err->fac = error_data->fac;
+                err->abstol = malloc(num_states * sizeof(double));
+                err->reltol = malloc(num_states * sizeof(double));
+                err->abstol_dense = malloc(num_states * sizeof(double));
+                err->reltol_dense = malloc(num_states * sizeof(double));
+                memcpy(err->abstol, row, num_states * sizeof(double));
+                memcpy(err->reltol, row + num_states, num_states * sizeof(double));
+                memcpy(err->abstol_dense, row + 2 * num_states, num_states * sizeof(double));
+                memcpy(err->reltol_dense, row + 3 * num_states, num_states * sizeof(double));
+                current->my->error_data = err;
                 current->method = &rk_methods[rk_methods_idx[i]];
             }
         }
+
+        free(filedata);
+        free(rk_methods_idx);
     }
     else
     {

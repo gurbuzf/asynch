@@ -509,6 +509,24 @@ Format:
 
 This section specifies error tolerances for the numerical integrators. A solver flag of ``0`` indicates the same tolerances will be used for all links. A solver flag of ``1`` indicates the tolerance info will be specified in the given RK data (.rkd) file. If solver flag is ``0``, than an rk solver index must be specified. A list of Runge-Kutta methods is given in :ref:`Built-In Runge-Kutta Methods`. Each error tolerance must have a value for each state of the system. The order of the tolerances must match the order of the states in the state vectors. The absolute and relative error tolerances are those typically used for RK methods. The dense tolerances are for the numerical solution produced between time steps. A numerical solution is rejected if either the error tolerances or dense error tolerances for any state is believed to be violated.
 
+RK Data Files (.rkd)
+~~~~~~~~~~~~~~~~~~~~
+
+With a solver flag of ``1``, the line reads ``1 {filename}.rkd`` and no solver index or tolerances
+follow in the global file. The .rkd file gives the method and the tolerances of every link:
+
+::
+
+  {number of links} {number of states per link}
+
+  {link id} {abstol x states} {reltol x states} {dense abstol x states} {dense reltol x states} {rk solver index}
+  {link id} ...
+
+There is one line per link of the network, in any order. The number of states must be at least the
+number of error tolerances the model needs. Different links may use different methods.
+``examples/test.rkd`` (used by ``examples/test_rkd.gbl``) repeats the settings of ``examples/test.gbl``
+for every link, so both global files give the same results.
+
 Database Connection Files
 -------------------------
 

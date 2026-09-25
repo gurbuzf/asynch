@@ -197,14 +197,15 @@ void Destroy_RKMethod(RKMethod* method)
     //    free(method->b_theta_deriv);
 }
 
-//Frees an ErrorData
+//Frees an ErrorData allocated for one link (when tolerances come from an .rkd file)
 void Destroy_ErrorData(ErrorData* error)
 {
     assert(error != NULL);
-    free(&error->abstol);
-    free(&error->reltol);
-    free(&error->abstol_dense);
-    free(&error->reltol_dense);
+    free(error->abstol);
+    free(error->reltol);
+    free(error->abstol_dense);
+    free(error->reltol_dense);
+    free(error);
 }
 
 //Allocates workspace for RK solvers

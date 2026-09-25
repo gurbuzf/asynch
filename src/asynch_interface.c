@@ -218,7 +218,7 @@ void Asynch_Load_Numerical_Error_Data(AsynchSolver* asynch)
         MPI_Abort(asynch->comm, 1);
     }
 
-    int ret = Build_RKData(asynch->sys, asynch->N, asynch->my_sys, asynch->my_N, asynch->rkdfilename, asynch->assignments, asynch->getting, asynch->globals, &asynch->errors_tol, &asynch->rk_methods, &asynch->num_methods);
+    int ret = Build_RKData(asynch->sys, asynch->N, asynch->my_sys, asynch->my_N, asynch->rkdfilename, asynch->assignments, asynch->getting, asynch->id_to_loc, asynch->globals, &asynch->errors_tol, &asynch->rk_methods, &asynch->num_methods);
     if (ret)
         MPI_Abort(asynch->comm, 1);
     asynch->setup_rkdata = 1;

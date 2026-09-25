@@ -48,6 +48,7 @@ import argparse
 import math
 import os
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -61,6 +62,7 @@ REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 #   compare : list of (produced file, reference file, kind); paths relative to workdir
 #   xfail   : None, or a string explaining why the comparison is known to fail
 #             (a crash / non-zero exit code is always reported as FAIL)
+#   skip_original (optional): reason why --compare-to cannot run this case
 # ---------------------------------------------------------------------------
 CASES = [
     {
@@ -69,6 +71,17 @@ CASES = [
         "gbl": "test.gbl",
         "compare": [("test.pea", "results/test.pea", "pea")],
         "xfail": None,
+    },
+    {
+        # Same as "test", but tolerances and method come from an .rkd file (one line per link,
+        # identical to the values of test.gbl), so the result must be the same.
+        "name": "test with .rkd file (model 190)",
+        "workdir": ".",
+        "gbl": "test_rkd.gbl",
+        "compare": [("test_rkd.pea", "results/test.pea", "pea")],
+        "xfail": None,
+        # Before the 2026-09-25 fix, reading an .rkd file never finished (issue B-14).
+        "skip_original": "the original code hangs while reading .rkd files (B-14)",
     },
     {
         "name": "clearcreek (model 254)",
@@ -244,13 +257,22 @@ def list_outputs(root, inputs):
     return found
 
 
-def run_asynch(mpi_cmd, exe, wd, gbl, env):
-    """Run one example; return (exit code, log lines worth showing on failure)."""
+def run_asynch(mpi_cmd, exe, wd, gbl, env, timeout):
+    """Run one example; return (exit code, log lines worth showing on failure).
+    A run that exceeds `timeout` seconds is killed and reported with exit code -1."""
     os.makedirs(os.path.join(wd, "results"), exist_ok=True)
     log_path = os.path.join(wd, "asynch_run.log")
     with open(log_path, "w") as log:
-        rc = subprocess.call(mpi_cmd + [exe, gbl], cwd=wd, stdout=log,
-                             stderr=subprocess.STDOUT, env=env)
+        # own process group, so that a hanging run (mpirun and all its processes) can be killed
+        proc = subprocess.Popen(mpi_cmd + [exe, gbl], cwd=wd, stdout=log,
+                                stderr=subprocess.STDOUT, env=env, start_new_session=True)
+        try:
+            rc = proc.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            os.killpg(proc.pid, signal.SIGKILL)
+            proc.wait()
+            rc = -1
+            log.write("\n*** killed by run_examples.py after %d s (endless run?) ***\n" % timeout)
     tail = []
     if rc != 0:
         with open(log_path, errors="replace") as log:
@@ -330,6 +352,8 @@ def main():
                          "tolerance used by the examples)")
     ap.add_argument("--only", help="run only cases whose name contains this text")
     ap.add_argument("--keep", action="store_true", help="keep the temporary run directory")
+    ap.add_argument("--timeout", type=int, default=600,
+                    help="seconds after which a run is killed and counted as a failure (default 600)")
     ap.add_argument("--verbose", action="store_true",
                     help="with --compare-to: list every output file that is not bit-identical")
     ap.add_argument("--compare-to", metavar="ASYNCH",
@@ -372,7 +396,7 @@ def main():
         wd = os.path.join(run_root, case["workdir"])
         # files already present (inputs, or outputs of an earlier case in the same directory)
         skip = {os.path.relpath(os.path.join(run_root, i), wd) for i in inputs} | list_outputs(wd, set())
-        rc, tail = run_asynch(mpi_cmd, args.asynch, wd, case["gbl"], env)
+        rc, tail = run_asynch(mpi_cmd, args.asynch, wd, case["gbl"], env, args.timeout)
 
         case_ok = rc == 0
         lines = ["  exit code: %d%s" % (rc, "" if rc == 0 else "  <-- FAIL, last lines of the log:")]
@@ -395,9 +419,11 @@ def main():
             lines += ["      " + m for m in msgs]
 
         orig_ok = True
-        if args.compare_to:
+        if args.compare_to and case.get("skip_original"):
+            lines.append("  vs original: not compared, %s" % case["skip_original"])
+        elif args.compare_to:
             owd = os.path.join(orig_root, case["workdir"])
-            orc, otail = run_asynch(mpi_cmd, args.compare_to, owd, case["gbl"], env)
+            orc, otail = run_asynch(mpi_cmd, args.compare_to, owd, case["gbl"], env, args.timeout)
             if orc != 0:
                 lines.append("  original exit code: %d (outputs it did not write are not compared)" % orc)
             # Compare only the files written by this case.

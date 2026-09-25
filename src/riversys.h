@@ -42,6 +42,7 @@ int Build_RKData(
     Link **my_sys, unsigned int my_N,
     char rk_filename[],
     int* assignments, short int* getting,
+    const Lookup * const id_to_loc,
     GlobalVars *globals,
     ErrorData* error_data,
     RKMethod** methods,

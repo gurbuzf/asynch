@@ -28,7 +28,7 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [B-02](#b-02) | **fixed** | code reading | Snapshot values are filtered only for links owned by MPI rank 0: output depends on process count |
 | [B-03](#b-03) | **fixed** | confirmed | Output file closed twice at shutdown: every debug build aborts at the end of a run |
 | [B-04](#b-04) | **fixed** | confirmed | Solver index 3 or 4 (advertised as "implicit") segfaults; the index is never validated |
-| [B-05](#b-05) | medium | code reading | `Destroy_ErrorData` frees addresses of struct fields instead of the pointers |
+| [B-05](#b-05) | **fixed** | code reading | `Destroy_ErrorData` frees addresses of struct fields instead of the pointers |
 | [B-06](#b-06) | medium | code reading | `Asynch_Get_Num_Links` returns `unsigned short`: wrong for networks > 65 535 links |
 | [B-07](#b-07) | **fixed** | code reading | `DumpStateH5` loops past the array end if rank 0 owns no link; leaks its buffer |
 | [B-08](#b-08) | **fixed** | confirmed (UB sanitizer) | Misaligned `double` reads/writes in snapshot filters (undefined behaviour) |
@@ -36,7 +36,8 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [B-10](#b-10) | low | compiler | Missing prototype for `Create_Rain_Data_Par_IBin`; wrong `printf` format in `check_state.c` |
 | [B-11](#b-11) | low | code reading | ~75 `fscanf`/`fread` return values ignored: malformed input files are not detected |
 | [B-13](#b-13) | **fixed** | confirmed (ASan) | Solver methods 0 and 1 used Butcher coefficients from freed stack memory: random results or endless runs |
-| [B-12](#b-12) | **fixed** | code reading | `.uini` reader misses "not enough values" (checks `== 0`, `fscanf` returns `EOF`); clearcreek.uini is short |
+| [B-12](#b-12) | **fixed** | code reading |
+| [B-14](#b-14) | **fixed** | confirmed | Reading an `.rkd` file (per-link tolerances) never finished: 5 defects in `Build_RKData` | `.uini` reader misses "not enough values" (checks `== 0`, `fscanf` returns `EOF`); clearcreek.uini is short |
 | [R-01](#r-01) | fixed | confirmed | No automated regression tests; only one unit test (`days_in_month`) |
 | [R-02](#r-02) | medium | confirmed | `examples/results/clearcreek.pea` (2015) does not match today's `clearcreek.gbl` |
 | [R-03](#r-03) | medium | confirmed | Model 259 benchmark cannot be reproduced from the files in the repository |
@@ -155,6 +156,7 @@ The index read in `src/config_gbl.c:628-630` is never validated. Running `exampl
 
 ### B-05
 **`Destroy_ErrorData` frees the wrong addresses.** *Medium, code reading + compiler warning.*
+**Fixed** (2026-09-25) together with B-14: it frees the arrays and the per-link structure.
 
 `src/system.c:204-207`: `free(&error->abstol)` frees the *address of the field*
 (inside a struct) instead of the memory the field points to. It should be
@@ -236,6 +238,26 @@ tables as `static` and was never affected.
 reports and bit-reproducible with 1 process. They agree with method 2 within the expected accuracy
 (clearcreek, 6 359 links: peak discharge differs by at most 7.7e-4 m³/s, median relative
 difference 0.1 %).
+
+### B-14
+**`.rkd` files (tolerances and method per link) could not be used.** *High for users of this
+option, confirmed.* Found while fixing B-04 and B-05. With a solver flag of `1` in the `.gbl`, the
+original code never got past "Reading dam and reservoir data...". `Build_RKData`
+(`src/riversys.c`) had five defects:
+1. the loops reading the tolerances incremented `i` instead of `j` (`for (j = 0; j < num_states; i++)`),
+   an endless loop running off the arrays;
+2. the array of method indices had `num_states` entries instead of one per link;
+3. the broadcast to the other processes sent `methods` (the table of RK methods) instead of the method
+   indices, overwriting memory;
+4. the per-link `ErrorData` structure was never allocated before being written to;
+5. the link ids in the file were read but not used: rows were assumed to be in network order.
+
+**Fixed** (2026-09-25): the reader was rewritten. Rows are matched to links by id; every value is
+checked, and a bad file stops the run with a clear message (unknown or repeated id, missing link or
+value, invalid method, too few tolerances for the model). The format is now documented in
+`docs/input_output.rst`. `examples/test_rkd.gbl` + `examples/test.rkd` repeat the settings of
+`examples/test.gbl` for every link. They give **bit-identical** results with 1 process, and are part of
+the regression tests.
 
 ---
 

@@ -30,6 +30,7 @@ python3 tests/regression/run_examples.py --asynch /path/to/other/asynch --keep
 | Case | Model | Compared files | Reference |
 |---|---|---|---|
 | `test` | 190 (constant runoff) | `test.pea` | `examples/results/test.pea` |
+| `test with .rkd file` | 190, tolerances from `examples/test.rkd` | `test_rkd.pea` | `examples/results/test.pea` (same settings, same result) |
 | `clearcreek` | 254 (top layer) | `clearcreek.pea` | `examples/results/clearcreek.pea`, **known mismatch** (R-02) |
 | `model_192` | 192 | hydrograph `.csv`, peaks `.pea`, snapshot `.h5` | `examples/more/model_192/results_benchmark/` |
 | `model_196` | 196 | idem | idem |

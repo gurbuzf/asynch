@@ -8,6 +8,28 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Fix B-14 and B-05: `.rkd` files (tolerances and method per link) work again
+
+*Results:* unchanged for every existing example (bit-identical to the original code with 1 process,
+within tolerance with 2). The `.rkd` option, which never finished before, now works. An `.rkd` file
+repeating the global settings gives bit-identical results to the global file (1 process).
+
+#### Fixed
+- `src/riversys.c` (`Build_RKData`): reading an `.rkd` file hung in an endless loop (`j` loop
+  incrementing `i`). The method-index array was too small, the wrong variable was broadcast to the
+  other processes, the per-link tolerance structure was never allocated, and link ids were ignored.
+  The reader was rewritten: rows are matched to links by id, and every value is checked with a clear
+  error message.
+- `src/system.c` (`Destroy_ErrorData`): freed the addresses of struct fields instead of the arrays
+  (B-05). It now frees the arrays and the structure.
+
+#### Added
+- `docs/input_output.rst`: the `.rkd` format, which was undocumented.
+- `examples/test_rkd.gbl`, `examples/test.rkd`: the `test` example with tolerances from an `.rkd` file.
+  It is a new regression case, checked against `examples/results/test.pea`.
+- `tests/regression/run_examples.py`: `--timeout` (default 600 s) kills a run that does not finish and
+  reports it as a failure. Cases can declare that the original code cannot run them.
+
 ### Fix B-12: `.uini` files with too few values used uninitialised memory
 
 *Results:* unchanged. Bit-identical to the original code with 1 process (clearcreek: bit-identical
