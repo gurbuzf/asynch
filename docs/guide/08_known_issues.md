@@ -37,7 +37,7 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [B-11](#b-11) | low | code reading | ~75 `fscanf`/`fread` return values ignored: malformed input files are not detected |
 | [B-13](#b-13) | **fixed** | confirmed (ASan) | Solver methods 0 and 1 used Butcher coefficients from freed stack memory: random results or endless runs |
 | [B-12](#b-12) | **fixed** | code reading |
-| [B-15](#b-15) | high | confirmed | A missing output folder loses all results, yet the run ends with a success exit code |
+| [B-15](#b-15) | **fixed** | confirmed | A missing output folder loses all results, yet the run ends with a success exit code |
 | [B-14](#b-14) | **fixed** | confirmed | Reading an `.rkd` file (per-link tolerances) never finished: 5 defects in `Build_RKData` | `.uini` reader misses "not enough values" (checks `== 0`, `fscanf` returns `EOF`); clearcreek.uini is short |
 | [R-01](#r-01) | fixed | confirmed | No automated regression tests; only one unit test (`days_in_month`) |
 | [R-02](#r-02) | **resolved** | confirmed | clearcreek references (2015) differ: another configuration, and a 2021 change to model 254 |
@@ -267,6 +267,10 @@ folder named in the `.gbl` for hydrographs, peaks or snapshots does not exist, e
 `Error: could not open h5 file ...` / `Error: Cannot open peakflow file ...` (27 lines for `test.gbl`), but the
 simulation runs to the end and `asynch` **exits with code 0**, the code for success, having written no results.
 In a script or an operational chain, the failure goes unnoticed. The simulation time is also wasted.
+**Fixed** (2026-09-25): `Read_Global_Data` (`src/config_gbl.c`) checks that the folders of the hydrograph, peak,
+snapshot and temporary files exist and are writable, and stops before computing otherwise. `main`
+(`src/asynch_cli.c`) now checks the return values of the final output functions, and exits with `EXIT_FAILURE` if
+one failed.
 
 ---
 

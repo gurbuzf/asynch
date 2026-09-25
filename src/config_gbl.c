@@ -49,6 +49,33 @@ void ReadDBC(char* filename, ConnData* const conninfo);
 int RemoveSuffix(char *filename, const char *suffix);
 
 
+//Returns 1 if the folder that will contain the file `path` exists and is writable, 0 otherwise
+//(and prints an error naming the folder). `what` names the output, for the message.
+//ASYNCH does not create folders: without this check, a missing folder was only noticed when the
+//results were written, after the whole simulation, and the run still ended "successfully" (issue B-15).
+static int OutputFolderWritable(const char *path, const char *what)
+{
+    char folder[ASYNCH_MAX_PATH_LENGTH];
+    const char *slash = strrchr(path, '/');
+    if (slash == NULL)
+        strcpy(folder, ".");
+    else if (slash == path)
+        strcpy(folder, "/");
+    else
+        snprintf(folder, sizeof(folder), "%.*s", (int)(slash - path), path);
+
+#if defined(HAVE_UNISTD_H)
+    if (access(folder, W_OK) != 0)
+    {
+        if (my_rank == 0)
+            printf("Error: cannot write the %s: the folder \"%s\" does not exist or is not writable. Create it before running.\n",
+                what, folder);
+        return 0;
+    }
+#endif
+    return 1;
+}
+
 GlobalVars* Read_Global_Data(
     char *globalfilename,
     ErrorData *errors,
@@ -606,6 +633,20 @@ GlobalVars* Read_Global_Data(
 
     sprintf(db_filename, "_%i_%i", getpid(), my_rank);
     strcat(globals->temp_filename, db_filename);
+
+    //Stop now, rather than after the whole simulation, if an output file cannot be created
+    {
+        int outputs_ok = 1;
+        if (globals->hydros_loc_filename && globals->hydros_loc_flag != 3)     //3 = database
+            outputs_ok &= OutputFolderWritable(globals->hydros_loc_filename, "hydrographs");
+        if (globals->peaks_loc_flag == 1)
+            outputs_ok &= OutputFolderWritable(globals->peaks_loc_filename, "peak flows");
+        if (globals->dump_loc_filename)
+            outputs_ok &= OutputFolderWritable(globals->dump_loc_filename, "snapshots");
+        outputs_ok &= OutputFolderWritable(globals->temp_filename, "temporary files");
+        if (!outputs_ok)
+            return NULL;
+    }
 
     //Grab adapative data
     ReadLineFromTextFile(globalfile, line_buffer, line_buffer_len);

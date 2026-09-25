@@ -102,8 +102,8 @@ clearcreek.uini
 The best way to learn the model is to change one thing and look at the effect. Here: the runoff
 coefficient RC of model 190 (the fraction of rain that runs off; 4th global parameter), from 0.33 to 0.50.
 
-1. Copy the global file, and create a folder for the new results. **ASYNCH does not create folders**: with a
-   missing folder it prints `Error: could not open h5 file ...` and writes no results (§2.7).
+1. Copy the global file, and create a folder for the new results. **ASYNCH does not create folders**: if one is
+   missing, it stops at once with `Error: cannot write the hydrographs: the folder "run_rc05" does not exist` (§2.7).
 
    ```bash
    cd examples
@@ -181,6 +181,7 @@ and `tools/python/plot_hydrographs.py` plots one link from up to three files (§
 | `Error: file X not found for .prm file.` (or `.rvr`, `.uini`, ...) | wrong name or wrong folder: file names are relative to where you run `asynch` |
 | `Error: File X appears to be in Windows format.` | the file was edited on Windows: convert it with `dos2unix X` |
 | `Error: Number of links in .str file differs from number of links in network` | the rain file does not match the network |
-| `Error: could not open h5 file X` / `Error: Cannot open peakflow file X` | the output folder does not exist: create it. **The run is not stopped**, and ASYNCH even ends with a success code; the results are simply missing. Always look for `Error` lines (issue B-15) |
+| `Error: cannot write the hydrographs: the folder "X" does not exist or is not writable. Create it before running.` | ASYNCH checks every output folder before computing: create the folder (`mkdir X`) or fix its permissions |
+| `Error: some results could not be written. See the messages above.` | writing the results failed at the end of the run (disk full, folder deleted, ...); `asynch` then ends with an error code |
 | `Error reading .rkd file ...` | see the format in `docs/input_output.rst` (*RK Data Files*) |
 | `Warning: Obtained N parameters from .gbl file. Expected M for model ...` | more global parameters than the model uses; the extra ones are ignored |

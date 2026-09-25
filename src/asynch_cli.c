@@ -339,18 +339,24 @@ int main(int argc, char* argv[])
     total_time += stop - start;
     print_out("\nComputations complete. Total time for calculations: %f\n", stop - start);
 
-    //Take a snapshot
-    Asynch_Take_System_Snapshot(asynch, NULL);
-
-    //Create output files
-    Asynch_Create_Output(asynch, NULL);
-    Asynch_Create_Peakflows_Output(asynch);
+    //Take a snapshot, and create output files. Each returns a positive value on error.
+    bool write_error = false;
+    write_error |= Asynch_Take_System_Snapshot(asynch, NULL) > 0;
+    write_error |= Asynch_Create_Output(asynch, NULL) > 0;
+    write_error |= Asynch_Create_Peakflows_Output(asynch) > 0;
 
     //Clean up
     Asynch_Delete_Temporary_Files(asynch);
 #if !defined(NDEBUG)
     Asynch_Free(asynch);
 #endif
+
+    //A failure to write results must not look like success to scripts calling asynch (issue B-15)
+    if (write_error)
+    {
+        print_err("Error: some results could not be written. See the messages above.\n");
+        return EXIT_FAILURE;
+    }
 
     return 0;
 }

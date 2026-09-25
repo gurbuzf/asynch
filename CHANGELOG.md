@@ -8,6 +8,20 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Fix B-15: a missing output folder no longer loses results silently
+
+*Results:* unchanged. Every output file is bit-identical to the previous commit (1 process); the sanitizer build is clean.
+
+#### Fixed
+- `src/config_gbl.c`: before computing, ASYNCH checks that the folders of the hydrograph, peak-flow, snapshot and
+  temporary files exist and are writable. If not, it stops at once with
+  `Error: cannot write the hydrographs: the folder "X" does not exist or is not writable. Create it before running.`
+  Before, it computed the whole simulation, printed errors while writing, and ended with exit code 0 and no results.
+- `src/asynch_cli.c`: if writing the final results fails anyway (a folder removed during the run, a full disk),
+  `asynch` ends with an error exit code and `Error: some results could not be written.`
+- Tested: a missing folder stops in 0.4 s with exit code 1; a read-only folder (as a normal user, in Docker) stops
+  likewise; a folder deleted during a run gives exit code 1 at the end.
+
 ### Guide reorganised as a learning path, for readers who do not program
 
 *Results:* no change to the model.

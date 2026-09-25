@@ -42,7 +42,7 @@ A "silent" error is always worse than a crash: a crash is noticed, a wrong numbe
 | Model equations | S-02: model 254 baseflow forced to 0 by a line added in 2021 | **High** | fixed (original equation restored) |
 | Inputs | B-12: missing initial values were taken from random memory | **High** | fixed |
 | Numerical solver | B-14: per-link solver settings (`.rkd`) never worked | **High** | fixed |
-| Outputs | B-15: a missing output folder loses all results, yet the run "succeeds" | **High** | open |
+| Outputs | B-15: a missing output folder lost all results, yet the run "succeeded" | **High** | fixed |
 | Numerical solver | B-04: an invalid solver number crashed the program | Medium | fixed |
 | Outputs | B-02: snapshots depended slightly on the number of processors | Medium | fixed |
 | Program end | B-03: debug versions crashed at the very end | Medium | fixed |
@@ -128,11 +128,17 @@ input format. Reading it contained five separate mistakes, the first being an en
 **Now.** Rewritten and tested: a file that repeats the global settings for every link gives results identical to the
 normal run, and a faulty file stops with a clear message. The format is now documented and has an example (`examples/test.rkd`).
 
-### B-15: results silently lost when an output folder is missing — High, open
+### B-15: results silently lost when an output folder was missing — High
 
-If a folder named in the `.gbl` for the outputs does not exist, ASYNCH prints `Error: could not open ...` lines but
-**runs to the end and reports success**, without writing results. Until this is fixed, create the output folders
-before a run, and look for `Error` lines in the output.
+**What happened.** If a folder named in the `.gbl` for the outputs did not exist, ASYNCH computed the whole
+simulation, printed `Error: could not open ...` lines while writing, and then **reported success** (exit code 0)
+without having written any results. Scripts and operational chains that run ASYNCH check that exit code, so the
+missing results went unnoticed. It was found while testing the exercise of chapter 2.
+
+**Now.** Every output folder is checked before the computation starts, and a missing or read-only folder stops
+the run at once with a message naming it. If writing still fails at the end (a full disk, for example), `asynch`
+ends with an error code. *C lesson*: a program tells whoever started it whether it succeeded through its **exit
+code** (the value returned by `main`, 0 = success). Printing an error is not enough.
 
 ## 7.6 Medium and low issues, in brief
 
