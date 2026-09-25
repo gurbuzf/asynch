@@ -41,7 +41,8 @@ void RKDense3_2(RKMethod* method)
     method->localorder = 3;
 
     //Build the coefficients for the method
-    const double A[][3] = {
+    //The tables are static: method keeps pointers to them after this function returns.
+    static const double A[][3] = {
         { 0.0, 0.0, 0.0 },
         { 0.5, 0.0, 0.0 },
         { -1.0, 2.0, 0.0 }
@@ -54,19 +55,19 @@ void RKDense3_2(RKMethod* method)
     method->dense_b(1.0, method->b);
     method->dense_b(1.0, method->b_theta);
 
-    const double c[] = { 0.0, 0.5, 1.0 };
+    static const double c[] = { 0.0, 0.5, 1.0 };
     //c[0] = 0.0;
     //c[1] = .5;
     //c[2] = 1.0;
     method->c = c;
 
-    const double e[] = { 2.0 / 3.0, -4.0 / 3.0, 2.0 / 3.0 };
+    static const double e[] = { 2.0 / 3.0, -4.0 / 3.0, 2.0 / 3.0 };
     //e[0] = 2.0 / 3.0;
     //e[1] = -4.0 / 3.0;
     //e[2] = 2.0 / 3.0;
     method->e = e;
 
-    const double d[] = { 1.0 / 3.0, -2.0 / 3.0, 1.0 / 3.0 };
+    static const double d[] = { 1.0 / 3.0, -2.0 / 3.0, 1.0 / 3.0 };
     //d[0] = 1.0 / 3.0;
     //d[1] = -2.0 / 3.0;
     //d[2] = 1.0 / 3.0;

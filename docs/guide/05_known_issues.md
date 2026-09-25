@@ -35,6 +35,7 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [B-09](#b-09) | low | code reading | Model 402 dam check prints a debug line on every call |
 | [B-10](#b-10) | low | compiler | Missing prototype for `Create_Rain_Data_Par_IBin`; wrong `printf` format in `check_state.c` |
 | [B-11](#b-11) | low | code reading | ~75 `fscanf`/`fread` return values ignored: malformed input files are not detected |
+| [B-13](#b-13) | **fixed** | confirmed (ASan) | Solver methods 0 and 1 used Butcher coefficients from freed stack memory: random results or endless runs |
 | [B-12](#b-12) | medium | code reading | `.uini` reader misses "not enough values" (checks `== 0`, `fscanf` returns `EOF`); clearcreek.uini is short |
 | [R-01](#r-01) | fixed | confirmed | No automated regression tests; only one unit test (`days_in_month`) |
 | [R-02](#r-02) | medium | confirmed | `examples/results/clearcreek.pea` (2015) does not match today's `clearcreek.gbl` |
@@ -213,6 +214,23 @@ with too few values is accepted, and the missing states keep whatever was in mem
 **4** values, while model 254 reads 7 (`no_ini_start = dim`). It works only because
 `ReadInitData` for model 254 happens to overwrite exactly the 3 missing states (4, 5, 6).
 **Fix:** check `!= 1`, and warn when the model id differs.
+
+### B-13
+**RK 3(2) and RK 4(3) read their coefficients from freed memory.** *Critical for users of
+methods 0 and 1, confirmed.* Found while testing the fix of B-04.
+`RKDense3_2` and `TheRKDense4_3` (`src/solvers/rk3_2_dense.c`, `src/solvers/rk4_3_dense.c`)
+stored in the `RKMethod` struct pointers to their *local* coefficient arrays (`A`, `b`, `c`, `d`,
+`e`). Local arrays live on the stack and disappear when the function returns, so every time step
+then read whatever else happened to be on the stack. AddressSanitizer:
+`stack-use-after-return ... in ExplicitRKSolver src/steppers/explicit.c:120`, pointing at
+array `c` of `TheRKDense4_3`. With method 1, `examples/test.gbl` ran forever in most runs (with 1
+or 2 processes, in the original code too). **Any result computed with solver index 0 or 1 by
+earlier versions is unreliable.** Method 2 (Dormand–Prince), used by all examples, stores its
+tables as `static` and was never affected.
+**Fixed** (2026-09-25): the tables are `static`. Methods 0 and 1 now finish, are free of sanitizer
+reports and bit-reproducible with 1 process. They agree with method 2 within the expected accuracy
+(clearcreek, 6 359 links: peak discharge differs by at most 7.7e-4 m³/s, median relative
+difference 0.1 %).
 
 ---
 

@@ -140,7 +140,7 @@ Here is `examples/test.gbl` with the meaning of each block:
 | `1 test.pea` | peak flows to `test.pea` |
 | `1 test.sav` / `3` | links to save: hydrographs for the ids listed in `test.sav`, peaks for all links |
 | `4 60 test.h5` | snapshots: format 4 (recurring HDF5) every 60 minutes → `test_<unixtime>.h5` |
-| `2` | numerical method: **index 2 = Dormand–Prince 5(4)** (recommended). 0 = RK 3(2) and 1 = RK 4(3) also exist; any other value stops the run with an error |
+| `2` | numerical method: **index 2 = Dormand–Prince 5(4)** (recommended). 0 = RK 3(2) and 1 = RK 4(3) also exist (lower order, usually slower for the same accuracy; unusable before the 2026-09-25 fixes, see issue B-13); any other value stops the run with an error |
 | 4 lines of numbers | error tolerances per state: absolute, relative, absolute (dense output), relative (dense output) |
 
 The small network files are easy to read by eye:

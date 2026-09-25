@@ -8,6 +8,22 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Fix B-13: solver methods 0 and 1 used freed memory
+
+*Results:* **unchanged for method 2** (Dormand–Prince, used by all examples): bit-identical to the
+original code with 1 process, within tolerance with 2. **Methods 0 (RK 3(2)) and 1 (RK 4(3)) change
+completely:** they used to produce unreliable results or run forever, and now work.
+
+#### Fixed
+- `src/solvers/rk3_2_dense.c`, `src/solvers/rk4_3_dense.c`: the Butcher tables (`A`, `b`, `c`, `d`, `e`)
+  were local arrays, but the method kept pointers to them after the function returned
+  (AddressSanitizer: `stack-use-after-return`). Every step then read leftover stack memory. With
+  method 1, `examples/test.gbl` hung in most runs, in the original code too. The tables are now `static`.
+- Verification: `test` and `clearcreek` with methods 0, 1 and 2, on 1 and 2 processes, release and
+  sanitizer builds: all 24 runs finish, with no sanitizer reports. Methods 0 and 1 are bit-reproducible
+  with 1 process. Against method 2, peak discharges agree within 7.7e-4 m³/s (median relative
+  difference ~0.1 % on clearcreek), the expected accuracy for solvers of order 3, 4 and 5 at these tolerances.
+
 ### Fix B-04: invalid numerical solver index crashed ASynch
 
 *Results:* unchanged (bit-identical to the original code with 1 process, within tolerance with 2).
