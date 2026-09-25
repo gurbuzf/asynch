@@ -1147,7 +1147,17 @@ static int Load_Initial_Conditions_Uini(
             return 1;
         }
 
-        fscanf(initdata, "%*i %lf", &(globals->t_0));	//Read model type, init time
+        //Read model type, init time
+        unsigned int file_model;
+        if (fscanf(initdata, "%u %lf", &file_model, &(globals->t_0)) != 2)
+        {
+            printf("Error: could not read the model type and initial time at the beginning of %s.\n", globals->init_filename);
+            fclose(initdata);
+            return 1;
+        }
+        if (file_model != globals->model_uid)
+            printf("Warning: %s is written for model %u, but the global file uses model %hu.\n",
+                globals->init_filename, file_model, globals->model_uid);
     }
 
     //Broadcast the initial time
@@ -1179,7 +1189,8 @@ static int Load_Initial_Conditions_Uini(
 
     //no_ini_start = system[loc].no_ini_start;
     //diff_start = system[loc].diff_start;
-    double *y_0_backup = malloc((no_ini_start - diff_start) * sizeof(double));
+    //Missing values (see below) stay 0
+    double *y_0_backup = calloc(no_ini_start - diff_start, sizeof(double));
     //y_0_backup->dim = no_ini_start - diff_start;
     //y_0_backup.ve = (double*) calloc(y_0_backup->dim,sizeof(double));
 
@@ -1188,9 +1199,19 @@ static int Load_Initial_Conditions_Uini(
         //for(i=diff_start;i<no_ini_start;i++)
         for (i = 0; i < no_ini_start - diff_start; i++)
         {
-            if (fscanf(initdata, "%lf", y_0_backup + i) == 0)
+            int read = fscanf(initdata, "%lf", y_0_backup + i);
+            if (read == EOF)
             {
-                printf("Error reading .uini file: Not enough initial states.\n");
+                //Fewer values than states: the remaining states are 0. For many models, ReadInitData
+                //(models/definitions.c) then computes them from the others.
+                printf("Warning: %s gives %u initial value(s), model %hu has %u. The remaining state(s) are set to 0 unless the model computes them.\n",
+                    globals->init_filename, i, globals->model_uid, no_ini_start - diff_start);
+                break;
+            }
+            if (read != 1)
+            {
+                printf("Error reading .uini file %s: initial value %u is not a number.\n", globals->init_filename, i + 1);
+                fclose(initdata);
                 return 1;
             }
         }

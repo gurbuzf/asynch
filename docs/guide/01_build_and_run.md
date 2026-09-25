@@ -156,6 +156,20 @@ test.rvr (topology)          test.prm (parameters)         test.str (rain)
 0           <- no parents                                          200   0   <- t=200: stop
 ```
 
+The uniform initial state file (`.uini`) gives one value per state, the same for every link:
+
+```
+clearcreek.uini
+254                               <- model number (ASYNCH warns if it differs from the .gbl)
+0.000000                          <- initial time [min]
+
+1e-6 0.0 0.0 0.0 0.0 0.0 1e-6     <- q, s_p, s_t, s_s, s_precip, V_r, q_b (the 7 states of model 254)
+```
+
+If the file gives fewer values than the model has states, ASYNCH prints a warning and sets the
+missing states to 0. Some models then compute them from the others: for model 254, s_precip = 0,
+V_r = 0 and q_b = q always (see 04_model_254_explained.md §4.5).
+
 ## 1.5 What comes out
 
 | File | Content | How to read it |

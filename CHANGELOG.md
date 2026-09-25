@@ -8,6 +8,25 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Fix B-12: `.uini` files with too few values used uninitialised memory
+
+*Results:* unchanged. Bit-identical to the original code with 1 process (clearcreek: bit-identical
+to the previous commit, since the original cannot run it on 1 process). Within tolerance with 2.
+
+#### Fixed
+- `src/riversys.c` (`Load_Initial_Conditions_Uini`): the check for missing values tested
+  `fscanf(...) == 0`, but at end of file `fscanf` returns `EOF`. A short file was silently accepted and
+  the missing states kept uninitialised memory. Now: the values start at 0, a short file gives a
+  warning (`Warning: clearcreek.uini gives 4 initial value(s), model 254 has 7. ...`), a non-number is an
+  error, and a model number in the file that differs from the `.gbl` gives a warning.
+- This affected the examples: models 258 and 259 read 4 values from `examples/more/common/test.uini`,
+  which has 3. Their 4th state was uninitialised memory that happened to be 0. It is now 0 by design.
+
+#### Changed
+- `examples/clearcreek.uini`: model number corrected (252 → 254) and all 7 states given. Model 254
+  computes states 4–6 itself, so results are identical.
+- `docs/guide/01_build_and_run.md`: explains the `.uini` format.
+
 ### Fix B-13: solver methods 0 and 1 used freed memory
 
 *Results:* **unchanged for method 2** (Dormand–Prince, used by all examples): bit-identical to the
