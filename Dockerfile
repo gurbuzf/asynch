@@ -5,7 +5,7 @@
 #   docker run --rm -it -v "$PWD/mywork:/work" asynch         # ... with a folder of your computer
 #
 # Inside the container:  cd /asynch/examples && mpirun -n 2 asynch test.gbl
-# Full instructions: docs/guide/01_build_and_run.md, section "Option B: Docker".
+# Full instructions: docs/guide/01_setup.md, section "Option B: Docker".
 
 FROM ubuntu:24.04
 

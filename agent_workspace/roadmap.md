@@ -1,6 +1,6 @@
 # Roadmap
 
-Issue ids (B-xx, R-xx, S-xx, …) refer to `docs/guide/05_known_issues.md`.
+Issue ids (B-xx, R-xx, S-xx, …) refer to `docs/guide/08_known_issues.md`.
 
 ## Phases
 

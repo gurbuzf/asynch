@@ -19,8 +19,8 @@ Why they are written this way:
 Role: careful C maintainer of a scientific hydrological model (ASYNCH, C99 + MPI).
 
 Context to read first:
-- docs/guide/05_known_issues.md, item [B-01]   <- change the id
-- docs/guide/06_reproducibility.md (regression harness and rules)
+- docs/guide/08_known_issues.md, item [B-01]   <- change the id
+- docs/guide/09_reproducibility.md (regression harness and rules)
 - the source lines cited in that item
 
 Task: fix [B-01] only.
@@ -41,14 +41,14 @@ Verification (paste outputs in your final message):
 Deliverables:
 - The code change.
 - A CHANGELOG.md entry under "Unreleased > Fixed": what, why, file:line, "results unchanged" or the measured change.
-- Mark the item as fixed in docs/guide/05_known_issues.md (status + commit).
+- Mark the item as fixed in docs/guide/08_known_issues.md (status + commit).
 - One commit: "Fix [B-01]: <short description>".
 ```
 
 ## P2-b. Regenerate a benchmark (only after an explicit decision)
 
 ```text
-Context: docs/guide/05_known_issues.md items R-02/R-03; docs/guide/06_reproducibility.md.
+Context: docs/guide/08_known_issues.md items R-02/R-03; docs/guide/09_reproducibility.md.
 Decision recorded by the model owner: [paste decision, date].
 
 Task: regenerate examples/[more/model_259/results_benchmark] from the current code.
@@ -76,8 +76,8 @@ Non-goals: do not fix failing cases inside this task; report them.
 ## P3. Design the new Python API (design first, no code)
 
 ```text
-Context: docs/guide/05_known_issues.md [A-01], src/asynch_interface.h, src/asynch_cli.c (main),
-docs/guide/02_code_map.md §2.3.
+Context: docs/guide/08_known_issues.md [A-01], src/asynch_interface.h, src/asynch_cli.c (main),
+docs/guide/03_code_map.md §2.3.
 
 Task: write docs/guide/design_python_api.md proposing a new Python binding. Requirements:
 - C side: a small stable API with opaque handles only (no struct layouts exposed to Python),
@@ -98,5 +98,5 @@ Task: measure, do not change code. Build with -O2 -g. On [a large network: path 
 profile with `perf record -g` (1 process) and with 4 and 16 processes (wall time per phase,
 from the --more output). Report the top 15 functions by self time and the time split between
 initialisation, Advance, and output. Relate the findings to P-01..P-03 in
-docs/guide/05_known_issues.md, and propose at most 3 optimisations, ranked by expected gain vs risk.
+docs/guide/08_known_issues.md, and propose at most 3 optimisations, ranked by expected gain vs risk.
 ```
