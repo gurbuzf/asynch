@@ -26,7 +26,7 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 |----|----------|--------|----------------------|
 | [B-01](#b-01) | **fixed** | confirmed | Model 254 uses model 256's snapshot filter: heap buffer overflow, crashes clearcreek on 1 process |
 | [B-02](#b-02) | high | code reading | Snapshot values are filtered only for links owned by MPI rank 0: output depends on process count |
-| [B-03](#b-03) | high | confirmed | Output file closed twice at shutdown: every debug build aborts at the end of a run |
+| [B-03](#b-03) | **fixed** | confirmed | Output file closed twice at shutdown: every debug build aborts at the end of a run |
 | [B-04](#b-04) | high | confirmed | Solver index 3 or 4 (advertised as "implicit") segfaults; the index is never validated |
 | [B-05](#b-05) | medium | code reading | `Destroy_ErrorData` frees addresses of struct fields instead of the pointers |
 | [B-06](#b-06) | medium | code reading | `Asynch_Get_Num_Links` returns `unsigned short`: wrong for networks > 65 535 links |
@@ -109,6 +109,8 @@ initial conditions for the next run.
 
 ### B-03
 **`outputfile` is closed twice.** *High, confirmed.*
+**Fixed** (2026-09-25): the pointer is set to `NULL` after each `fclose`. Debug and sanitizer
+builds now run every example to the end with exit code 0.
 
 `Asynch_Delete_Temporary_Files` (`src/asynch_interface.c:1077-1078`) calls
 `fclose(asynch->outputfile)` but does not set it to `NULL`. `Asynch_Free`

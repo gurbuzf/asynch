@@ -107,8 +107,8 @@ Release build (`-O3 -DNDEBUG`), Ubuntu 24.04, GCC 13, OpenMPI 4.1, HDF5 1.10:
 | model_258 | PASS (bit-identical) | PASS | PASS |
 | model_259 | XFAIL (R-03) | XFAIL (R-03) | XFAIL (R-03) |
 
-With a debug build (no `-DNDEBUG`), every case additionally fails with exit code 134
-because of the double `fclose` at shutdown (B-03). The outputs are still correct.
+At that commit, a debug build (no `-DNDEBUG`) additionally failed every case with exit
+code 134, because of the double `fclose` at shutdown (B-03, since fixed).
 
 ## 6.4 Useful tools
 

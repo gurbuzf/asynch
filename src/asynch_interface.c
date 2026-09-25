@@ -440,7 +440,10 @@ void Asynch_Free(AsynchSolver* asynch)
     free(asynch->getting);
     
     if (asynch->outputfile)
+    {
         fclose(asynch->outputfile);
+        asynch->outputfile = NULL;  // so that a later call does not close it twice
+    }
 
     for (i = 0; i < asynch->N; i++)
         Destroy_Link(&asynch->sys[i], asynch->rkdfilename[0] != '\0', asynch->forcings, asynch->globals);
@@ -1075,7 +1078,10 @@ int Asynch_Check_Peakflow_Output(AsynchSolver* asynch, char* name)
 int Asynch_Delete_Temporary_Files(AsynchSolver* asynch)
 {
     if (asynch->outputfile)
+    {
         fclose(asynch->outputfile);
+        asynch->outputfile = NULL;  // so that a later call does not close it twice
+    }
 
     int ret_val = RemoveTemporaryFiles(asynch->globals, asynch->my_save_size, NULL);
     //if(ret_val == 1)	printf("[%i]: Error deleting temp file. File does not exist.\n");

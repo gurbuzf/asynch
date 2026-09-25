@@ -57,7 +57,7 @@ to install** to run the examples.
 | Flags | Use it for |
 |---|---|
 | `-O3 -DNDEBUG` | production runs (what the README recommends). `-DNDEBUG` turns `assert()` checks off. |
-| `-O0 -g` | debugging with `gdb`: no optimisation, full debug info, `assert()`s active. *Currently every run ends with an abort at shutdown in this mode (issue B-03); the results are still written.* |
+| `-O0 -g` | debugging with `gdb`: no optimisation, full debug info, `assert()`s active. |
 | `-O1 -g -fsanitize=address,undefined` | hunting memory bugs, see [06_reproducibility.md](06_reproducibility.md) |
 
 Compiler **warnings** (`warning: ignoring return value of 'fscanf'`, …) are expected at

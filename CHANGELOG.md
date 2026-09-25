@@ -8,6 +8,18 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Fix B-03: output file closed twice at shutdown
+
+*Results:* unchanged. Bit-identical to the original code with 1 process for every example;
+within tolerance with 2 and 4 processes.
+
+#### Fixed
+- `src/asynch_interface.c` (`Asynch_Delete_Temporary_Files`, `Asynch_Free`): the temporary output
+  file was closed twice (undefined behaviour), so every debug build (compiled without `-DNDEBUG`)
+  aborted at the very end of a run with `free(): double free detected` (exit code 134). The
+  pointer is now reset after closing. Debug builds, and the AddressSanitizer build, now run all
+  examples cleanly.
+
 ### Fix B-01: heap buffer overflow in model 254 snapshots
 
 *Results:* unchanged. Checked against the original code (commit `84da43a`) with
