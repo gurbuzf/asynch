@@ -19,8 +19,16 @@ with the original code; keep user documentation current.
   - B-12 revealed that models 258/259 read an uninitialised 4th initial state from `common/test.uini`.
 - Helper used for every change (scratchpad, not in repo): rebuild release + ASan builds, run the
   harness with `--compare-to` at np 1, 2, 4 and ASan np 1, and grep the ASan np 2 logs for reports.
-- In progress: B-09/B-10 (debug prints in `check_state.c`, missing prototype in `forcings_io.h`), then
-  B-06, B-10 indentation in `riversys.c`, R-02/R-03 references, M-01 attic, CI.
+- Also fixed: B-09, B-10 (except the `riversys.c` indentation).
+- Owner clarified: the benchmark is the example results of the original repository. Found the 2015
+  configurations behind `examples/results/` (commit `b73fc2d`: 300 / 6000 min from 2014-05-01) and
+  added them as `examples/test_2015.gbl`, `examples/clearcreek_2015.gbl`. The `test` references are
+  reproduced. The `clearcreek` references are reproduced only without the 2021 baseflow floor in model 254
+  (commit `93241a3`). Decision asked (S-02).
+- Tolerance policy measured: two 4-process runs of the original differ by up to 1.15e-4 on the
+  6000-minute run, so atol is 1e-3 for np>1. Peak times get their own 20-minute tolerance.
+- Next: B-06 (`unsigned short` link count), B-10 indentation, M-01 attic, CI (GitHub Actions on
+  `modernization`), then B-11 (unchecked `fscanf`).
 - Noted for later: neither the `.gbl` path nor any other code checks that the number of tolerances
   covers the model's states (the check in `riversys.c` is commented out); `find_link_by_idtoloc` is a
   hand-written binary search (TODO says replace by `bsearch`).

@@ -27,18 +27,25 @@ regenerate references (R-02/R-03, after decision 1) → CI → dead code (M-01, 
    Keep the user documentation (how to build, run, read outputs) current with every change.
 5. **Develop only on branch `modernization` of `gurbuzf/asynch`.** Never merge it into `master`,
    never open pull requests (owner's instruction, 2026-09-25). `master` stays identical to upstream.
-6. **After every code change: run all examples and compare with the original code** (commit
-   `84da43a`) using `tests/regression/run_examples.py --compare-to <original asynch>`, in addition
-   to the stored benchmarks. Report the comparison in the CHANGELOG entry.
+6. **After every code change: run all examples and compare with the example results of the original
+   repository** (`examples/results/`, `examples/more/*/results_benchmark/`, never modified), with
+   `tests/regression/run_examples.py`. Additionally compare with the original code (commit `84da43a`)
+   using `--compare-to`: bit-identical with np=1. Report both in the CHANGELOG entry.
 
 ## Decisions
 
 The owner asked (2026-09-25) to proceed with the recommended option for each:
 
-1. **R-02 / R-03** → regenerate the `clearcreek` and `model_259` references from the current
-   inputs once B-01 is fixed, with a provenance note. Adopted.
+1. **R-02 / R-03** → ~~regenerate the references~~. **Superseded by the owner's clarification
+   (2026-09-25): "compare with the original" means compare model results with the example results
+   of the original, untouched repository.** Reference files are never modified or regenerated.
+   R-02 was instead explained by reconstructing the 2015 configurations (`examples/*_2015.gbl`).
+   R-03 stays a known mismatch.
 2. **B-03** → both debug and release builds must run cleanly. Adopted.
 3. **S-02 / S-06** → keep the model unchanged; behaviour is documented. Adopted.
+   **Reopened for S-02 (2026-09-25):** the floor `max(0.001, q_b)` is not original. It was added in
+   2021 (`93241a3`), and without it the original clearcreek references are reproduced. Asked the owner
+   whether to restore the 2015 form. The code stays unchanged until they answer.
 4. **M-01** → move dead source files to `attic/` (history kept, nothing compiled). Adopted.
 
 ### Original wording
