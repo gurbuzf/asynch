@@ -31,3 +31,7 @@ examples
 *.dbc
 *.str
 *.rvr
+
+# Python
+__pycache__/
+*.pyc

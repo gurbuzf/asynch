@@ -301,6 +301,9 @@ with sizes + function pointers) in one file per model family.
 ### M-03
 **Tooling.** `.travis.yml` targets travis-ci.org, which shut down in 2021, so there
 is no working CI. Recommendation: GitHub Actions running the build and the regression harness.
+The root `.gitignore` also lists `examples` (and `*.rvr`, `*.str`, …), although those files
+are tracked. `git add examples/...` therefore refuses to stage changes to the examples, and
+`git add -u` (or `-f`) is needed. Recommendation: ignore only generated outputs (`examples/**/results/`).
 
 ---
 
