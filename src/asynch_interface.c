@@ -427,14 +427,20 @@ void Asynch_Finalize_Network(AsynchSolver* asynch)
 
 
 //Trash an asynchsolver object
+//Frees a solver at any stage of its setup (created only, global file read, network loaded, ...).
 void Asynch_Free(AsynchSolver* asynch)
 {
     unsigned int i;
 
-    TransData_Free(asynch->my_data);
+    if (!asynch)
+        return;
+
+    if (asynch->my_data)
+        TransData_Free(asynch->my_data);
     for (i = 0; i < ASYNCH_MAX_DB_CONNECTIONS; i++)
         ConnData_Free(&asynch->db_connections[i]);
-    Destroy_Workspace(&asynch->workspace, asynch->globals->max_rk_stages, asynch->globals->max_parents);
+    if (asynch->globals)
+        Destroy_Workspace(&asynch->workspace, asynch->globals->max_rk_stages, asynch->globals->max_parents);
     free(asynch->getting);
     
     if (asynch->outputfile)
@@ -443,8 +449,9 @@ void Asynch_Free(AsynchSolver* asynch)
         asynch->outputfile = NULL;  // so that a later call does not close it twice
     }
 
-    for (i = 0; i < asynch->N; i++)
-        Destroy_Link(&asynch->sys[i], asynch->rkdfilename[0] != '\0', asynch->forcings, asynch->globals);
+    if (asynch->sys)
+        for (i = 0; i < asynch->N; i++)
+            Destroy_Link(&asynch->sys[i], asynch->rkdfilename[0] != '\0', asynch->forcings, asynch->globals);
 
     for (i = 0; i < ASYNCH_MAX_DB_CONNECTIONS - ASYNCH_DB_LOC_FORCING_START; i++)
         Forcing_Free(&asynch->forcings[i]);
@@ -461,7 +468,8 @@ void Asynch_Free(AsynchSolver* asynch)
     if (asynch->res_list)
         free(asynch->res_list);
     free(asynch->id_to_loc);
-    Destroy_UnivVars(asynch->globals);
+    if (asynch->globals)
+        Destroy_UnivVars(asynch->globals);
     //if (asynch->model)
     //    free(asynch->model);
     free(asynch);
