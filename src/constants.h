@@ -41,6 +41,8 @@
 
 #define ASYNCH_MAX_DIM 256              //!< Maximum number of Degree of Freedom in the outputs
 
-#define ASYNCH_LINK_MAX_PARENTS 8
+//Maximum number of upstream links (parents) of one link. Used by the network readers and the time-step
+//routines alike (they must agree, issue B-16). Real river networks rarely exceed 3 or 4.
+#define ASYNCH_LINK_MAX_PARENTS 16
 
 #endif //ASYNCH_CONSTANTS_H

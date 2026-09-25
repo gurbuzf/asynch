@@ -37,6 +37,7 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [B-11](#b-11) | low | code reading | ~75 `fscanf`/`fread` return values ignored: malformed input files are not detected |
 | [B-13](#b-13) | **fixed** | confirmed (ASan) | Solver methods 0 and 1 used Butcher coefficients from freed stack memory: random results or endless runs |
 | [B-12](#b-12) | **fixed** | code reading |
+| [B-16](#b-16) | **fixed** | confirmed (ASan) | Links with more than 8 parents overflowed memory; reader and solver disagreed on the limit |
 | [B-15](#b-15) | **fixed** | confirmed | A missing output folder loses all results, yet the run ends with a success exit code |
 | [B-14](#b-14) | **fixed** | confirmed | Reading an `.rkd` file (per-link tolerances) never finished: 5 defects in `Build_RKData` | `.uini` reader misses "not enough values" (checks `== 0`, `fscanf` returns `EOF`); clearcreek.uini is short |
 | [R-01](#r-01) | fixed | confirmed | No automated regression tests; only one unit test (`days_in_month`) |
@@ -273,6 +274,18 @@ In a script or an operational chain, the failure goes unnoticed. The simulation 
 snapshot and temporary files exist and are writable, and stops before computing otherwise. `main`
 (`src/asynch_cli.c`) now checks the return values of the final output functions, and exits with `EXIT_FAILURE` if
 one failed.
+
+### B-16
+**Links with many parents overflowed memory.** *High, confirmed* (while testing B-06 on a synthetic network).
+The time-step routines (`src/steppers/*.c`) keep the parents' data in an array of `ASYNCH_LINK_MAX_PARENTS` = 8
+entries, but the network reader (`Create_River_Network`, `src/riversys.c`) accepted up to 10 parents, and stored
+each parent *before* checking the limit. A link with 9 or 10 parents made every time step write past the array
+(AddressSanitizer: `stack-buffer-overflow in ExplicitRKSolver`, the run aborted). With 11 or more parents the reader
+itself wrote past its buffer.
+**Fixed** (2026-09-25): one limit, `ASYNCH_LINK_MAX_PARENTS` = 16, is used by the reader and the solvers; both readers
+(file and database) check it before storing. A network with 70 000 links and 10 parents per main-channel link now
+runs cleanly (release and sanitizer builds, 1 and 2 processes). One with 21 parents stops with
+`Error: link 1 has 21 parents; ASYNCH supports at most 16 (ASYNCH_LINK_MAX_PARENTS in src/constants.h).`
 
 ---
 

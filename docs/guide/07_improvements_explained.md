@@ -43,6 +43,8 @@ A "silent" error is always worse than a crash: a crash is noticed, a wrong numbe
 | Inputs | B-12: missing initial values were taken from random memory | **High** | fixed |
 | Numerical solver | B-14: per-link solver settings (`.rkd`) never worked | **High** | fixed |
 | Outputs | B-15: a missing output folder lost all results, yet the run "succeeded" | **High** | fixed |
+| Network | B-16: a junction with more than 8 upstream streams crashed the run | **High** | fixed |
+| Library | B-06: programs using ASYNCH as a library got a wrong link count above 65 535 links | Medium | fixed |
 | Numerical solver | B-04: an invalid solver number crashed the program | Medium | fixed |
 | Outputs | B-02: snapshots depended slightly on the number of processors | Medium | fixed |
 | Program end | B-03: debug versions crashed at the very end | Medium | fixed |
@@ -150,6 +152,11 @@ code** (the value returned by `main`, 0 = success). Printing an error is not eno
   (results were already written). Fixed.
 * **Examples 258/259** (Medium): pointed to a file on a University of Iowa computer, so they could not run anywhere
   else. They now use the evaporation file shipped in the repository, and reproduce their reference exactly.
+* **B-16** (High): at a junction, ASYNCH keeps the data of every upstream stream in a list with room for 8. The file
+  reader accepted up to 10, and a junction with 9 or 10 upstream streams overwrote memory at every time step, which
+  crashed the run. Now one limit of 16 applies everywhere, and a network exceeding it is refused with a clear message.
+* **B-06** (Medium): the function that reports the number of links used a type that stops at 65 535. A 70 000-link
+  network was reported as 4 464 links. It only affected programs that use ASYNCH as a library, such as the Python API.
 * **B-05, B-07, B-08** (Low): memory handling errors that did not change results: freeing the wrong address, a
   buffer never released, numbers read from misaligned memory addresses.
 * **B-09, B-10** (Low): models 402 and 403 printed a debug line at every step; compiler warnings about

@@ -8,6 +8,18 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Fix B-16: links with more than 8 parents overflowed memory
+
+*Results:* unchanged for the examples (bit-identical to the previous commit with 1 process).
+
+#### Fixed
+- `src/constants.h`, `src/riversys.c`: the time-step routines had room for 8 parents per link, but the network reader
+  accepted 10, and stored parents before checking. A link with 9 or 10 parents made the run abort with a stack overflow;
+  11 or more overflowed the reader's buffer. Now a single limit (`ASYNCH_LINK_MAX_PARENTS` = 16) is used by the readers
+  and the solvers, and both readers (file and database) check it before storing, with a clear error message.
+- Tested on a synthetic network of 70 000 links (10 parents per main-channel link): runs cleanly on 1 and 2 processes,
+  in release and sanitizer builds. A network with 21 parents stops with an error naming the link.
+
 ### Fix B-06: link count wrong above 65 535 links
 
 *Results:* unchanged (bit-identical to the previous commit with 1 process).

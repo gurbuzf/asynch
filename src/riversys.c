@@ -58,7 +58,7 @@ void Create_River_Network(GlobalVars* globals, Link** system, unsigned int* N, L
     unsigned int *dbres_parent = NULL;
     unsigned int sizeres = 0;
     unsigned int i, j;
-    unsigned int max_children = 10;
+    const unsigned int max_children = ASYNCH_LINK_MAX_PARENTS;    //Width of loc_to_children
     unsigned int *num_parents = NULL;
     unsigned int **loc_to_children = NULL;
     unsigned int *loc_to_children_array = NULL;
@@ -96,18 +96,21 @@ void Create_River_Network(GlobalVars* globals, Link** system, unsigned int* N, L
             for (i = 0; i < *N; i++)
             {
                 fscanf(riverdata, "%u %u", &(link_ids[i]), &(num_parents[i]));
+
+                //Check before storing the parents: loc_to_children has room for max_children per link
+                if (num_parents[i] > max_children)
+                {
+                    printf("Error: link %u has %u parents; ASYNCH supports at most %u (ASYNCH_LINK_MAX_PARENTS in src/constants.h).\n",
+                        link_ids[i], num_parents[i], max_children);
+                    fclose(riverdata);
+                    return;
+                }
+
                 for (j = 0; j < num_parents[i]; j++)
                 {
                     unsigned int id;
                     fscanf(riverdata, "%u", &id);
                     loc_to_children[i][j] = id;
-                }
-
-                if (num_parents[i] > max_children)
-                {
-                    printf("Error: assumed no link has more than %u parents, but link %u has %u.\n", max_children, link_ids[i], num_parents[i]);
-                    printf("If this is not an error in the input data, modify max_children in riversys.c, function Create_River_Network.\n");
-                    return;
                 }
             }
 
@@ -226,7 +229,13 @@ void Create_River_Network(GlobalVars* globals, Link** system, unsigned int* N, L
                     for (j = 0; i + j < sizeres; j++)
                         if (dbres_link_id[i + j] != id)	break;
 
-                    //Set the number of parents
+                    //Set the number of parents, checking that they fit in loc_to_children
+                    if (j > max_children)
+                    {
+                        printf("Error: link %u has %u parents; ASYNCH supports at most %u (ASYNCH_LINK_MAX_PARENTS in src/constants.h).\n",
+                            id, j, max_children);
+                        return;
+                    }
                     num_parents[curr_loc] = j;
 
                     //Set the information to find the child links
