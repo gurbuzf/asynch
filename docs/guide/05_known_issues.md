@@ -24,7 +24,7 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 
 | ID | Severity | Status | One-line description |
 |----|----------|--------|----------------------|
-| [B-01](#b-01) | critical | confirmed | Model 254 uses model 256's snapshot filter: heap buffer overflow, crashes clearcreek on 1 process |
+| [B-01](#b-01) | **fixed** | confirmed | Model 254 uses model 256's snapshot filter: heap buffer overflow, crashes clearcreek on 1 process |
 | [B-02](#b-02) | high | code reading | Snapshot values are filtered only for links owned by MPI rank 0: output depends on process count |
 | [B-03](#b-03) | high | confirmed | Output file closed twice at shutdown: every debug build aborts at the end of a run |
 | [B-04](#b-04) | high | confirmed | Solver index 3 or 4 (advertised as "implicit") segfaults; the index is never validated |
@@ -62,6 +62,8 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 
 ### B-01
 **Model 254 uses the snapshot filter of model 256: heap buffer overflow.** *Critical, confirmed.*
+**Fixed** (2026-09-25): the missing `break;` was added. clearcreek now runs on 1 process; with
+2 processes all 27 output files are bit-identical to the original code (see CHANGELOG).
 
 `SetOutputConstraints` in `src/models/definitions.c:885-893` has no `break;` after
 `case 254:`. Execution *falls through* into `case 256:` (a classic C pitfall: a

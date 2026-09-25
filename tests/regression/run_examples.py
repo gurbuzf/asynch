@@ -260,7 +260,8 @@ def run_asynch(mpi_cmd, exe, wd, gbl, env):
     return rc, tail
 
 
-def compare_to_original(new_root, orig_root, inputs, rtol, atol, have_h5py, verbose=False):
+def compare_to_original(new_root, orig_root, inputs, rtol, atol, have_h5py, verbose=False,
+                        orig_crashed=False):
     """Compare every output file of two runs. Returns (ok, report lines)."""
     lines, ok = [], True
     new_files = list_outputs(new_root, inputs)
@@ -271,11 +272,19 @@ def compare_to_original(new_root, orig_root, inputs, rtol, atol, have_h5py, verb
     for f in sorted(orig_files - new_files):
         lines.append("    %-34s FAIL: written by the original, not by the new code" % f)
         ok = False
-    for f in sorted(new_files - orig_files):
-        lines.append("    %-34s note: written only by the new code" % f)
-    n_identical, worst = 0, (0.0, 0.0)
+    only_new = sorted(new_files - orig_files)
+    if only_new:
+        lines.append("    note: %d file(s) written only by the new code (%s%s)"
+                     % (len(only_new), ", ".join(only_new[:3]), ", ..." if len(only_new) > 3 else ""))
+    n_identical, worst, total_skipped = 0, (0.0, 0.0), []
     for f in sorted(new_files & orig_files):
         reader = ANY_READERS[os.path.splitext(f)[1]]
+        if orig_crashed:
+            try:
+                reader(os.path.join(orig_root, f))
+            except Exception:
+                total_skipped.append(f)      # half-written by the crashing original
+                continue
         try:
             same, msgs, mabs, mrel = compare(reader(os.path.join(new_root, f)),
                                              reader(os.path.join(orig_root, f)), rtol, atol)
@@ -291,7 +300,10 @@ def compare_to_original(new_root, orig_root, inputs, rtol, atol, have_h5py, verb
         lines.append("    %-34s %s  (max abs diff %.3g, max rel diff %.3g)"
                      % (f, "ok  " if same else "FAIL", mabs, mrel))
         lines += ["        " + m for m in msgs]
-    total = len(new_files & orig_files)
+    total = len(new_files & orig_files) - len(total_skipped)
+    if total_skipped:
+        lines.insert(0, "    (%d file(s) left incomplete by the crashing original were not compared)"
+                     % len(total_skipped))
     head = "  vs original: %d of %d output files identical" % (n_identical, total)
     if total and n_identical < total:
         head += ", others within tolerance" if ok else ""
@@ -390,7 +402,7 @@ def main():
                 lines.append("  original exit code: %d (outputs it did not write are not compared)" % orc)
             # Compare only the files written by this case.
             orig_ok, cmp_lines = compare_to_original(wd, owd, skip, args.rtol, args.atol, have_h5py,
-                                                       args.verbose)
+                                                       args.verbose, orig_crashed=orc != 0)
             lines += cmp_lines
             # A difference from the original is always a failure, even for XFAIL cases.
             if not orig_ok:

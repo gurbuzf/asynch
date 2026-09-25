@@ -8,6 +8,25 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Fix B-01: heap buffer overflow in model 254 snapshots
+
+*Results:* unchanged. Checked against the original code (commit `84da43a`) with
+`run_examples.py --compare-to`: every example is bit-identical with 1 process (27/27 files for
+`test`, 3/3 for models 192, 196, 258, 259), and within tolerance with 2 and 4 processes. For
+`clearcreek` with 2 processes, all 27 output files are bit-identical. With 1 process the original
+crashes. Instead, the new 1-process run was compared with the original 2-process run: all 27
+files are within tolerance.
+
+#### Fixed
+- `src/models/definitions.c` (`SetOutputConstraints`): `case 254` had no `break;` and fell through
+  to `case 256`, so model 254 used the 8-state snapshot filter on 7-state records. That wrote
+  past the end of the snapshot buffer (heap buffer overflow, found with AddressSanitizer).
+  `examples/clearcreek.gbl` crashed on 1 MPI process (`Fatal glibc error: malloc.c`); it now runs.
+
+#### Changed
+- `tests/regression/run_examples.py`: when the original executable crashes, the files it left
+  half-written are skipped instead of being reported as differences.
+
 ### Regression harness: comparison with the original code
 
 *Results:* no change to the model (test tooling only).

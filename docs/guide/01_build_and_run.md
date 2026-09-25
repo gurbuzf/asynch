@@ -108,9 +108,14 @@ Results written to file outputs.h5.
 Peakflows written to file test.pea.
 ```
 
-> ⚠️ Until issue B-01 is fixed, **run `clearcreek.gbl` with at least 2 processes**. On 1
-> process it crashes with `Fatal glibc error: malloc.c ...` because of a memory
-> overflow in the snapshot code.
+The larger example, the Clear Creek basin (6 359 links, model 254), runs the same way:
+
+```bash
+$ mpirun -n 4 ../build/src/asynch clearcreek.gbl
+```
+
+> Versions of ASYNCH before the 2026-09-25 fixes crash on this example with one process
+> (`Fatal glibc error: malloc.c ...`, issue B-01). If you see that message, you are running an old build.
 
 ## 1.4 What goes in: the input files
 
