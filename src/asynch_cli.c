@@ -26,8 +26,8 @@
 #include "optparse.h"
 
 // Global variables
-int my_rank = 0;
-int np = 0;
+// my_rank and np are defined in the library (globals.c) and declared in globals.h
+#include <globals.h>
 
 //Print to stdout only for process of rank 0
 int print_out(const char* format, ...)

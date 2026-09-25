@@ -1,6 +1,12 @@
+# The same sources are built twice:
+#  - libasynch.a  (static) is linked into the programs asynch and assim; results do not depend on
+#    this choice, it only keeps the programs self-contained.
+#  - libasynch.la (shared, libasynch.so once installed) is loaded by the Python package (python/).
 lib_LIBRARIES = libasynch.a
+lib_LTLIBRARIES = libasynch.la
 
-libasynch_a_SOURCES = \
+ASYNCH_SOURCES = \
+  globals.c \
   advance.c \
   asynch_interface.c \
   blas.c \
@@ -68,6 +74,12 @@ libasynch_a_SOURCES = \
   models/model.h \
   solvers/lagrange.h
 
+libasynch_a_SOURCES = $(ASYNCH_SOURCES)
+libasynch_la_SOURCES = $(ASYNCH_SOURCES)
+libasynch_la_CFLAGS = $(AM_CFLAGS)
+libasynch_la_LDFLAGS = -version-info 0:0:0 $(HDF5_LDFLAGS) $(POSTGRESQL_LDFLAGS)
+libasynch_la_LIBADD = $(HDF5_LIBS) $(POSTGRESQL_LIBS) -lm
+
 bin_PROGRAMS = asynch
 asynch_SOURCES = optparse.c optparse.h asynch_cli.c
 asynch_LDADD = libasynch.a $(HDF5_LIBS) $(POSTGRESQL_LIBS) $(METIS_LIBS)
@@ -75,6 +87,11 @@ asynch_LDFLAGS = $(HDF5_LDFLAGS) $(POSTGRESQL_LDFLAGS) $(METIS_LDFLAGS)
 
 # If PETSc is available, add the assim source files to asynch an build the assim CLI
 if USE_PETSC
+
+libasynch_la_SOURCES += \
+  assim/ancillary.c \
+  assim/linear_least_squares.c \
+  assim/models.c
 
 libasynch_a_SOURCES += \
   assim/ancillary.c \

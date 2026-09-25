@@ -8,6 +8,17 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Shared library `libasynch.so`
+
+*Results:* unchanged. The `asynch` program is bit-identical to the previous commit (1 process); `make check` passes.
+
+#### Added
+- The library is now also built as a shared library, `libasynch.so` (via libtool; `LT_INIT([disable-static])` in
+  `configure.ac`), and installed in `<prefix>/lib` by `make install`. It is what the Python package loads. The static
+  `libasynch.a` used by the `asynch` program is unchanged.
+- `src/globals.c`: the global variables `my_rank` and `np` are defined in the library. Before, every program had to
+  define them, which made the library unusable on its own. They were removed from `asynch_cli.c` and `assim_cli.c`.
+
 ### Fix B-16: links with more than 8 parents overflowed memory
 
 *Results:* unchanged for the examples (bit-identical to the previous commit with 1 process).

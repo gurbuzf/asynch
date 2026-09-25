@@ -9,6 +9,9 @@ AC_PROG_CC_STDC #C99
 AM_PROG_CC_C_O  #automake < 1.14
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AC_PROG_RANLIB
+# libtool builds the shared library libasynch.so (used by the Python package); the static
+# libasynch.a used by the programs is built by automake itself, hence disable-static here.
+LT_INIT([disable-static])
 
 # Checks for libraries
 AX_CHECK_ZLIB

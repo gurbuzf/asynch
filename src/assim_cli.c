@@ -39,8 +39,8 @@
 
 // Global variables
 bool verbose = false;
-int my_rank;
-int np;
+// my_rank and np are defined in the library (globals.c) and declared in globals.h
+#include <globals.h>
 
 ////Output functions
 //int Output_Linkid(double t, VEC y_i, VEC global_params, VEC params, int state, void* user);
