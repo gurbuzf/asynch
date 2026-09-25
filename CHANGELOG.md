@@ -8,6 +8,43 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### C interface for other languages (`asynch_api.h`); fixes B-17 to B-21
+
+*Results:* unchanged. Every output of every example is bit-identical to the previous commit (1 process); 1 and 2
+processes pass against the references and the original code; the sanitizer build is clean.
+
+#### Added
+- `src/asynch_api.h`, `src/asynch_api.c` (installed with the library): functions that only exchange numbers, arrays
+  and opaque pointers, so that other languages (the new Python package) never depend on the layout of a C structure.
+  - MPI and creation: `Asynch_MPI_Init/Finalize`, `Asynch_Init_World`, `Asynch_Init_Fortran_Comm` (for mpi4py),
+    `Asynch_Get_Rank`, `Asynch_Get_Num_Procs`.
+  - Network: link id, location lookup (`Asynch_Find_Link`), owner process, parents, child, number of states.
+  - Parameters: get/set the parameters of a link, `Asynch_Update_Precalculations` (recompute the derived parameters
+    after changing global or link parameters, e.g. for calibration).
+  - States: current time, state of one link, `Asynch_Gather_States` / `Asynch_Set_States` (all links, on every
+    process), `Asynch_Gather_Peakflows`, current forcing values.
+  - Custom models without writing C structures: `Asynch_Model_Spec_Create` and setters (equations, derived
+    parameters, initial states, consistency check or built-in non-negativity, dense states, unit factors of the
+    parameters read from disk, area indices, user pointer), then `Asynch_Install_Model` before `Asynch_Parse_GBL`.
+    Tested: model 190 rewritten through this interface gives results bit-identical to the built-in model 190
+    (1 process), and within the run-to-run variation with 3 processes.
+
+#### Fixed
+- **B-17** (`src/asynch_interface.c`): `Asynch_Get_Size_Global_Parameters` and `Asynch_Set_Global_Parameters` crashed
+  with built-in models; `Asynch_Set_Total_Simulation_Duration` was declared but missing; `Asynch_Set_System_State`
+  passed the state as the dam flag; `Asynch_Custom_Model` leaked; `Asynch_Set_Init_File` accepted no `.h5`, read
+  before short names and crashed when the initial states came from a database.
+- **B-18** (`src/riversys.c`): the `.ini` readers stored the discontinuity state on the wrong link; the `.rec`,
+  `.dbc` and `.h5` readers passed it as the dam flag. Affects only models with dams.
+- **B-19** (`src/models/equations.c`): model 190 read a third forcing value that does not exist (unused).
+- **B-20** (`src/asynch_interface.c`, `src/riversys.c`): custom outputs (`Asynch_Set_Output_*`) of a state that was not
+  otherwise interpolated were written as 0 (tested with state 1 of model 190: 0 instead of about 0.001). The states
+  are now recorded when the output is set before the model is initialised, and added to the interpolated states.
+- **B-21** (`src/config_gbl.c`, `src/riversys.c`): a custom model is recognised by its callbacks, so that a model
+  set only for its partitioning keeps the built-in equations, and custom models no longer inherit the `.h5` snapshot
+  filter of the built-in model with the same number.
+- New custom models get their states that are not read from the initial file set to 0 instead of uninitialised memory.
+
 ### Shared library `libasynch.so`
 
 *Results:* unchanged. The `asynch` program is bit-identical to the previous commit (1 process); `make check` passes.

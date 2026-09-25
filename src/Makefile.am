@@ -9,6 +9,7 @@ ASYNCH_SOURCES = \
   globals.c \
   advance.c \
   asynch_interface.c \
+  asynch_api.c \
   blas.c \
   comm.c \
   compression.c \
@@ -42,6 +43,7 @@ ASYNCH_SOURCES = \
   steppers/forced.c \
   advance.h \
   asynch_interface.h \
+  asynch_api.h \
   blas.h \
   comm.h \
   compression.h \
@@ -110,6 +112,6 @@ assim_LDFLAGS = $(HDF5_LDFLAGS) $(POSTGRESQL_LDFLAGS) $(METIS_LDFLAGS) $(PETSC_L
 
 endif
 
-include_HEADERS = structs.h structs_fwd.h asynch_interface.h
+include_HEADERS = structs.h structs_fwd.h asynch_interface.h asynch_api.h
 
 AM_CFLAGS = $(HDF5_CPPFLAGS) $(POSTGRESQL_CPPFLAGS) $(METIS_CPPFLAGS) $(PETSC_CFLAGS)

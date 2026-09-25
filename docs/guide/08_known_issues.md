@@ -35,17 +35,22 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [B-09](#b-09) | **fixed** | code reading | Model 402 dam check prints a debug line on every call |
 | [B-10](#b-10) | **fixed** (except riversys.c indentation) | compiler | Missing prototype for `Create_Rain_Data_Par_IBin`; wrong `printf` format in `check_state.c` |
 | [B-11](#b-11) | low | code reading | ~75 `fscanf`/`fread` return values ignored: malformed input files are not detected |
+| [B-12](#b-12) | **fixed** | code reading | `.uini` reader misses "not enough values" (checks `== 0`, `fscanf` returns `EOF`); clearcreek.uini is short |
 | [B-13](#b-13) | **fixed** | confirmed (ASan) | Solver methods 0 and 1 used Butcher coefficients from freed stack memory: random results or endless runs |
-| [B-12](#b-12) | **fixed** | code reading |
-| [B-16](#b-16) | **fixed** | confirmed (ASan) | Links with more than 8 parents overflowed memory; reader and solver disagreed on the limit |
+| [B-14](#b-14) | **fixed** | confirmed | Reading an `.rkd` file (per-link tolerances) never finished: 5 defects in `Build_RKData` |
 | [B-15](#b-15) | **fixed** | confirmed | A missing output folder loses all results, yet the run ends with a success exit code |
-| [B-14](#b-14) | **fixed** | confirmed | Reading an `.rkd` file (per-link tolerances) never finished: 5 defects in `Build_RKData` | `.uini` reader misses "not enough values" (checks `== 0`, `fscanf` returns `EOF`); clearcreek.uini is short |
+| [B-16](#b-16) | **fixed** | confirmed (ASan) | Links with more than 8 parents overflowed memory; reader and solver disagreed on the limit |
+| [B-17](#b-17) | **fixed** | confirmed | Library functions that crashed with built-in models or were missing (global parameters, duration, init file) |
+| [B-18](#b-18) | **fixed** | code reading | `.ini` readers stored the discontinuity state on the wrong link; other readers passed it as the dam flag |
+| [B-19](#b-19) | **fixed** | code reading | Model 190 read a third forcing value that does not exist (unused, no effect on results) |
+| [B-20](#b-20) | **fixed** | confirmed | Custom outputs of non-interpolated states were written as 0 / memory contents |
+| [B-21](#b-21) | **fixed** | code reading | Custom models inherited the snapshot filter of the built-in model with the same number |
 | [R-01](#r-01) | fixed | confirmed | No automated regression tests; only one unit test (`days_in_month`) |
 | [R-02](#r-02) | **resolved** | confirmed | clearcreek references (2015) differ: another configuration, and a 2021 change to model 254 |
 | [R-03](#r-03) | medium | confirmed | Model 259 benchmark cannot be reproduced from the files in the repository |
 | [R-04](#r-04) | fixed | confirmed | Examples 258/259 pointed to a file on the original developers' cluster |
 | [R-05](#r-05) | info | confirmed | Results change at noise level with the number of MPI processes |
-| [A-01](#a-01) | high | confirmed | Python API is broken beyond repair (Python 2, not built, ABI out of sync) |
+| [A-01](#a-01) | **resolved** | confirmed | Old Python API broken beyond repair; replaced by the `python/` package (chapter 10) |
 | [M-01](#m-01) | medium | confirmed | ~6 500 lines (15 %) of C are never compiled |
 | [M-02](#m-02) | medium | code reading | A model is defined in 7 different places; duplicated unreachable code |
 | [M-03](#m-03) | low | confirmed | CI (Travis) is dead; build docs mention obsolete steps |
@@ -286,6 +291,55 @@ itself wrote past its buffer.
 (file and database) check it before storing. A network with 70 000 links and 10 parents per main-channel link now
 runs cleanly (release and sanitizer builds, 1 and 2 processes). One with 21 parents stops with
 `Error: link 1 has 21 parents; ASYNCH supports at most 16 (ASYNCH_LINK_MAX_PARENTS in src/constants.h).`
+
+### B-17
+**Several library functions crashed or did not exist.** *Medium, confirmed* (while writing the Python package).
+They only concern programs that use ASYNCH as a library; the `asynch` program does not call them.
+* `Asynch_Get_Size_Global_Parameters` and `Asynch_Set_Global_Parameters` read `asynch->model`, which only exists for
+  custom models: with a built-in model they dereferenced a null pointer. `Asynch_Set_Global_Parameters` also did not
+  update the count kept in `globals`, so `Asynch_Get_Global_Parameters` copied the old number of values.
+* `Asynch_Set_Total_Simulation_Duration` was declared in `asynch_interface.h` but never written: a program calling
+  it did not link.
+* `Asynch_Set_System_State` passed the discontinuity state where `check_state` expects the dam flag.
+* `Asynch_Custom_Model` allocated a model that it immediately replaced (a leak), and a model created by
+  `Asynch_Custom_Partitioning` alone (no equations) made the global-file reader call a null function.
+* `Asynch_Set_Init_File` read before the start of names shorter than 4 characters, did not accept `.h5`
+  initial states, and wrote into a null pointer when the global file took the initial states from a database.
+
+**Fixed** (2026-09-25) in `src/asynch_interface.c`, `src/config_gbl.c` and `src/riversys.c`: the counts come from
+`globals`, the missing function exists, the flags are passed in the right place, a custom model is recognised by
+its callbacks (so a partitioning-only "model" keeps the built-in equations), and the file type is taken from the
+extension (`.ini`, `.uini`, `.rec`, `.h5`).
+
+### B-18
+**Initial-state readers stored the discontinuity state on the wrong link.** *Medium, confirmed by reading.*
+In `Load_Initial_Conditions` (`src/riversys.c`), the two `.ini` branches computed the state of the link at
+location `loc` but stored it in `system[i]`, where `i` is only a loop counter. The `.rec`, `.dbc` and `.h5` branches
+passed the state where `check_state` expects the dam flag. Only models with discontinuity states (the dam models) are
+affected: their first step could start in the wrong regime. The shipped examples have no dams and do not change.
+**Fixed** (2026-09-25).
+
+### B-19
+**Model 190 read a forcing that does not exist.** *Low, confirmed by reading.* `LinearHillslope_MonthlyEvap`
+(`src/models/equations.c`) read `forcing_values[2]` into an unused variable, but model 190 has two forcings (the
+array holds two values). The optimiser removes the unused read, so results were never affected; the line, added in
+2017 together with model 195, is removed.
+
+### B-20
+**Custom time series outputs of states that are not interpolated were wrong.** *High, confirmed.* A program can add
+its own outputs (`Asynch_Set_Output_Int/Double/Float`) and say which states they use. Those states must be
+interpolated ("dense output") at the print times. The code added the states that were *already* interpolated, and
+skipped the others; those were then written as whatever was in memory. Test: an output returning state 1 of model 190,
+with State1 not otherwise printed, wrote **0** at every time instead of values around 0.001. Also, when called at the
+documented moment (right after reading the global file), the links did not exist yet and nothing was added at all.
+**Fixed** (2026-09-25): the used states are recorded before the model is initialised and added afterwards; the output
+now equals State1 to its print precision (1, 2 and 3 processes). The same off-by-one (`>` instead of `>=` when checking
+that a state exists) was fixed in `Initialize_Model`.
+
+### B-21
+**A custom model inherited the snapshot filter of the built-in model with the same number.** *Low, confirmed by reading.*
+`SetOutputConstraints` chooses a filter for `.h5` snapshots from the model number of the global file, even for a
+custom model, whose states may mean something else. Custom models now get no filter.
 
 ---
 

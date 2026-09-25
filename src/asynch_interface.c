@@ -86,13 +86,11 @@ int Asynch_Custom_Model(
     AsynchSolver* asynch,
     AsynchModel *model)
 {
-    if (!(asynch->model))
-    {
-        asynch->model = (AsynchModel*) malloc(sizeof(AsynchModel));
-        asynch->model->partition = NULL;
-    }
-
+    //Keep a partitioning routine set earlier with Asynch_Custom_Partitioning
+    PartitionFunc *partition = asynch->model ? asynch->model->partition : NULL;
     asynch->model = model;
+    if (partition && !model->partition)
+        model->partition = partition;
 
     return 0;
 }
@@ -557,6 +555,15 @@ double Asynch_Get_Total_Simulation_Duration(AsynchSolver* asynch)
     return asynch->globals->maxtime;
 }
 
+//Sets the duration of the simulation [minutes]; the end time is moved accordingly.
+//(Declared in asynch_interface.h but missing until 2026.)
+void Asynch_Set_Total_Simulation_Duration(AsynchSolver* asynch, double duration)
+{
+    assert(duration >= 0.0);
+    asynch->globals->maxtime = duration;
+    asynch->globals->end_time = asynch->globals->begin_time + (time_t)(duration * 60.0);
+}
+
 unsigned int Asynch_Get_Last_Forcing_Timestamp(AsynchSolver* asynch, unsigned int forcing_idx)
 {
     return asynch->forcings[forcing_idx].first_file + (unsigned int)(60.0 * asynch->forcings[forcing_idx].maxtime);
@@ -600,47 +607,33 @@ unsigned int Asynch_Get_Init_Timestamp(AsynchSolver* asynch)
     return asynch->globals->init_timestamp;
 }
 
+//Sets the initial-state file; its type is given by the extension (.ini, .uini, .rec or .h5).
 void Asynch_Set_Init_File(AsynchSolver* asynch, char* filename)
 {
-    sprintf(asynch->globals->init_filename, "%s", filename);
-
-    int length;
-    for (length = 0; length < 256; length++)
-        if (filename[length] == '\0')	break;
-
-    if (length < 3 || length == 256)
+    const char *ext = strrchr(filename, '.');
+    unsigned short flag;
+    if (ext && strcmp(ext, ".ini") == 0)        flag = 0;
+    else if (ext && strcmp(ext, ".uini") == 0)  flag = 1;
+    else if (ext && strcmp(ext, ".rec") == 0)   flag = 2;
+    else if (ext && strcmp(ext, ".h5") == 0)    flag = 4;
+    else
     {
-        if (my_rank == 0)	printf("Error: Bad init filename: %s.\n", filename);
+        if (my_rank == 0)	printf("Error: Bad init filename: %s (expected .ini, .uini, .rec or .h5).\n", filename);
         MPI_Abort(asynch->comm, 1);
+        return;
     }
-
-    //Check what type of file
-    if (filename[length - 1] == 'c')
+    if (strlen(filename) >= ASYNCH_MAX_PATH_LENGTH)
     {
-        if (filename[length - 2] == 'e' && filename[length - 3] == 'r' && filename[length - 4] == '.')
-        {
-            asynch->globals->init_flag = 2;
-            return;
-        }
+        if (my_rank == 0)	printf("Error: init filename too long: %s.\n", filename);
+        MPI_Abort(asynch->comm, 1);
+        return;
     }
 
-    if (filename[length - 1] == 'i' && filename[length - 2] == 'n' && filename[length - 3] == 'i')
-    {
-        if (filename[length - 4] == '.')
-        {
-            asynch->globals->init_flag = 0;
-            return;
-        }
-
-        if (filename[length - 4] == 'u' && filename[length - 5] == '.')
-        {
-            asynch->globals->init_flag = 1;
-            return;
-        }
-    }
-
-    if (my_rank == 0)	printf("Error: Bad init filename: %s.\n", filename);
-    MPI_Abort(asynch->comm, 1);
+    //NULL when the global file reads the initial states from a database
+    if (!asynch->globals->init_filename)
+        asynch->globals->init_filename = (char*)malloc(ASYNCH_MAX_PATH_LENGTH * sizeof(char));
+    strcpy(asynch->globals->init_filename, filename);
+    asynch->globals->init_flag = flag;
 }
 
 
@@ -802,201 +795,119 @@ int Asynch_Reset_Temp_Files(AsynchSolver* asynch, double set_time)
     return ResetTempFiles(set_time, asynch->sys, asynch->N, asynch->outputfile, asynch->globals, asynch->my_save_size, asynch->id_to_loc);
 }
 
-int Asynch_Set_Output_Int(AsynchSolver* asynch, char* name, OutputIntCallback* callback, unsigned int* used_states, unsigned int num_states)
+//Common part of Asynch_Set_Output_Int/Double/Float.
+//The states used by a custom output must be computed by dense output (interpolation) at the print times.
+//Before Asynch_Initialize_Model, they are added to the list of states to print (Initialize_Model merges
+//it into the dense states of every link); between Asynch_Initialize_Model and Asynch_Load_Initial_Conditions
+//they are merged into the dense states directly. Afterwards the storage for dense output is allocated and
+//the list cannot change anymore.
+//Returns 1 if the output was set, 0 if there was a problem.
+static int SetCustomOutput(AsynchSolver* asynch, const char* name, enum AsynchTypes type, OutputCallback callback, const unsigned int* used_states, unsigned int num_states)
 {
-    Link *sys = asynch->sys, **my_sys = asynch->my_sys;
-    unsigned int my_N = asynch->my_N;
-    unsigned int *states_to_add = NULL;
-    GlobalVars* GlobalVars = asynch->globals;
+    GlobalVars* globals = asynch->globals;
 
     //Find index
     unsigned int i;
-    for ( i = 0; i < asynch->globals->num_outputs; i++)
+    for (i = 0; i < globals->num_outputs; i++)
     {
-        if (strcmp(name, asynch->globals->outputs[i].name) == 0)
+        if (strcmp(name, globals->outputs[i].name) == 0)
             break;
     }
 
-    if (i == asynch->globals->num_outputs)
+    if (i == globals->num_outputs)
     {
         printf("[%i]: Output %s not set.\n", my_rank, name);
         return 0;
     }
 
-    //Add new output
-    Output *out = &asynch->globals->outputs[i];
-    out->type = ASYNCH_INT;
-    out->callback.out_int = callback;
-
-    out->size = GetByteSize(ASYNCH_INT);
-    out->specifier = GetSpecifier(ASYNCH_INT);
-
-    //Check if anything should be added to the dense_indices from used_states
-    for (unsigned int loc = 0; loc < my_N; loc++)
+    if (asynch->setup_initconds && num_states)
     {
-        Link *current = my_sys[loc];
-        unsigned int num_to_add = 0;
-        states_to_add = (unsigned int*)realloc(states_to_add, num_states * sizeof(unsigned int));
-        for (unsigned int i = 0; i < num_states; i++)
+        printf("[%i]: Error: output %s must be set before the initial conditions are loaded.\n", my_rank, name);
+        return 0;
+    }
+
+    //Add new output
+    Output *out = &globals->outputs[i];
+    out->type = type;
+    out->callback = callback;
+    out->size = GetByteSize(type);
+    out->specifier = GetSpecifier(type);
+
+    if (!asynch->setup_initmodel)
+    {
+        //Remember the states; Initialize_Model adds them to the dense states
+        globals->print_indices = (unsigned int*)realloc(globals->print_indices, (globals->num_states_for_printing + num_states) * sizeof(unsigned int));
+        for (unsigned int k = 0; k < num_states; k++)
         {
-            if (used_states[i] > current->dim)
-                continue;	//State is not present at this link
-            for (unsigned int j = 0; j < current->num_dense; j++)
-            {
-                if (used_states[i] == current->dense_indices[j])
-                {
-                    states_to_add[num_to_add++] = used_states[i];
+            unsigned int j;
+            for (j = 0; j < globals->num_states_for_printing; j++)
+                if (globals->print_indices[j] == used_states[k])
                     break;
-                }
-            }
+            if (j == globals->num_states_for_printing)
+                globals->print_indices[globals->num_states_for_printing++] = used_states[k];
+        }
+        return 1;
+    }
+
+    //Add the states that are not dense yet at every link stored here
+    unsigned int *states_to_add = (unsigned int*)malloc((num_states ? num_states : 1) * sizeof(unsigned int));
+    for (unsigned int loc = 0; loc < asynch->N; loc++)
+    {
+        Link *current = &asynch->sys[loc];
+        if (!current->my)
+            continue;
+
+        unsigned int num_to_add = 0;
+        for (unsigned int k = 0; k < num_states; k++)
+        {
+            if (used_states[k] >= current->dim)
+                continue;	//State is not present at this link
+            bool present = false;
+            for (unsigned int j = 0; j < current->num_dense && !present; j++)
+                present = (used_states[k] == current->dense_indices[j]);
+            for (unsigned int m = 0; m < num_to_add && !present; m++)
+                present = (used_states[k] == states_to_add[m]);	//Repeated in used_states
+            if (!present)
+                states_to_add[num_to_add++] = used_states[k];
         }
 
         if (num_to_add)
         {
             current->dense_indices = (unsigned int*)realloc(current->dense_indices, (current->num_dense + num_to_add) * sizeof(unsigned int));
-            for (i = 0; i < num_to_add; i++)
-                current->dense_indices[i + current->num_dense] = states_to_add[i];
+            for (unsigned int k = 0; k < num_to_add; k++)
+                current->dense_indices[k + current->num_dense] = states_to_add[k];
             current->num_dense += num_to_add;
             merge_sort_1D(current->dense_indices, current->num_dense);
         }
     }
+    free(states_to_add);
 
-    if (states_to_add)
-        free(states_to_add);
+    //Same as Initialize_Model: all procs know the number of dense states at each link
+    for (unsigned int loc = 0; loc < asynch->N; loc++)
+        MPI_Bcast(&(asynch->sys[loc].num_dense), 1, MPI_UNSIGNED, asynch->assignments[loc], asynch->comm);
 
     return 1;
 }
 
+int Asynch_Set_Output_Int(AsynchSolver* asynch, char* name, OutputIntCallback* callback, unsigned int* used_states, unsigned int num_states)
+{
+    OutputCallback cb;
+    cb.out_int = callback;
+    return SetCustomOutput(asynch, name, ASYNCH_INT, cb, used_states, num_states);
+}
 
 int Asynch_Set_Output_Double(AsynchSolver* asynch, char* name, OutputDoubleCallback* callback, unsigned int* used_states, unsigned int num_states)
 {
-    Link *sys = asynch->sys, **my_sys = asynch->my_sys;
-    unsigned int my_N = asynch->my_N;
-    unsigned int *states_to_add = NULL;
-    GlobalVars* GlobalVars = asynch->globals;
-
-    //Find index
-    unsigned int i;
-    for (i = 0; i < asynch->globals->num_outputs; i++)
-    {
-        if (strcmp(name, asynch->globals->outputs[i].name) == 0)
-            break;
-    }
-
-    if (i == asynch->globals->num_outputs)
-    {
-        printf("[%i]: Output %s not set.\n", my_rank, name);
-        return 0;
-    }
-
-    //Add new output
-    Output *out = &asynch->globals->outputs[i];
-    out->type = ASYNCH_DOUBLE;
-    out->callback.out_double = callback;
-
-    out->size = GetByteSize(ASYNCH_DOUBLE);
-    out->specifier = GetSpecifier(ASYNCH_DOUBLE);
-
-    //Check if anything should be added to the dense_indices from used_states
-    for (unsigned int loc = 0; loc < my_N; loc++)
-        {
-        Link *current = my_sys[loc];
-        unsigned int num_to_add = 0;
-        states_to_add = (unsigned int*)realloc(states_to_add, num_states * sizeof(unsigned int));
-        for (i = 0; i < num_states; i++)
-        {
-            if (used_states[i] > current->dim)
-                continue;	//State is not present at this link
-            for (unsigned int j = 0; j < current->num_dense; j++)
-            {
-                if (used_states[i] == current->dense_indices[j])
-                {
-                    states_to_add[num_to_add++] = used_states[i];
-                    break;
-                }
-            }
-        }
-
-        if (num_to_add)
-        {
-            current->dense_indices = (unsigned int*)realloc(current->dense_indices, (current->num_dense + num_to_add) * sizeof(unsigned int));
-            for (i = 0; i < num_to_add; i++)
-                current->dense_indices[i + current->num_dense] = states_to_add[i];
-            current->num_dense += num_to_add;
-            merge_sort_1D(current->dense_indices, current->num_dense);
-        }
-    }
-
-    if (states_to_add)
-        free(states_to_add);
-
-    return 1;
+    OutputCallback cb;
+    cb.out_double = callback;
+    return SetCustomOutput(asynch, name, ASYNCH_DOUBLE, cb, used_states, num_states);
 }
-
 
 int Asynch_Set_Output_Float(AsynchSolver* asynch, char* name, OutputFloatCallback* callback, unsigned int* used_states, unsigned int num_states)
 {
-    Link **my_sys = asynch->my_sys;
-    unsigned int my_N = asynch->my_N;
-    unsigned int *states_to_add = NULL;
-    GlobalVars* GlobalVars = asynch->globals;
-
-    //Find index
-    unsigned int i;
-    for (i = 0; i < asynch->globals->num_outputs; i++)
-    {
-        if (strcmp(name, asynch->globals->outputs[i].name) == 0)
-            break;
-    }
-
-    if (i == asynch->globals->num_outputs)
-    {
-        printf("[%i]: Output %s not set.\n", my_rank, name);
-        return 0;
-    }
-
-    //Add new output
-    Output *out = &asynch->globals->outputs[i];
-    out->type = ASYNCH_FLOAT;
-    out->callback.out_float = callback;
-
-    out->size = GetByteSize(ASYNCH_FLOAT);
-    out->specifier = GetSpecifier(ASYNCH_FLOAT);
-
-    //Check if anything should be added to the dense_indices from used_states
-    for (unsigned int loc = 0; loc < my_N; loc++)
-    {
-        Link *current = my_sys[loc];
-        unsigned int num_to_add = 0;
-        states_to_add = (unsigned int*)realloc(states_to_add, num_states * sizeof(unsigned int));
-        for (i = 0; i < num_states; i++)
-        {
-            if (used_states[i] > current->dim)
-                continue;	//State is not present at this link
-            for (unsigned int j = 0; j < current->num_dense; j++)
-            {
-                if (used_states[i] == current->dense_indices[j])
-                {
-                    states_to_add[num_to_add++] = used_states[i];
-                    break;
-                }
-            }
-        }
-
-        if (num_to_add)
-        {
-            current->dense_indices = (unsigned int*)realloc(current->dense_indices, (current->num_dense + num_to_add) * sizeof(unsigned int));
-            for (i = 0; i < num_to_add; i++)
-                current->dense_indices[i + current->num_dense] = states_to_add[i];
-            current->num_dense += num_to_add;
-            merge_sort_1D(current->dense_indices, current->num_dense);
-        }
-    }
-
-    if (states_to_add)
-        free(states_to_add);
-
-    return 1;
+    OutputCallback cb;
+    cb.out_float = callback;
+    return SetCustomOutput(asynch, name, ASYNCH_FLOAT, cb, used_states, num_states);
 }
 
 
@@ -1221,7 +1132,6 @@ void Asynch_Set_System_State(AsynchSolver* asynch, double unix_time, double* sta
     unsigned int N = asynch->N, num_forcings = asynch->globals->num_forcings;
     //Forcing** forcings = asynch->forcings;
     GlobalVars* globals = asynch->globals;
-    AsynchModel* model = asynch->model;
 
     //Reset some things
     Flush_TransData(asynch->my_data);
@@ -1256,14 +1166,14 @@ void Asynch_Set_System_State(AsynchSolver* asynch, double unix_time, double* sta
             current->peak_time = unix_time;
             dcopy(current->my->list.head->y_approx, current->peak_value, 0, current->dim);
 
-            //Reset current state
-            if (model->check_state != NULL)
-                current->state = model->check_state(
+            //Reset current state (check_state is set on every link by the model routines, built-in or custom)
+            if (current->check_state != NULL)
+                current->state = current->check_state(
                     current->my->list.head->y_approx, current->dim,
                     globals->global_params, globals->num_global_params,
                     current->params, current->num_params,
                     current->qvs,
-                    current->state,
+                    current->has_dam,
                     current->user);
             
             current->my->list.head->state = current->state;
@@ -1372,7 +1282,10 @@ int Asynch_Get_Reservoir_Forcing(AsynchSolver* asynch)
 //Returns the number of global parameters in the system.
 unsigned int Asynch_Get_Size_Global_Parameters(AsynchSolver* asynch)
 {
-    return asynch->model->num_global_params;
+    //asynch->model only exists for custom models: the count is kept in globals for every model
+    if (!asynch || !asynch->globals)
+        return 0;
+    return asynch->globals->num_global_params;
 }
 
 // Copy in gparams the global parameters of the system.
@@ -1394,7 +1307,9 @@ int Asynch_Set_Global_Parameters(AsynchSolver* asynch, double *gparams, unsigned
     if (!asynch || !asynch->globals)
         return 1;
     
-    asynch->model->num_global_params = num_params;
+    asynch->globals->num_global_params = num_params;
+    if (asynch->model)
+        asynch->model->num_global_params = num_params;
     asynch->globals->global_params = realloc(asynch->globals->global_params, num_params * sizeof(double));
     dcopy(gparams, asynch->globals->global_params, 0, num_params);
 

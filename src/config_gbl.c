@@ -222,13 +222,17 @@ GlobalVars* Read_Global_Data(
     }
 
     //Set dim and other sizes
-    if (model)
+    //A model set with Asynch_Custom_Partitioning alone has no set_param_sizes: it is a built-in model
+    bool custom = model && model->set_param_sizes;
+    if (custom)
         model->set_param_sizes(globals, external);
     else
         SetParamSizes(globals, external);
 
-    //Define output data constrains
-    SetOutputConstraints(globals);
+    //Define output data constrains (the snapshot filters of the built-in models; none for a custom model,
+    //which may reuse the number of a built-in model)
+    if (!custom)
+        SetOutputConstraints(globals);
 
     //Find the states needed for printing
     globals->num_states_for_printing = 0;
