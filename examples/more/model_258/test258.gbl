@@ -44,7 +44,7 @@ Classic
 1 ../common/test_075.str
 
 %Evaporation
-7 /Dedicated/IFC/projects/asynch_1_4_3b/tests/mdl258a/evap.mon
+7 ../common/evap.mon
 1398902400 1588291200
 
 % forcing: 'Reservoirs'

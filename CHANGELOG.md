@@ -1,0 +1,50 @@
+# Changelog
+
+All notable changes to ASYNCH are recorded here, newest first.
+Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+Every entry says **whether numerical results change**. Results are checked with
+`tests/regression/run_examples.py` (see `docs/guide/06_reproducibility.md`).
+
+## [Unreleased]
+
+### Phase 1: understanding and audit (2026-09-25)
+
+No change to the C source code: the model computes exactly what it computed before.
+
+#### Added
+- `docs/guide/`: a learner/developer guide covering building and running, a code map,
+  the numerical method, model 254 equation by equation, a C primer, reproducibility,
+  and prompts for the next phases.
+- `docs/guide/05_known_issues.md`: the audit. 12 bugs (4 confirmed by running the code,
+  including a heap buffer overflow in the flagship `clearcreek` example), 5
+  reproducibility issues, the broken Python API, dead code, performance hypotheses,
+  6 scientific review items and 3 documentation errors, each with file:line and evidence.
+- `tests/regression/run_examples.py`: runs every example and compares hydrographs,
+  peak flows and snapshots with the stored benchmarks, using a tolerance (atol 1e-5,
+  rtol 1e-4). It reports max abs/rel differences, treats crashes as failures, and marks
+  the two unreproducible references as known mismatches (XFAIL).
+- `CHANGELOG.md` (this file).
+
+#### Fixed
+- `examples/more/model_258/test258.gbl`, `examples/more/model_259/test259.gbl`: the
+  evaporation file pointed to an absolute path on the original developers' cluster
+  (`/Dedicated/IFC/...`). It now points to `../common/evap.mon`, like the other examples.
+  *Results:* model 258 now runs and reproduces its benchmark bit for bit. Model 259
+  runs, but does not match its benchmark (issue R-03: the 2018 code gives the same
+  output as today's, so the benchmark was produced with inputs that are not in the repository).
+
+#### Baseline (for comparison by future changes)
+Release build `-O3 -DNDEBUG`, GCC 13.3, OpenMPI 4.1.6, HDF5 1.10.10, commit `84da43a` + the fix above:
+
+| case | np=1 | np=2 | np=4 |
+|---|---|---|---|
+| test (190) | PASS | PASS | PASS |
+| clearcreek (254) | FAIL: crash, B-01 | XFAIL, R-02 | XFAIL, R-02 |
+| model_192 | PASS | PASS | PASS |
+| model_196 | PASS | PASS | PASS |
+| model_258 | PASS | PASS | PASS |
+| model_259 | XFAIL, R-03 | XFAIL, R-03 | XFAIL, R-03 |
+
+## [1.4.3] and earlier
+See `docs/release_notes.rst`.
