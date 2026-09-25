@@ -100,7 +100,7 @@ Here is a typical global file taken from the examples folder:
 
   %Solver flag (0 = data below, 1 = .rkd)
   0
-  %Numerical solver index (0-3 explicit, 4 implicit)
+  %Numerical solver index (0 = RK 3(2), 1 = RK 4(3), 2 = Dormand-Prince 5(4))
   2
   %Error tolerances (abs, rel, abs dense, rel dense)
   1e-3 1e-3 1e-3

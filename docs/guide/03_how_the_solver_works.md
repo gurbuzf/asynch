@@ -98,7 +98,7 @@ Available methods (index in the `.gbl`):
 | 0 | RK 3(2) dense | 3 | 3 / 2 |
 | 1 | RK 4(3) dense | 4 | 4 / 3 |
 | 2 | Dormand–Prince 5(4) dense | 7 | 5 / 4 |
-| 3 | Radau IIA (implicit) | | not usable, issue B-04 |
+| 3 | Radau IIA (implicit) | | not usable: its solver is not compiled, and ASYNCH refuses the index |
 
 ## 3.5 Initial step size (`src/rksteppers.c`, `InitialStepSize`)
 

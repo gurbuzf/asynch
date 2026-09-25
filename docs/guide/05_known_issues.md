@@ -27,7 +27,7 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [B-01](#b-01) | **fixed** | confirmed | Model 254 uses model 256's snapshot filter: heap buffer overflow, crashes clearcreek on 1 process |
 | [B-02](#b-02) | **fixed** | code reading | Snapshot values are filtered only for links owned by MPI rank 0: output depends on process count |
 | [B-03](#b-03) | **fixed** | confirmed | Output file closed twice at shutdown: every debug build aborts at the end of a run |
-| [B-04](#b-04) | high | confirmed | Solver index 3 or 4 (advertised as "implicit") segfaults; the index is never validated |
+| [B-04](#b-04) | **fixed** | confirmed | Solver index 3 or 4 (advertised as "implicit") segfaults; the index is never validated |
 | [B-05](#b-05) | medium | code reading | `Destroy_ErrorData` frees addresses of struct fields instead of the pointers |
 | [B-06](#b-06) | medium | code reading | `Asynch_Get_Num_Links` returns `unsigned short`: wrong for networks > 65 535 links |
 | [B-07](#b-07) | **fixed** | code reading | `DumpStateH5` loops past the array end if rank 0 owns no link; leaks its buffer |
@@ -132,6 +132,9 @@ in all builds.
 
 ### B-04
 **Solver index 3/4 crashes.** *High, confirmed.*
+**Fixed** (2026-09-25): the index is validated (in the `.gbl` file and in `.rkd` files). An invalid
+value stops the run with `Error: numerical solver index 4 in the global file is not valid. Use 0 (RK 3(2)),
+1 (RK 4(3)) or 2 (Dormand-Prince 5(4)).` The comments in the example `.gbl` files and in the docs were corrected.
 
 The global file comment says `%Numerical solver index (0-3 explicit, 4 implicit)`.
 In reality (`src/riversys.c:686-690`) the table contains:

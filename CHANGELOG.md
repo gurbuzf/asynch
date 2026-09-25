@@ -8,6 +8,21 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Fix B-04: invalid numerical solver index crashed ASynch
+
+*Results:* unchanged (bit-identical to the original code with 1 process, within tolerance with 2).
+
+#### Fixed
+- `src/riversys.c` (`Build_RKData`): the numerical solver index read from the global file (or from a
+  `.rkd` file) was never checked. Indices 3 and above caused a segmentation fault. ASYNCH now stops
+  with: `Error: numerical solver index 4 in the global file is not valid. Use 0 (RK 3(2)), 1 (RK 4(3))
+  or 2 (Dormand-Prince 5(4)).` Index 3 (Radau IIA) is refused because its implicit solver is not compiled.
+
+#### Changed
+- The comment `%Numerical solver index (0-3 explicit, 4 implicit)` in all example `.gbl` files and in
+  `docs/input_output.rst` was wrong. It now reads `(0 = RK 3(2), 1 = RK 4(3), 2 = Dormand-Prince 5(4))`.
+  `docs/builtin_options.rst` explains that index 3 cannot be selected.
+
 ### Fix B-02, B-07, B-08: HDF5 snapshot writer
 
 *Results:* unchanged with 1 process (every example bit-identical to the original code). With 2 or

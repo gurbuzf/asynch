@@ -669,6 +669,16 @@ int Partition_Network(
 
 //Reads numerical error tolerances. Builds RK methods.
 //!!!! I'm not really sure how to handle specifying the dimension here. Should the rkd file allow a variable number of tols? !!!!
+//Message listing the numerical methods that can be selected in a global file or a .rkd file.
+#define USABLE_RK_METHODS_MSG "Use 0 (RK 3(2)), 1 (RK 4(3)) or 2 (Dormand-Prince 5(4))."
+
+//Returns true if index refers to a method that can be used: it must exist and be explicit,
+//because the implicit (Radau) stepper is not compiled.
+static bool IsUsableRKMethod(const RKMethod *rk_methods, unsigned int num_methods, unsigned int index)
+{
+    return index < num_methods && rk_methods[index].exp_imp == 0;
+}
+
 int Build_RKData(
     Link *system, unsigned int N,
     Link **my_sys, unsigned int my_N,
@@ -791,12 +801,26 @@ int Build_RKData(
                     current->my->error_data->abstol_dense[j] = filedata_abs_dense[i*num_states + j];
                     current->my->error_data->reltol_dense[j] = filedata_rel_dense[i*num_states + j];
                 }
+                if (!IsUsableRKMethod(rk_methods, *num_methods, rk_methods_idx[i]))
+                {
+                    printf("[%i]: Error: numerical solver index %u given for link %u in %s is not valid. %s\n",
+                        my_rank, rk_methods_idx[i], current->ID, rk_filename, USABLE_RK_METHODS_MSG);
+                    return 1;
+                }
                 current->method = &rk_methods[rk_methods_idx[i]];
             }
         }
     }
     else
     {
+        if (!IsUsableRKMethod(rk_methods, *num_methods, globals->method))
+        {
+            if (my_rank == 0)
+                printf("Error: numerical solver index %u in the global file is not valid. %s\n",
+                    globals->method, USABLE_RK_METHODS_MSG);
+            return 1;
+        }
+
         for (unsigned int i = 0; i < N; i++)
         {
             Link *current = &system[i];

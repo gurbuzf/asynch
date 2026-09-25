@@ -62,6 +62,9 @@ The ASYNCH solver is based upon using Runge-Kutta methods at the link level. The
   | 3          | RadauII 3A                    | 3 / 2                       |
   +------------+-------------------------------+-----------------------------+
 
+Index 3 (RadauII 3A, an implicit method) cannot be selected: its solver is not part of the build,
+and ASYNCH stops with an error message if a global file or a .rkd file asks for it.
+
 The application of these methods is done through the *RKSolver* routine in the *UnivVars* structure. This is set with a call to the *InitRoutines* method. See Section [sec: initroutines]. Several choices exist for the *RKSolver*. They are given in Table  :ref:`rk-solvers`. Some solvers are only appropriate if the model uses ODEs, while others support DAEs. Similarly, some methods support discontinuity states, while others do not. Currently, only one method is equipped to handle stiff ODEs. Certainly, the routine *ExplicitRKIndex1SolverDam* could be used to solve any problem. However, using a more appropriate solver is significantly more efficient.
 
 .. _rk-solvers:

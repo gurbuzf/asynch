@@ -38,7 +38,7 @@ asynch/
 │   │   ├── rk3_2_dense.c          method 0
 │   │   ├── rk4_3_dense.c          method 1
 │   │   ├── dopri5_dense.c         method 2 (Dormand–Prince 5(4), the usual choice)
-│   │   └── radau.c                method 3 (implicit, NOT usable, see issue B-04)
+│   │   └── radau.c                method 3 (implicit, NOT usable: refused with an error)
 │   ├── models/
 │   │   ├── definitions.c          model registry: sizes, unit conversions, precalculations, initial states
 │   │   ├── equations.c            the right-hand sides dy/dt of every model
