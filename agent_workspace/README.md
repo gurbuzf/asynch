@@ -10,5 +10,5 @@ task prompts. **Nothing here is part of ASYNCH itself.** The code and its docume
 | [work_log.md](work_log.md) | what was done in each session, newest first |
 | [prompts.md](prompts.md) | ready-to-use task descriptions for the upcoming work |
 
-Before contributing a branch upstream, drop this folder from it (for example with a
-dedicated branch without it, or `git rm -r agent_workspace` in the contribution branch).
+All development happens on branch `modernization`. It is not merged into `master`
+and no pull requests are opened.

@@ -39,6 +39,41 @@ python3 tests/regression/run_examples.py --asynch /path/to/other/asynch --keep
 A *known mismatch* (`XFAIL`) is reported but does not make the run fail. A **crash is
 always a failure**, even for those cases.
 
+### Comparing with the original code (`--compare-to`)
+
+Stored references can be old or incomplete, so the most direct test of a change is:
+*does the changed code give the same answer as the code before the change, on the same inputs?*
+
+```bash
+# 1. Build the unmodified original code once (default: commit 84da43a, into ~/asynch-original)
+tests/regression/build_original.sh
+# 2. Build your version with the SAME flags (see 01_build_and_run.md), then:
+python3 tests/regression/run_examples.py --compare-to ~/asynch-original/build/src/asynch
+python3 tests/regression/run_examples.py --compare-to ~/asynch-original/build/src/asynch --np 4
+```
+
+Both executables run every example on identical copies of the inputs, and **every output
+file** is compared: peak flows, hydrographs (`.csv`, `.dat`, `.h5`) and every snapshot
+(`.h5`, `.rec`). A case line looks like
+
+```
+  vs original: 27 of 27 output files identical
+```
+
+"Identical" means bit for bit. A file that differs but stays within the tolerance is
+counted as "within tolerance" (use `--verbose` to list it). A file outside the tolerance,
+or a file the original wrote but the new code did not, makes the case **FAIL**, even for
+`XFAIL` cases. If the original itself crashes, its missing files are not compared.
+
+**What to expect:**
+
+| processes | same code, two runs | what a change must achieve |
+|---|---|---|
+| `--np 1` | bit-identical | **bit-identical**, unless the change is meant to alter results |
+| `--np 2`, `--np 4` | differences up to ~1e-6 relative (asynchronous scheduling, see §6.2) | within tolerance |
+
+So a pure bug fix or refactoring must give "N of N output files identical" with one process.
+
 ## 6.2 Why compare with a tolerance?
 
 ASYNCH is an adaptive solver: every link chooses its own time step from an error

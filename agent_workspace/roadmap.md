@@ -24,9 +24,24 @@ regenerate references (R-02/R-03, after decision 1) → CI → dead code (M-01, 
    benchmarks are regenerated only deliberately, in the same commit.
 3. **Never mix a refactoring with a behaviour change.** A refactoring must leave results *bit-identical*.
 4. Document as you go in `docs/guide/`, but keep plans and status here, not in official files.
-5. Work on branch `modernization` of `gurbuzf/asynch`; `master` mirrors upstream.
+   Keep the user documentation (how to build, run, read outputs) current with every change.
+5. **Develop only on branch `modernization` of `gurbuzf/asynch`.** Never merge it into `master`,
+   never open pull requests (owner's instruction, 2026-09-25). `master` stays identical to upstream.
+6. **After every code change: run all examples and compare with the original code** (commit
+   `84da43a`) using `tests/regression/run_examples.py --compare-to <original asynch>`, in addition
+   to the stored benchmarks. Report the comparison in the CHANGELOG entry.
 
-## Open decisions (owner: repository owner)
+## Decisions
+
+The owner asked (2026-09-25) to proceed with the recommended option for each:
+
+1. **R-02 / R-03** → regenerate the `clearcreek` and `model_259` references from the current
+   inputs once B-01 is fixed, with a provenance note. Adopted.
+2. **B-03** → both debug and release builds must run cleanly. Adopted.
+3. **S-02 / S-06** → keep the model unchanged; behaviour is documented. Adopted.
+4. **M-01** → move dead source files to `attic/` (history kept, nothing compiled). Adopted.
+
+### Original wording
 
 1. **R-02 / R-03:** may the `clearcreek` and `model_259` reference results be regenerated
    (after B-01 is fixed) from the current code and repository inputs? The alternative is to

@@ -8,6 +8,21 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Regression harness: comparison with the original code
+
+*Results:* no change to the model (test tooling only).
+
+#### Added
+- `tests/regression/run_examples.py --compare-to ASYNCH`: runs a second executable (normally
+  the original code) on identical copies of the examples and compares **every** output file
+  (peak flows, hydrographs in `.csv`/`.dat`/`.h5`, all snapshots). Reports bit-identical files
+  and the largest difference of the others. `--verbose` lists each non-identical file.
+- `tests/regression/build_original.sh [COMMIT] [DEST]`: builds an unmodified copy of a commit
+  (default `84da43a`, the original code) to compare with.
+- `docs/guide/06_reproducibility.md`: how to use it, and what to expect. With 1 MPI process
+  the same code is bit-for-bit reproducible. With 2 or more processes, two runs of the same
+  code differ by up to ~1e-6 (relative), because of the asynchronous scheduling.
+
 ### 2026-09-25: documentation, regression tests, example fixes
 
 No change to the C source code: the model computes exactly what it computed before.

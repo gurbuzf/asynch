@@ -22,10 +22,20 @@ several percent. We therefore compare with
 and always print the largest absolute and relative difference found, so a
 human can judge the size of any change.
 
+Two kinds of comparison
+-----------------------
+1. Against the reference results stored in the repository (always done).
+2. Against another executable, typically the *original* code before any change
+   (``--compare-to``). Both executables run the same examples with the same inputs,
+   and **every** output file they write is compared (peak flows, hydrographs,
+   snapshots). A bit-for-bit match is reported as "identical". Build the original
+   code with ``tests/regression/build_original.sh``.
+
 Usage
 -----
     python3 tests/regression/run_examples.py                 # uses build/src/asynch
     python3 tests/regression/run_examples.py --asynch /path/to/asynch --np 2
+    python3 tests/regression/run_examples.py --compare-to ~/asynch-original/build/src/asynch
     python3 tests/regression/run_examples.py --only clearcreek --keep
 
 Only the Python standard library is needed. If ``h5py`` is installed, the HDF5
@@ -127,7 +137,64 @@ def read_h5(path):
     return rows
 
 
+def read_text_numbers(path):
+    """Any text output (.dat, .rec, ...): every number, line by line, in file order."""
+    rows = {}
+    with open(path) as f:
+        for i, line in enumerate(f):
+            vals = []
+            for tok in line.replace(",", " ").split():
+                try:
+                    vals.append(float(tok))
+                except ValueError:
+                    pass
+            if vals:
+                rows["line %d" % i] = vals
+    return rows
+
+
+def read_h5_any(path):
+    """Any ASYNCH .h5 output, keyed so that the order of links does not matter.
+
+    * snapshot (dataset 'snapshot', column link_id)          -> one entry per link
+    * hydrographs, packet format (dataset 'outputs' with
+      columns LinkID and Time)                               -> one entry per (link, time)
+    * hydrographs, array format (datasets link_id, time and
+      outputs[link, time, output])                          -> one entry per link, plus the time axis
+    * anything else                                          -> each dataset flattened in order
+    """
+    import h5py
+    rows = {}
+    with h5py.File(path, "r") as f:
+        if "model" in f.attrs:
+            rows["attr model"] = [float(f.attrs["model"][0])]
+        names = list(f.keys())
+        if "snapshot" in names:
+            data = f["snapshot"][:]
+            cols = [n for n in data.dtype.names if n != "link_id"]
+            for rec in data:
+                rows["link %d" % rec["link_id"]] = [float(rec[c]) for c in cols]
+        elif "outputs" in names and f["outputs"].dtype.names and "LinkID" in f["outputs"].dtype.names:
+            data = f["outputs"][:]
+            cols = [n for n in data.dtype.names if n not in ("LinkID", "Time")]
+            for rec in data:
+                rows["link %d t=%r" % (rec["LinkID"], float(rec["Time"]))] = [float(rec[c]) for c in cols]
+        elif {"link_id", "time", "outputs"} <= set(names):
+            ids, out = f["link_id"][:], f["outputs"][:]
+            rows["time axis"] = [float(t) for t in f["time"][:]]
+            for i, lid in enumerate(ids):
+                rows["link %d" % lid] = [float(v) for v in out[i].ravel()]
+        else:
+            for n in names:
+                if isinstance(f[n], h5py.Dataset) and f[n].dtype.names is None:
+                    rows["dataset " + n] = [float(v) for v in f[n][...].ravel()]
+    return rows
+
+
 READERS = {"pea": read_pea, "csv": read_csv, "h5": read_h5}
+# Readers used when comparing two executables, chosen by file extension.
+ANY_READERS = {".pea": read_pea, ".csv": read_csv, ".h5": read_h5_any,
+               ".dat": read_text_numbers, ".rec": read_text_numbers}
 
 
 def compare(new, ref, rtol, atol):
@@ -166,6 +233,72 @@ def compare(new, ref, rtol, atol):
     return ok, msgs, max_abs, max_rel
 
 
+def list_outputs(root, inputs):
+    """Output files under root: files with a known extension that are not inputs."""
+    found = set()
+    for d, _, files in os.walk(root):
+        for fn in files:
+            rel = os.path.relpath(os.path.join(d, fn), root)
+            if os.path.splitext(fn)[1] in ANY_READERS and rel not in inputs:
+                found.add(rel)
+    return found
+
+
+def run_asynch(mpi_cmd, exe, wd, gbl, env):
+    """Run one example; return (exit code, log lines worth showing on failure)."""
+    os.makedirs(os.path.join(wd, "results"), exist_ok=True)
+    log_path = os.path.join(wd, "asynch_run.log")
+    with open(log_path, "w") as log:
+        rc = subprocess.call(mpi_cmd + [exe, gbl], cwd=wd, stdout=log,
+                             stderr=subprocess.STDOUT, env=env)
+    tail = []
+    if rc != 0:
+        with open(log_path, errors="replace") as log:
+            # drop mpirun's own boilerplate so the actual error message is visible
+            noise = ("---", "Primary job", "a non-zero exit", "mpirun ", "Per user-direction", "[")
+            tail = [l.rstrip() for l in log if l.strip() and not l.lstrip().startswith(noise)][-6:]
+    return rc, tail
+
+
+def compare_to_original(new_root, orig_root, inputs, rtol, atol, have_h5py, verbose=False):
+    """Compare every output file of two runs. Returns (ok, report lines)."""
+    lines, ok = [], True
+    new_files = list_outputs(new_root, inputs)
+    orig_files = list_outputs(orig_root, inputs)
+    if not have_h5py:
+        new_files = {f for f in new_files if not f.endswith(".h5")}
+        orig_files = {f for f in orig_files if not f.endswith(".h5")}
+    for f in sorted(orig_files - new_files):
+        lines.append("    %-34s FAIL: written by the original, not by the new code" % f)
+        ok = False
+    for f in sorted(new_files - orig_files):
+        lines.append("    %-34s note: written only by the new code" % f)
+    n_identical, worst = 0, (0.0, 0.0)
+    for f in sorted(new_files & orig_files):
+        reader = ANY_READERS[os.path.splitext(f)[1]]
+        try:
+            same, msgs, mabs, mrel = compare(reader(os.path.join(new_root, f)),
+                                             reader(os.path.join(orig_root, f)), rtol, atol)
+        except Exception as exc:
+            same, msgs, mabs, mrel = False, ["could not read: %s" % exc], float("nan"), float("nan")
+        if same and mabs == 0.0:
+            n_identical += 1
+            continue
+        worst = (max(worst[0], mabs), max(worst[1], mrel))
+        ok &= same
+        if same and not verbose:
+            continue
+        lines.append("    %-34s %s  (max abs diff %.3g, max rel diff %.3g)"
+                     % (f, "ok  " if same else "FAIL", mabs, mrel))
+        lines += ["        " + m for m in msgs]
+    total = len(new_files & orig_files)
+    head = "  vs original: %d of %d output files identical" % (n_identical, total)
+    if total and n_identical < total:
+        head += ", others within tolerance" if ok else ""
+        head += " (largest difference: abs %.3g, rel %.3g)" % worst
+    return ok, [head] + lines
+
+
 def find_mpirun():
     for name in ("mpirun", "mpiexec"):
         p = shutil.which(name)
@@ -185,10 +318,15 @@ def main():
                          "tolerance used by the examples)")
     ap.add_argument("--only", help="run only cases whose name contains this text")
     ap.add_argument("--keep", action="store_true", help="keep the temporary run directory")
+    ap.add_argument("--verbose", action="store_true",
+                    help="with --compare-to: list every output file that is not bit-identical")
+    ap.add_argument("--compare-to", metavar="ASYNCH",
+                    help="also run this executable (e.g. the original code) and compare every output file")
     args = ap.parse_args()
 
-    if not os.path.isfile(args.asynch):
-        sys.exit("asynch executable not found at %s (build it first, or pass --asynch)" % args.asynch)
+    for exe in [args.asynch] + ([args.compare_to] if args.compare_to else []):
+        if not os.path.isfile(exe):
+            sys.exit("asynch executable not found at %s (build it first)" % exe)
     mpirun = find_mpirun()
     if not mpirun:
         sys.exit("mpirun/mpiexec not found in PATH")
@@ -203,6 +341,10 @@ def main():
     tmp = tempfile.mkdtemp(prefix="asynch_regression_")
     run_root = os.path.join(tmp, "examples")
     shutil.copytree(os.path.join(REPO, "examples"), run_root)
+    inputs = list_outputs(run_root, set())          # output-like files that are really inputs
+    orig_root = os.path.join(tmp, "examples_original")
+    if args.compare_to:
+        shutil.copytree(os.path.join(REPO, "examples"), orig_root)
 
     env = dict(os.environ)
     env.setdefault("OMPI_ALLOW_RUN_AS_ROOT", "1")          # harmless when not root
@@ -216,20 +358,13 @@ def main():
         if args.only and args.only not in case["name"]:
             continue
         wd = os.path.join(run_root, case["workdir"])
-        os.makedirs(os.path.join(wd, "results"), exist_ok=True)
-        log_path = os.path.join(wd, "asynch_run.log")
-        with open(log_path, "w") as log:
-            rc = subprocess.call(mpi_cmd + [args.asynch, case["gbl"]], cwd=wd,
-                                 stdout=log, stderr=subprocess.STDOUT, env=env)
+        # files already present (inputs, or outputs of an earlier case in the same directory)
+        skip = {os.path.relpath(os.path.join(run_root, i), wd) for i in inputs} | list_outputs(wd, set())
+        rc, tail = run_asynch(mpi_cmd, args.asynch, wd, case["gbl"], env)
 
         case_ok = rc == 0
         lines = ["  exit code: %d%s" % (rc, "" if rc == 0 else "  <-- FAIL, last lines of the log:")]
-        if rc != 0:
-            with open(log_path, errors="replace") as log:
-                # drop mpirun's own boilerplate so the actual error message is visible
-                noise = ("---", "Primary job", "a non-zero exit", "mpirun ", "Per user-direction", "[")
-                tail = [l.rstrip() for l in log if l.strip() and not l.lstrip().startswith(noise)][-6:]
-            lines += ["      | " + l for l in tail]
+        lines += ["      | " + l for l in tail]
         for produced, reference, kind in case["compare"]:
             if kind == "h5" and not have_h5py:
                 continue
@@ -247,9 +382,23 @@ def main():
                          % (os.path.basename(produced), "ok  " if ok else "FAIL", mabs, mrel))
             lines += ["      " + m for m in msgs]
 
+        orig_ok = True
+        if args.compare_to:
+            owd = os.path.join(orig_root, case["workdir"])
+            orc, otail = run_asynch(mpi_cmd, args.compare_to, owd, case["gbl"], env)
+            if orc != 0:
+                lines.append("  original exit code: %d (outputs it did not write are not compared)" % orc)
+            # Compare only the files written by this case.
+            orig_ok, cmp_lines = compare_to_original(wd, owd, skip, args.rtol, args.atol, have_h5py,
+                                                       args.verbose)
+            lines += cmp_lines
+            # A difference from the original is always a failure, even for XFAIL cases.
+            if not orig_ok:
+                case_ok = False
+
         if case_ok:
             status = "PASS"
-        elif case["xfail"] and rc == 0:
+        elif case["xfail"] and rc == 0 and orig_ok:
             # A known mismatch with the reference is tolerated, a crash never is.
             status = "XFAIL (known: %s)" % case["xfail"]
         else:
