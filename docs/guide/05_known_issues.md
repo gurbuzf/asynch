@@ -25,13 +25,13 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | ID | Severity | Status | One-line description |
 |----|----------|--------|----------------------|
 | [B-01](#b-01) | **fixed** | confirmed | Model 254 uses model 256's snapshot filter: heap buffer overflow, crashes clearcreek on 1 process |
-| [B-02](#b-02) | high | code reading | Snapshot values are filtered only for links owned by MPI rank 0: output depends on process count |
+| [B-02](#b-02) | **fixed** | code reading | Snapshot values are filtered only for links owned by MPI rank 0: output depends on process count |
 | [B-03](#b-03) | **fixed** | confirmed | Output file closed twice at shutdown: every debug build aborts at the end of a run |
 | [B-04](#b-04) | high | confirmed | Solver index 3 or 4 (advertised as "implicit") segfaults; the index is never validated |
 | [B-05](#b-05) | medium | code reading | `Destroy_ErrorData` frees addresses of struct fields instead of the pointers |
 | [B-06](#b-06) | medium | code reading | `Asynch_Get_Num_Links` returns `unsigned short`: wrong for networks > 65 535 links |
-| [B-07](#b-07) | medium | code reading | `DumpStateH5` loops past the array end if rank 0 owns no link; leaks its buffer |
-| [B-08](#b-08) | medium | confirmed (UB sanitizer) | Misaligned `double` reads/writes in snapshot filters (undefined behaviour) |
+| [B-07](#b-07) | **fixed** | code reading | `DumpStateH5` loops past the array end if rank 0 owns no link; leaks its buffer |
+| [B-08](#b-08) | **fixed** | confirmed (UB sanitizer) | Misaligned `double` reads/writes in snapshot filters (undefined behaviour) |
 | [B-09](#b-09) | low | code reading | Model 402 dam check prints a debug line on every call |
 | [B-10](#b-10) | low | compiler | Missing prototype for `Create_Rain_Data_Par_IBin`; wrong `printf` format in `check_state.c` |
 | [B-11](#b-11) | low | code reading | ~75 `fscanf`/`fread` return values ignored: malformed input files are not detected |
@@ -97,6 +97,8 @@ never index beyond it.
 
 ### B-02
 **Snapshot values are filtered only on rank 0.** *High, code reading (consistent with B-01 crashing only on 1 process).*
+**Fixed** (2026-09-25): the filter is applied to every link. In a 2-process clearcreek snapshot, the
+original code left 4 values in (0, 1e-12) unfiltered; the fixed code leaves none.
 
 In `DumpStateH5` (`src/processdata.c:1903-1911`) the output filter
 (`OutputConstrainsHdf5`) is applied only to links that live on process 0. Values
@@ -164,6 +166,7 @@ but any external program would.
 
 ### B-07
 **`DumpStateH5` edge cases.** *Medium, code reading.*
+**Fixed** (2026-09-25): the search is bounded and the buffers are freed.
 
 `src/processdata.c:1861-1863`: `while (assignments[i] != my_rank) i++;` runs past the
 end of the array if process 0 owns no link (possible with many processes and a small
@@ -172,6 +175,8 @@ leak at every recurrent snapshot).
 
 ### B-08
 **Misaligned `double` access.** *Medium, confirmed by UndefinedBehaviorSanitizer.*
+**Fixed** (2026-09-25): states are filtered in an aligned array before being packed. The sanitizer
+reports for the examples went from 21 to 0.
 
 Snapshot records are packed as `uint32 + doubles`, so the doubles sit at addresses
 that are not multiples of 8, and the filters access them through `double*`

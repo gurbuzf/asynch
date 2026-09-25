@@ -1857,10 +1857,10 @@ int DumpStateH5(Link* sys, unsigned int N, int* assignments, GlobalVars* globals
         H5LTset_attribute_ushort(file_id, "/", "model", &type, 1);
         H5LTset_attribute_uint(file_id, "/", "unix_time", &unix_time, 1);
 
-        // Find the first link that belongs to this process
-        i = 0;
-        while (assignments[i] != my_rank)
-            i++;
+        // Find the first link that belongs to this process (or use the first link if it owns none)
+        for (i = 0; i < N && assignments[i] != my_rank; i++);
+        if (i == N)
+            i = 0;
 
         //Assume that every links have the same dimension
         unsigned int dim = sys[i].dim;
@@ -1889,32 +1889,43 @@ int DumpStateH5(Link* sys, unsigned int N, int* assignments, GlobalVars* globals
             return 2;
         }
 		
+        // Records are packed (link id + dim doubles), so the doubles inside a record are not
+        // aligned in memory. The states of each link are therefore gathered and filtered in the
+        // aligned array `states`, and only then copied into the record.
         char *data_storage = malloc(N * line_size);
+        double *states = malloc(dim * sizeof(double));
 
         for (i = 0; i < N; i++)
         {
             char *data = data_storage + i * line_size;
 
-            // Copy link id
-            memcpy(data, &sys[i].ID, sizeof(unsigned int));
-            data += sizeof(unsigned int);
-
-            // Copy states
-            assert(sys[i].dim >= dim);
-            if (assignments[i] != 0)
-                MPI_Recv(data, sys[i].dim, MPI_DOUBLE, assignments[i], i, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            else
+            if (sys[i].dim != dim)
             {
-                double* out = memcpy(data, sys[i].my->list.tail->y_approx, sys[i].dim * sizeof(double));
-                if (globals->OutputConstrainsHdf5)
-                    globals->OutputConstrainsHdf5(out);
+                printf("Error: h5 snapshots require every link to have the same number of states (link %u has %u, expected %u).\n", sys[i].ID, sys[i].dim, dim);
+                MPI_Abort(MPI_COMM_WORLD, 1);
             }
+
+            // Get the states, from this process or from the process that owns the link
+            if (assignments[i] != 0)
+                MPI_Recv(states, dim, MPI_DOUBLE, assignments[i], i, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            else
+                memcpy(states, sys[i].my->list.tail->y_approx, dim * sizeof(double));
+
+            // Apply the model's output filter to every link, whichever process computed it
+            if (globals->OutputConstrainsHdf5)
+                globals->OutputConstrainsHdf5(states);
+
+            // Pack the record: link id, then the states
+            memcpy(data, &sys[i].ID, sizeof(unsigned int));
+            memcpy(data + sizeof(unsigned int), states, dim * sizeof(double));
         }
 
         // Append to the packet table
         herr_t ret = H5PTappend(packet_file_id, N, data_storage);
 
         //Clean up
+        free(states);
+        free(data_storage);
         H5PTclose(packet_file_id);
         H5Fclose(file_id);
         H5Tclose(compound_id);
@@ -1926,8 +1937,6 @@ int DumpStateH5(Link* sys, unsigned int N, int* assignments, GlobalVars* globals
         MPI_Bcast(&res, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
         if (res)
             return 1;
-
-        unsigned int dim = 4;  // adlzanchetta: I have no idea why this was hardcoded
 
         for (i = 0; i < N; i++)
         {

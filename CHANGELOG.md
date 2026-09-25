@@ -8,6 +8,26 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Fix B-02, B-07, B-08: HDF5 snapshot writer
+
+*Results:* unchanged with 1 process (every example bit-identical to the original code). With 2 or
+more processes, **snapshot** values below 1e-12 computed by processes other than 0 are now set to 0,
+as they already were on process 0. Snapshots no longer depend on the number of processes. Hydrographs
+and peak flows are not affected. All differences from the original are below 1e-5 (absolute).
+
+#### Fixed
+- `src/processdata.c` (`DumpStateH5`):
+  - the model's output filter (`OutputConstrainsHdf5`) was applied only to the links owned by
+    process 0; it is now applied to every link (B-02). In a 2-process clearcreek run, 4 values
+    in (0, 1e-12) were left unfiltered before; none are now.
+  - the filter worked directly on packed records, i.e. on misaligned `double`s (undefined
+    behaviour, 21 UBSan reports over the examples). States are now filtered in an aligned array
+    and then copied into the record (B-08). UBSan reports: 0.
+  - the search for process 0's first link could run past the end of the array, and the packing
+    buffer was never freed (a leak at every recurrent snapshot). Both are fixed (B-07).
+  - links with a different number of states now stop the run with a clear error instead of
+    writing past the record.
+
 ### Fix B-03: output file closed twice at shutdown
 
 *Results:* unchanged. Bit-identical to the original code with 1 process for every example;
