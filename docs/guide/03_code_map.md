@@ -1,10 +1,10 @@
-# 2. Code map: where everything lives
+# 3. Code map: where everything lives
 
 ASYNCH is about 43 000 lines of C. You do **not** need to read them all. About 80 % of
 the scientific behaviour lives in **four files**. This page tells you which ones, and
 in which order to read them.
 
-## 2.1 The shortest reading path
+## 3.1 The shortest reading path
 
 | Order | File | What you learn | Size |
 |---|---|---|---|
@@ -15,11 +15,11 @@ in which order to read them.
 | 5 | `src/steppers/explicit.c` → `ExplicitRKSolver()` | one time step of one link | 350 lines |
 | 6 | `src/models/definitions.c` | how a model id is wired to its equations, sizes, parameters | 4 000 lines (read only your model's `case`) |
 
-## 2.2 Directory layout
+## 3.2 Directory layout
 
 ```
 asynch/
-├── configure.ac, Makefile.am      build system (autotools), see 01_build_and_run.md
+├── configure.ac, Makefile.am      build system (autotools), see 01_setup.md
 ├── src/
 │   ├── asynch_cli.c               main(): the `asynch` command-line program
 │   ├── asynch_interface.c/.h      the public C API: Asynch_Init, Asynch_Parse_GBL, Asynch_Advance, ...
@@ -52,7 +52,7 @@ asynch/
 │   └── assim/, assim_cli.c        data assimilation (built only if PETSc is found)
 ├── py/                            Python API (BROKEN, see issue A-01)
 ├── tests/check_asynch.c           C unit tests (one test at the moment)
-├── tests/regression/              example-based regression harness (see 06_reproducibility.md)
+├── tests/regression/              example-based regression harness (see 09_reproducibility.md)
 ├── examples/                      runnable examples + reference results
 ├── docs/*.rst                     original Sphinx documentation (formats, models, API)
 └── docs/guide/                    this guide
@@ -62,7 +62,7 @@ Files in `src/` that are **not compiled** (dead code, ignore them): `rkmethods.c
 `rainfall.c`, `asynchdist_custom.c`, `modeloutputs.c`, `models/model.c`,
 `steppers/implicit.c`, `steppers/explicit_discont.c`, `steppers/assim.c`.
 
-## 2.3 The life of a run
+## 3.3 The life of a run
 
 `main()` in `src/asynch_cli.c` is a straight sequence of calls to the public API
 (`src/asynch_interface.c`). Each call prints one of the lines you see on screen:
@@ -92,7 +92,7 @@ Asynch_Delete_Temporary_Files, Asynch_Free
 Because it is a sequence of API calls, you can write your own `main()` that does the same thing and changes something in between,
 e.g. overwriting parameters after `Asynch_Load_Network_Parameters`.
 
-## 2.4 The core data structures (`src/structs.h`)
+## 3.4 The core data structures (`src/structs.h`)
 
 **`Link`**: one river link (channel segment + its hillslope). Everything is attached to it:
 
@@ -124,7 +124,7 @@ are freed once every child has used them.
 **`AsynchSolver`**: the object that owns all of the above for one simulation (`sys`,
 `globals`, `my_sys` = the links owned by this process, forcings, MPI buffers).
 
-## 2.5 How a model plugs in
+## 3.5 How a model plugs in
 
 A model is identified by its number (`model_uid` in the code, first entry of the `.gbl`).
 For model 254 you find it in these places:
@@ -139,10 +139,10 @@ For model 254 you find it in these places:
 | `ReadInitData` (line ~3573) | derived initial states: `s_precip = 0`, `V_r = 0`, `q_b = q` |
 | `src/models/equations.c` → `model254` (line 1609) | the ODEs themselves |
 
-[04_model_254_explained.md](04_model_254_explained.md) walks through each of these
+[05_model_254_explained.md](05_model_254_explained.md) walks through each of these
 with the physics.
 
-## 2.6 Parallelism in one paragraph
+## 3.6 Parallelism in one paragraph
 
 With `mpirun -n P` there are `P` independent copies of the program (MPI *processes*),
 each with its own memory. `partition.c` gives each process a set of links: whole

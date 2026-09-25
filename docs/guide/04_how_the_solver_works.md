@@ -1,11 +1,11 @@
-# 3. How the solver works (the mathematics behind `advance.c`)
+# 4. How the solver works (the mathematics behind `advance.c`)
 
 Reference: S. Small, L. Jay, R. Mantilla, R. Curtu, L. Cunha, M. Fonley, W. Krajewski,
 *An asynchronous solver for systems of ODEs linked by a directed tree structure*,
 Advances in Water Resources 53 (2013) 23–32. Numerical background: Hairer, Nørsett &
 Wanner, *Solving Ordinary Differential Equations I* (Springer), chapter II.4–II.6.
 
-## 3.1 The problem
+## 4.1 The problem
 
 The river network is split into **links**. A link is a channel segment plus the
 hillslope that drains into it. Each link *i* carries a small state vector
@@ -17,7 +17,7 @@ The coupling only goes **downstream**: a link needs the states of its parents
 (upstream links), never of its child. The whole system is one huge ODE (7 × 400 000
 unknowns for Iowa), but it has a **tree structure**.
 
-## 3.2 The key idea: every link has its own clock
+## 4.2 The key idea: every link has its own clock
 
 A classical solver would advance all links together with one common step size. This
 would be dictated by the fastest-changing link somewhere in the basin, which wastes work
@@ -33,7 +33,7 @@ So the computation sweeps from the headwaters to the outlet, with each link runn
 its own pace. Headwater links (no parents) can run ahead freely. A link waits only for
 its own parents.
 
-## 3.3 The scheduler (`src/advance.c`, function `Advance`)
+## 4.3 The scheduler (`src/advance.c`, function `Advance`)
 
 ```
 while t < end of simulation:                       # one "pass" per block of forcing data
@@ -64,7 +64,7 @@ Important details:
 * `my_sys` is sorted by `distance` (longest path to a headwater, largest first), and the
   scan runs from the end of the array, so upstream links are tried first.
 
-## 3.4 One step of one link (`src/steppers/explicit.c`, `ExplicitRKSolver`)
+## 4.4 One step of one link (`src/steppers/explicit.c`, `ExplicitRKSolver`)
 
 An explicit Runge–Kutta method with *s* stages (Butcher coefficients A, b, c):
 
@@ -100,7 +100,7 @@ Available methods (index in the `.gbl`):
 | 2 | Dormand–Prince 5(4) dense | 7 | 5 / 4 |
 | 3 | Radau IIA (implicit) | | not usable: its solver is not compiled, and ASYNCH refuses the index |
 
-## 3.5 Initial step size (`src/rksteppers.c`, `InitialStepSize`)
+## 4.5 Initial step size (`src/rksteppers.c`, `InitialStepSize`)
 
 This follows Hairer–Nørsett–Wanner's algorithm (vol. I, II.4): estimate `h0` from
 ‖y₀‖/‖f(y₀)‖, do one explicit Euler step, estimate the second derivative, and choose
@@ -109,10 +109,10 @@ This follows Hairer–Nørsett–Wanner's algorithm (vol. I, II.4): estimate `h0
 to switch to `max(1e-6, h0·1e-3)`. This only changes the first trial step, which the
 error control then corrects.
 
-## 3.6 Why results change slightly with the number of processes
+## 4.6 Why results change slightly with the number of processes
 
 With several MPI processes, the order in which links are computed, and the time when
 parent data arrives, depend on timing. The step sequence of a link, and hence its
 numerical error, can therefore differ slightly from run to run. Every result is still
 within the requested tolerances, and the differences are of that size (see
-[06_reproducibility.md](06_reproducibility.md), R-05).
+[09_reproducibility.md](09_reproducibility.md), R-05).

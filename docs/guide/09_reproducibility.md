@@ -1,4 +1,4 @@
-# 6. Reproducibility and regression testing
+# 9. Reproducibility and regression testing
 
 > **Rule for every change to the C code:** run the regression harness before and
 > after the change. If a result moves by more than the tolerance, the change is
@@ -8,13 +8,13 @@
 > (`examples/results/` and `examples/more/*/results_benchmark/`). These files are never
 > modified or regenerated. Every result is measured against them.
 
-## 6.1 The harness
+## 9.1 The harness
 
 `tests/regression/run_examples.py` runs every example shipped in `examples/` and
 compares the produced files with those original reference ("benchmark") files.
 
 ```bash
-# after building (see 01_build_and_run.md)
+# after building (see 01_setup.md)
 python3 tests/regression/run_examples.py                  # 1 MPI process
 python3 tests/regression/run_examples.py --np 4           # 4 MPI processes
 python3 tests/regression/run_examples.py --only model_258 # a single case
@@ -60,7 +60,7 @@ mpirun -n 2 ../build/src/asynch test_2015.gbl        # compare out_2015/test.* w
 
 Results: the `test` references are reproduced (hydrographs within 5e-7). The `clearcreek` references
 are reproduced within the solver tolerance only when one line of model 254 is restored to its
-2015 form; see issue R-02 in [05_known_issues.md](05_known_issues.md).
+2015 form; see issue R-02 in [08_known_issues.md](08_known_issues.md).
 
 ### Comparing with the original code (`--compare-to`)
 
@@ -70,7 +70,7 @@ Stored references can be old or incomplete, so the most direct test of a change 
 ```bash
 # 1. Build the unmodified original code once (default: commit 84da43a, into ~/asynch-original)
 tests/regression/build_original.sh
-# 2. Build your version with the SAME flags (see 01_build_and_run.md), then:
+# 2. Build your version with the SAME flags (see 01_setup.md), then:
 python3 tests/regression/run_examples.py --compare-to ~/asynch-original/build/src/asynch
 python3 tests/regression/run_examples.py --compare-to ~/asynch-original/build/src/asynch --np 4
 ```
@@ -98,7 +98,7 @@ or a file the original wrote but the new code did not, makes the case **FAIL**, 
 So a pure bug fix or refactoring must give "N of N output files identical" with one process.
 That is the strict test. Runs with several processes check that nothing breaks in parallel.
 
-## 6.2 Why compare with a tolerance?
+## 9.2 Why compare with a tolerance?
 
 ASYNCH is an adaptive solver: every link chooses its own time step from an error
 estimate. Anything that changes the last bits of a floating-point number (another
@@ -126,7 +126,7 @@ apart while their values agree to 1e-7 m³/s. The peak *value* is always checked
 Files are compared by **link id** (`.pea`, `.h5`) or by row (`.csv`, `.dat`, `.rec`), so a different
 order of links in the file (which happens with MPI) does not matter for `.pea` and `.h5`.
 
-## 6.3 Reference baseline (commit `84da43a` + example path fix)
+## 9.3 Reference baseline (commit `84da43a` + example path fix)
 
 Release build (`-O3 -DNDEBUG`), Ubuntu 24.04, GCC 13, OpenMPI 4.1, HDF5 1.10:
 
@@ -142,7 +142,7 @@ Release build (`-O3 -DNDEBUG`), Ubuntu 24.04, GCC 13, OpenMPI 4.1, HDF5 1.10:
 At that commit, a debug build (no `-DNDEBUG`) additionally failed every case with exit
 code 134, because of the double `fclose` at shutdown (B-03, since fixed).
 
-## 6.4 Useful tools
+## 9.4 Useful tools
 
 **AddressSanitizer / UndefinedBehaviorSanitizer** detect invalid memory accesses and
 undefined behaviour *while the program runs*, with the exact source line. Build a

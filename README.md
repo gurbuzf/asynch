@@ -4,12 +4,13 @@
 
 A numerical library for solving differential equations with a tree structure. Emphasis is given to hillslope-link river basin models.
 
-> **New here?** Start with the [developer & learner guide](docs/guide/README.md): it covers
-> building, running and reading the outputs, how the code and the solver work, model 254
-> equation by equation, and the [known issues](docs/guide/05_known_issues.md). Please read
-> the known issues before production use. Changes are recorded
-> in [CHANGELOG.md](CHANGELOG.md), and results can be verified with
-> `python3 tests/regression/run_examples.py`.
+> **New here? Start with the [ASYNCH guide](docs/guide/README.md).** It explains in plain words
+> what the model does ([chapter 0](docs/guide/00_what_is_asynch.md)), how to install it on your own
+> computer or with Docker and run a first simulation ([chapter 1](docs/guide/01_setup.md)), how to run
+> and change simulations ([chapter 2](docs/guide/02_running_the_model.md)), and then the equations,
+> the solver and the C code. [Chapter 7](docs/guide/07_improvements_explained.md) lists what was fixed
+> and how serious each problem was. The instructions further down this page are the original ones;
+> where they differ, follow the guide. Changes are recorded in [CHANGELOG.md](CHANGELOG.md).
 
 
 ## Requirements

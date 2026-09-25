@@ -1,13 +1,13 @@
-# 4. Model 254 ("Top Layer" hillslope-link model), equation by equation
+# 5. Model 254 ("Top Layer" hillslope-link model), equation by equation
 
 Model 254 is the model used operationally by the Iowa Flood Center and in
 `examples/clearcreek.gbl`. This page maps **every equation to the line of C that
 implements it**, with units, so that you can check the code against the science
 yourself. The official description is in `docs/builtin_models.rst` (section *Top Layer
 Hydrological Model*). Where that description and the code disagree, it is noted here
-(and listed in [05_known_issues.md](05_known_issues.md), items D-xx).
+(and listed in [08_known_issues.md](08_known_issues.md), items D-xx).
 
-## 4.1 The conceptual picture
+## 5.1 The conceptual picture
 
 Each link = one channel reach + the hillslope (two sides) that drains into it.
 
@@ -36,7 +36,7 @@ The infiltration rate `k_t` depends on how wet the top layer is. When the top so
 dry, more water infiltrates; when it is full (`s_t → S_L`), infiltration drops to `A·k2`.
 That is how the model produces a runoff coefficient that varies in time.
 
-## 4.2 States (`dim = 7`)
+## 5.2 States (`dim = 7`)
 
 | index | symbol | meaning | unit |
 |---|---|---|---|
@@ -50,7 +50,7 @@ That is how the model produces a runoff coefficient that varies in time.
 
 Time `t` is in **minutes** everywhere inside ASYNCH.
 
-## 4.3 Parameters
+## 5.3 Parameters
 
 **Global** (same for all links, line `%Global parameters` in the `.gbl`), read in
 `model254()` from `global_params[]`:
@@ -84,7 +84,7 @@ computed in `Precalculations` (`src/models/definitions.c` ~line 3036):
 | 6 | c_1 | 0.001/60 | converts rain mm/h → m/min |
 | 7 | c_2 | A_h/60 | converts m/min over A_h → m³/s |
 
-## 4.4 The equations, line by line (`src/models/equations.c`, `model254`, lines 1609-1687)
+## 5.4 The equations, line by line (`src/models/equations.c`, `model254`, lines 1609-1687)
 
 **Evaporation** (lines 1621, 1641-1654). Potential evaporation is shared between the three storages in
 proportion to their relative fullness:
@@ -134,19 +134,19 @@ L in m). From 2021 to 2026 the code used `max(0.001, q_b)` instead of `q_b` in t
 not part of the original model, and it has been removed (issues S-02, R-02), so the equation above is again
 the one that produced the reference results shipped with ASYNCH. The `.rst` documentation omits the factor 60 in front of the parents' baseflow (D-02).
 
-## 4.5 Initial state (`ReadInitData`, `definitions.c` ~line 3573)
+## 5.5 Initial state (`ReadInitData`, `definitions.c` ~line 3573)
 
 The `.uini`/`.ini` file provides q, s_p, s_t, s_s. The code then sets
 `s_precip = 0`, `V_r = 0`, `q_b = q` (initially all flow is assumed to be baseflow).
 
-## 4.6 Constraints
+## 5.6 Constraints
 
 `check_consistency = CheckConsistency_Nonzero_AllStates_q` (`src/models/check_consistency.c`)
 is applied after each stage and step. It clamps q to a small positive value and the storages
 to ≥ 0. Every time it clamps, it silently adds water: this is how the model stays
 physical when evaporation over-draws a nearly empty storage (see S-06).
 
-## 4.7 Documentation discrepancies found while writing this page
+## 5.7 Documentation discrepancies found while writing this page
 
 * **D-01** `docs/builtin_models.rst`: 1/τ has `L · 10⁻³` in the denominator with L in km. It should
   be `L · 10³` (km → m). The code is correct (L is converted to metres in `ConvertParams`).

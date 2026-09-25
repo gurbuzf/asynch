@@ -92,7 +92,7 @@ CASES = [
         "workdir": ".",
         "gbl": "clearcreek.gbl",
         "compare": [("clearcreek.pea", "results/clearcreek.pea", "pea")],
-        # See docs/guide/05_known_issues.md, issue "R-02". The same reference is checked with its
+        # See docs/guide/08_known_issues.md, issue "R-02". The same reference is checked with its
         # original configuration in the case "clearcreek, 2015 configuration".
         "changed_vs_original": "model 254 baseflow equation restored to its 2015 form (issue S-02)",
         "xfail": ("the reference was produced by the 2015 configuration (6000 min from 2014-05-01), "
@@ -142,7 +142,7 @@ for _m in (192, 196, 258, 259):
         ],
         "xfail": None,
     })
-# See docs/guide/05_known_issues.md, issue "R-03".
+# See docs/guide/08_known_issues.md, issue "R-03".
 CASES[-1]["xfail"] = ("benchmark was produced with an evaporation file that is not in the "
                       "repository; the 2018 code gives the same result as today's code")
 
@@ -407,7 +407,7 @@ def main():
     ap.add_argument("--atol", type=float, default=None,
                     help="absolute tolerance (default 1e-5 with 1 process, 1e-3 with several: two runs "
                          "of the same code with several processes differ by up to ~1e-4, see "
-                         "docs/guide/06_reproducibility.md)")
+                         "docs/guide/09_reproducibility.md)")
     ap.add_argument("--only", help="run only cases whose name contains this text")
     ap.add_argument("--keep", action="store_true", help="keep the temporary run directory")
     ap.add_argument("--peak-time-atol", type=float, default=PEAK_TIME_ATOL,
@@ -423,6 +423,10 @@ def main():
     if args.atol is None:
         args.atol = 1e-5 if args.np == 1 else 1e-3
 
+    # The examples run in other folders, so relative paths must be made absolute first.
+    args.asynch = os.path.abspath(args.asynch)
+    if args.compare_to:
+        args.compare_to = os.path.abspath(args.compare_to)
     for exe in [args.asynch] + ([args.compare_to] if args.compare_to else []):
         if not os.path.isfile(exe):
             sys.exit("asynch executable not found at %s (build it first)" % exe)

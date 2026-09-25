@@ -1,8 +1,8 @@
-# 5. Known issues
+# 8. Known issues
 
 Known bugs, risks and open scientific questions in ASYNCH, found by building and running
 the code and by reading it (September 2026). Any fix should be verified with the regression
-harness ([06_reproducibility.md](06_reproducibility.md)).
+harness ([09_reproducibility.md](09_reproducibility.md)).
 
 How each item was established:
 
@@ -37,6 +37,7 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [B-11](#b-11) | low | code reading | ~75 `fscanf`/`fread` return values ignored: malformed input files are not detected |
 | [B-13](#b-13) | **fixed** | confirmed (ASan) | Solver methods 0 and 1 used Butcher coefficients from freed stack memory: random results or endless runs |
 | [B-12](#b-12) | **fixed** | code reading |
+| [B-15](#b-15) | high | confirmed | A missing output folder loses all results, yet the run ends with a success exit code |
 | [B-14](#b-14) | **fixed** | confirmed | Reading an `.rkd` file (per-link tolerances) never finished: 5 defects in `Build_RKData` | `.uini` reader misses "not enough values" (checks `== 0`, `fscanf` returns `EOF`); clearcreek.uini is short |
 | [R-01](#r-01) | fixed | confirmed | No automated regression tests; only one unit test (`days_in_month`) |
 | [R-02](#r-02) | **resolved** | confirmed | clearcreek references (2015) differ: another configuration, and a 2021 change to model 254 |
@@ -260,6 +261,13 @@ value, invalid method, too few tolerances for the model). The format is now docu
 `examples/test.gbl` for every link. They give **bit-identical** results with 1 process, and are part of
 the regression tests.
 
+### B-15
+**Unwritable outputs are not fatal.** *High, confirmed* (while testing the documentation). If a
+folder named in the `.gbl` for hydrographs, peaks or snapshots does not exist, every write prints
+`Error: could not open h5 file ...` / `Error: Cannot open peakflow file ...` (27 lines for `test.gbl`), but the
+simulation runs to the end and `asynch` **exits with code 0**, the code for success, having written no results.
+In a script or an operational chain, the failure goes unnoticed. The simulation time is also wasted.
+
 ---
 
 ## Reproducibility
@@ -267,7 +275,7 @@ the regression tests.
 ### R-01
 **No regression testing.** *High.* `make check` runs a single unit test (`days_in_month`).
 Nothing checks that the model still produces the same hydrographs. **Addressed by**
-`tests/regression/run_examples.py` (see [06_reproducibility.md](06_reproducibility.md)).
+`tests/regression/run_examples.py` (see [09_reproducibility.md](09_reproducibility.md)).
 
 ### R-02
 **Clearcreek reference is from another configuration, and model 254 changed in 2021.** *Medium, confirmed.*
@@ -468,4 +476,4 @@ documented decision.
   consistent) and the floor `max(0.001, q_b)` (S-02).
 * **D-03** V_r is described as m³/s. It is an accumulated depth in m.
 
-Details: [04_model_254_explained.md §4.7](04_model_254_explained.md#47-documentation-discrepancies-found-while-writing-this-page).
+Details: [05_model_254_explained.md §5.7](05_model_254_explained.md#57-documentation-discrepancies-found-while-writing-this-page).

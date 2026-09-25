@@ -1,10 +1,10 @@
-# 7. Just enough C to read ASYNCH
+# 6. Just enough C to read ASYNCH
 
 This page teaches the C you need for this codebase, using **real code from ASYNCH**, and
-the real bugs listed in [Known issues](05_known_issues.md) as examples of what goes wrong. If you know Python,
+the real bugs listed in [Known issues](08_known_issues.md) as examples of what goes wrong. If you know Python,
 the comparisons in *italics* will help.
 
-## 7.1 How a C program is built
+## 6.1 How a C program is built
 
 *Python reads your `.py` files at run time. C is translated to machine code beforehand.*
 
@@ -22,7 +22,7 @@ the comparisons in *italics* will help.
 the libraries and writes the `Makefile`s. `src/Makefile.am` lists which `.c` files are compiled.
 **A `.c` file that is not listed there is never compiled** (that is how issue M-01 was found).
 
-## 7.2 Types, variables, `const`
+## 6.2 Types, variables, `const`
 
 ```c
 unsigned int dim = link_i->dim;      // integer >= 0, 32 bits
@@ -37,7 +37,7 @@ Storing 400 000 in an `unsigned short` silently gives 400 000 mod 65 536 = 6 784
 `const double * const global_params` means: a pointer that won't change, to doubles that
 won't be changed through it. It is a promise that the function only *reads* them.
 
-## 7.3 Pointers and arrays: the most important concept
+## 6.3 Pointers and arrays: the most important concept
 
 A **pointer** is a variable holding a memory address. `double *y` is "the address of a
 double", usually the first of an array of doubles.
@@ -75,7 +75,7 @@ ReadLine(..., &flag);
 ```
 *This is how C functions "return" several values.*
 
-## 7.4 Structs and `->`
+## 6.4 Structs and `->`
 
 A `struct` groups variables, like a Python class with only attributes:
 ```c
@@ -92,7 +92,7 @@ struct Link {
 `link_i->my->list.tail->y_approx` walks from the link to its private data, to its solution
 list, to the last node, to that node's state array.
 
-## 7.5 Function pointers: how models are plugged in
+## 6.5 Function pointers: how models are plugged in
 
 ```c
 link->differential = &model254;      // in definitions.c (InitRoutines)
@@ -103,7 +103,7 @@ The solver does not know which model it runs. It calls whatever function the lin
 points to. *Like passing a function as an argument in Python.* To find what a call
 really executes, search where the pointer is assigned (`grep -n "differential =" src/models/definitions.c`).
 
-## 7.6 Memory: `malloc` / `free`
+## 6.6 Memory: `malloc` / `free`
 
 *Python frees memory for you. C does not.*
 ```c
@@ -123,10 +123,10 @@ The classic errors, all present in ASYNCH:
 | using memory that was never initialised | B-12: `malloc` + too-short `.uini` file |
 
 These errors often do **not** crash immediately. They corrupt something that fails
-later, somewhere else. That is why we use **AddressSanitizer** (see 06_reproducibility.md):
+later, somewhere else. That is why we use **AddressSanitizer** (see 09_reproducibility.md):
 it stops at the exact faulty line.
 
-## 7.7 `switch` falls through
+## 6.7 `switch` falls through
 
 ```c
 switch (model_uid) {
@@ -141,7 +141,7 @@ switch (model_uid) {
 *Unlike Python's `match`, a C `case` is only a jump label.* Every `case` needs its own `break;`.
 This one missing line is issue B-01.
 
-## 7.8 Reading files: always check the return value
+## 6.8 Reading files: always check the return value
 
 ```c
 if (fscanf(initdata, "%lf", y_0_backup + i) == 0)   // B-12: wrong check
@@ -150,7 +150,7 @@ if (fscanf(initdata, "%lf", y_0_backup + i) == 0)   // B-12: wrong check
 **`EOF` (−1) at end of file**. The correct test is `!= 1`. About 75 calls in ASYNCH do not
 check at all (B-11).
 
-## 7.9 MPI in five functions
+## 6.9 MPI in five functions
 
 With `mpirun -n 4 asynch x.gbl`, **4 independent copies** of the program run. Each knows:
 
@@ -166,7 +166,7 @@ often looks like `if (my_rank == 0) { read file; send } else { receive }`. A con
 a bug can depend on the number of processes (B-01 only crashes on 1 process, B-02
 only shows with several).
 
-## 7.10 Debugging tools
+## 6.10 Debugging tools
 
 ```bash
 # a debug build (no optimisation, debug symbols)
@@ -181,7 +181,7 @@ gdb --args ./src/asynch ../examples/test.gbl
 ```
 And the quickest tool of all: `printf("q=%g at t=%g\n", q, t);` followed by a rebuild.
 
-## 7.11 Anatomy of a model function
+## 6.11 Anatomy of a model function
 
 ```c
 void model254(

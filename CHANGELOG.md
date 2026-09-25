@@ -4,9 +4,41 @@ All notable changes to ASYNCH are recorded here, newest first.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 Every entry says **whether numerical results change**. Results are checked with
-`tests/regression/run_examples.py` (see `docs/guide/06_reproducibility.md`).
+`tests/regression/run_examples.py` (see `docs/guide/09_reproducibility.md`).
 
 ## [Unreleased]
+
+### Guide reorganised as a learning path, for readers who do not program
+
+*Results:* no change to the model.
+
+#### Added
+- `docs/guide/00_what_is_asynch.md`: what the model computes, what a run is, and the vocabulary, without code.
+- `docs/guide/02_running_the_model.md`: the command and its options, the examples, every block of the global
+  file, the input files, an exercise (change the runoff coefficient and compare), reading and plotting results,
+  and the messages ASYNCH prints, with what to do.
+- `docs/guide/07_improvements_explained.md`: every problem found, in plain words, classified as Critical / High /
+  Medium / Low with the reason, and before/after figures.
+- `tools/python/plot_hydrographs.py`: plot one link from up to three hydrograph files (`.dat`, `.csv`, `.h5`).
+- `docs/guide/figures/exercise_runoff_coefficient.png`.
+
+#### Changed
+- `docs/guide/01_setup.md` (was `01_build_and_run.md`): step-by-step setup with three options: Ubuntu 24.04 or
+  WSL2, Docker, other systems. Each step says what success looks like, and there is a troubleshooting table.
+  **Option A was tested by running its commands verbatim on a fresh Ubuntu 24.04 container**, as a normal user
+  with sudo. That test found two problems, now fixed. The Python packages must come from `apt` (Ubuntu 24.04
+  refuses `pip install` into the system Python). `ca-certificates` must be installed on minimal systems, for `git clone`.
+- Chapters renumbered to follow the learning path: code map 3, solver 4, model 254 5, C primer 6, known issues 8,
+  reproducibility 9. All links were updated.
+- `README.md`: points newcomers to the guide.
+
+#### Fixed
+- `tests/regression/run_examples.py`: a relative path given to `--asynch` or `--compare-to` failed, because the
+  examples run in other folders. Paths are now made absolute. Found by the fresh-machine test.
+
+#### Known issue recorded
+- B-15 (High, open): if an output folder does not exist, ASYNCH prints errors but finishes with a success exit
+  code and writes no results.
 
 ### Working Docker image
 
@@ -27,7 +59,7 @@ Every entry says **whether numerical results change**. Results are checked with
 
 #### Fixed (documentation)
 - The build needs a **Fortran compiler** (`gfortran`): `configure` checks BLAS with a small Fortran program.
-  The package list in `docs/guide/01_build_and_run.md` did not include it, and a clean Docker build failed
+  The package list in `docs/guide/01_setup.md` did not include it, and a clean Docker build failed
   without it.
 
 ### Model 254: original baseflow equation restored (S-02) — **results change**
@@ -92,9 +124,9 @@ The same holds at 1, 2 and 4 processes.
     unchanged original code differed from each other by up to 1.15e-4 on the 6000-minute clearcreek run.
     The strict test stays the 1-process run, which must be bit-identical;
   - creates the output directories of each case.
-- `docs/guide/06_reproducibility.md`: the reference files of the original repository are the benchmark
+- `docs/guide/09_reproducibility.md`: the reference files of the original repository are the benchmark
   and are never modified. It also documents the 2015 configurations and the tolerance policy.
-- `docs/guide/05_known_issues.md`: R-02 explained, S-02 history. R-03 unchanged (benchmark kept).
+- `docs/guide/08_known_issues.md`: R-02 explained, S-02 history. R-03 unchanged (benchmark kept).
 
 ### Fix B-14 and B-05: `.rkd` files (tolerances and method per link) work again
 
@@ -135,7 +167,7 @@ to the previous commit, since the original cannot run it on 1 process). Within t
 #### Changed
 - `examples/clearcreek.uini`: model number corrected (252 → 254) and all 7 states given. Model 254
   computes states 4–6 itself, so results are identical.
-- `docs/guide/01_build_and_run.md`: explains the `.uini` format.
+- `docs/guide/01_setup.md`: explains the `.uini` format.
 
 ### Fix B-13: solver methods 0 and 1 used freed memory
 
@@ -230,7 +262,7 @@ files are within tolerance.
   and the largest difference of the others. `--verbose` lists each non-identical file.
 - `tests/regression/build_original.sh [COMMIT] [DEST]`: builds an unmodified copy of a commit
   (default `84da43a`, the original code) to compare with.
-- `docs/guide/06_reproducibility.md`: how to use it, and what to expect. With 1 MPI process
+- `docs/guide/09_reproducibility.md`: how to use it, and what to expect. With 1 MPI process
   the same code is bit-for-bit reproducible. With 2 or more processes, two runs of the same
   code differ by up to ~1e-6 (relative), because of the asynchronous scheduling.
 
@@ -241,7 +273,7 @@ No change to the C source code: the model computes exactly what it computed befo
 #### Added
 - `docs/guide/`: a learner/developer guide covering building and running, a code map,
   the numerical method, model 254 equation by equation, a C primer and reproducibility.
-- `docs/guide/05_known_issues.md`: known issues. 12 bugs (4 confirmed by running the code,
+- `docs/guide/08_known_issues.md`: known issues. 12 bugs (4 confirmed by running the code,
   including a heap buffer overflow in the flagship `clearcreek` example), 5
   reproducibility issues, the broken Python API, dead code, performance hypotheses,
   6 scientific review items and 3 documentation errors, each with file:line and evidence.
