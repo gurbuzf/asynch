@@ -500,7 +500,7 @@ void Asynch_Set_Model_Type(AsynchSolver* asynch, unsigned short type)
     asynch->globals->model_uid = type;
 }
 
-unsigned short Asynch_Get_Num_Links(AsynchSolver* asynch)
+unsigned int Asynch_Get_Num_Links(AsynchSolver* asynch)
 {
     if (!asynch)
         return 0;

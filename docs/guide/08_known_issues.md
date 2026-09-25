@@ -29,7 +29,7 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [B-03](#b-03) | **fixed** | confirmed | Output file closed twice at shutdown: every debug build aborts at the end of a run |
 | [B-04](#b-04) | **fixed** | confirmed | Solver index 3 or 4 (advertised as "implicit") segfaults; the index is never validated |
 | [B-05](#b-05) | **fixed** | code reading | `Destroy_ErrorData` frees addresses of struct fields instead of the pointers |
-| [B-06](#b-06) | medium | code reading | `Asynch_Get_Num_Links` returns `unsigned short`: wrong for networks > 65 535 links |
+| [B-06](#b-06) | **fixed** | confirmed | `Asynch_Get_Num_Links` returns `unsigned short`: wrong for networks > 65 535 links |
 | [B-07](#b-07) | **fixed** | code reading | `DumpStateH5` loops past the array end if rank 0 owns no link; leaks its buffer |
 | [B-08](#b-08) | **fixed** | confirmed (UB sanitizer) | Misaligned `double` reads/writes in snapshot filters (undefined behaviour) |
 | [B-09](#b-09) | **fixed** | code reading | Model 402 dam check prints a debug line on every call |
@@ -170,6 +170,8 @@ the solver is freed (debug builds).
 `src/asynch_interface.c:500` returns `unsigned short` (max 65 535). State-wide
 networks (e.g. Iowa, ~400 000 links) are silently truncated. The CLI does not use it,
 but any external program would.
+**Fixed** (2026-09-25): returns `unsigned int`. On a synthetic network of 70 000 links it returns 70 000; the old
+type would have returned 4 464.
 
 ### B-07
 **`DumpStateH5` edge cases.** *Medium, code reading.*

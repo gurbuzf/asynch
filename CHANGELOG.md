@@ -8,6 +8,19 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Fix B-06: link count wrong above 65 535 links
+
+*Results:* unchanged (bit-identical to the previous commit with 1 process).
+
+#### Fixed
+- `src/asynch_interface.h/.c`: `Asynch_Get_Num_Links` returned an `unsigned short` (at most 65 535), so for larger
+  networks programs using the library got a wrong number (70 000 links reported as 4 464). It returns `unsigned int`.
+  The command-line program never used this function.
+
+#### Added
+- `tests/data_generators/make_synthetic_network.py`: writes a complete model-190 setup for a synthetic network of
+  any size, used to test networks with more than 65 535 links.
+
 ### Fix B-15: a missing output folder no longer loses results silently
 
 *Results:* unchanged. Every output file is bit-identical to the previous commit (1 process); the sanitizer build is clean.

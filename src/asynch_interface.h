@@ -456,7 +456,7 @@ void Asynch_Set_Total_Simulation_Duration(AsynchSolver* asynch, double duration)
 ///
 /// \param asynch A pointer to a AsynchSolver object to use.
 /// \return Number of links in the network
-unsigned short Asynch_Get_Num_Links(AsynchSolver* asynch);
+unsigned int Asynch_Get_Num_Links(AsynchSolver* asynch);
 
 Link* Asynch_Get_Links(AsynchSolver* asynch);
 
