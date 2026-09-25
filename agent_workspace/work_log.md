@@ -2,6 +2,24 @@
 
 Newest first.
 
+## 2026-09-25: owner feedback: clarity for non-programmers, plots, Docker, decision A
+
+- Owner chose A: model 254 baseflow restored to 2015 form. All 6 original reference files now reproduced
+  (clearcreek_2015 compared at solver tolerance 1e-4; peaks at 2e-4 because peaks are recorded at step ends).
+- Owner feedback: work was not understandable to a non-coder; wanted severity classes, before/after plots,
+  a clear overview, setup incl. Docker, teaching focus, "do not blindly write code".
+  Done: guide reorganised as a learning path (00 overview, 01 setup, 02 running, 03-06 understanding,
+  07 fixes explained with Critical/High/Medium/Low, 08-09 technical); figures via
+  `tools/python/make_comparison_plots.py`; readers/plot helpers in `tools/python/`.
+- Everything verified by running it: Dockerfile built and all tests run inside (found: gfortran needed,
+  .dockerignore excluded reference .h5, uid 1000 clash with base image `ubuntu` user); chapter 1 option A
+  run verbatim on fresh ubuntu:24.04 as sudo user, cloning from GitHub (found: apt instead of pip,
+  ca-certificates, harness relative path bug). Chapter 2 exercise run for real (found B-15).
+- B-15 found and fixed (missing output folder → results lost with exit 0).
+- Sandbox notes: dockerd must be started manually (`dockerd &`); fresh containers need the sandbox proxy CA
+  (/root/.ccr/ca-bundle.crt) for git; the Fedora registry is blocked.
+- Next: B-06, B-10 indentation, M-01 attic, CI, B-11.
+
 ## 2026-09-25: Phase 2 (fix), first part
 
 Owner instructions: develop only on `modernization`, never merge to `master`, no PRs; apply the
