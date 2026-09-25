@@ -8,6 +8,18 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Fix B-09, B-10: debug output of models 402/403, missing prototype
+
+*Results:* unchanged. Every example is bit-identical to the original code with 1 process.
+
+#### Fixed
+- `src/models/check_state.c`: the dam checks of models 402 and 403 had `debug = 1` and printed a line
+  at every call (every time step of every dam link), flooding the output and slowing runs. Debugging is
+  now off by default; the `printf` of an `unsigned int` with `%f` was corrected (B-09, B-10).
+- `src/forcings_io.h`: `Create_Rain_Data_Par_IBin` (binary forcing files, flag 2) was called without a
+  prototype, so the compiler could not check its arguments. The prototype is now declared (B-10).
+  No compiler warnings remain in these two files.
+
 ### Regression tests against all reference results of the original repository
 
 *Results:* no change to the model (examples and tests only).

@@ -45,18 +45,12 @@ int dam_check_qvs_402(double *y, unsigned int num_dof,
     {
     //unsigned int i, iterations;
     //double S = y[6]; //model 402 storage is state 6
-    int debug =1;
-    
+    int debug = 0;  // set to 1 to print a line at every call (very verbose)
 
     if (!has_dam)
         return 0;
-    if(has_dam){
-        if(debug) printf("found dam_check_qvs_402\n");
-        return 1;
-    }
-        
-    
-    
+    if (debug) printf("found dam_check_qvs_402\n");
+    return 1;
 }
 
 int dam_check_qvs_403(double *y, unsigned int num_dof,
@@ -68,7 +62,7 @@ int dam_check_qvs_403(double *y, unsigned int num_dof,
     {
     unsigned int i, iterations;
     double S = y[6]; //model 403 storage is state 6
-    int debug =1;
+    int debug = 0;  // set to 1 to print at every call (very verbose)
     if(debug) printf("storage in dam_check_qvs_403 : %f\n", S);
 
     if (!has_dam)
@@ -81,7 +75,7 @@ int dam_check_qvs_403(double *y, unsigned int num_dof,
             return i;
 
     }
-    if(debug) printf("dam_check_qvs_403 iterations found: %f\n", i);
+    if(debug) printf("dam_check_qvs_403 iterations found: %u\n", i);
 
     return i;
 }

@@ -32,8 +32,8 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [B-06](#b-06) | medium | code reading | `Asynch_Get_Num_Links` returns `unsigned short`: wrong for networks > 65 535 links |
 | [B-07](#b-07) | **fixed** | code reading | `DumpStateH5` loops past the array end if rank 0 owns no link; leaks its buffer |
 | [B-08](#b-08) | **fixed** | confirmed (UB sanitizer) | Misaligned `double` reads/writes in snapshot filters (undefined behaviour) |
-| [B-09](#b-09) | low | code reading | Model 402 dam check prints a debug line on every call |
-| [B-10](#b-10) | low | compiler | Missing prototype for `Create_Rain_Data_Par_IBin`; wrong `printf` format in `check_state.c` |
+| [B-09](#b-09) | **fixed** | code reading | Model 402 dam check prints a debug line on every call |
+| [B-10](#b-10) | **fixed** (except riversys.c indentation) | compiler | Missing prototype for `Create_Rain_Data_Par_IBin`; wrong `printf` format in `check_state.c` |
 | [B-11](#b-11) | low | code reading | ~75 `fscanf`/`fread` return values ignored: malformed input files are not detected |
 | [B-13](#b-13) | **fixed** | confirmed (ASan) | Solver methods 0 and 1 used Butcher coefficients from freed stack memory: random results or endless runs |
 | [B-12](#b-12) | **fixed** | code reading |
@@ -193,6 +193,7 @@ copy before packing it.
 ### B-09
 **Debug print in model 402.** *Low.* `src/models/check_state.c:48-55` has `int debug = 1;`
 and prints `found dam_check_qvs_402` on every call. That floods the output and slows runs with dams.
+Model 403 did the same. **Fixed** (2026-09-25): debugging is off by default.
 
 ### B-10
 **Compiler-detected mistakes.** *Low.*
