@@ -8,6 +8,28 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Working Docker image
+
+*Results:* no change to the model.
+
+#### Changed
+- `Dockerfile`: rewritten on Ubuntu 24.04. The old one used Fedora 34, which reached end-of-life in 2022;
+  it could not be tested here because this environment's network blocks the Fedora registry. The new
+  image installs all dependencies, compiles ASYNCH, runs `make check`, installs `asynch`, and works as a
+  normal user with id 1000. Tested here: the image builds; the examples run inside it; the full regression
+  suite passes with 1 and 2 processes; results written into a mounted folder belong to the host user
+  (also with `--user <uid>:<gid>`).
+- `.dockerignore`: replaced a generic template with rules for this project (no host build files, no
+  output files; the reference results are always included).
+
+#### Removed
+- `docker_config_files/`: helper for the old Dockerfile, no longer used.
+
+#### Fixed (documentation)
+- The build needs a **Fortran compiler** (`gfortran`): `configure` checks BLAS with a small Fortran program.
+  The package list in `docs/guide/01_build_and_run.md` did not include it, and a clean Docker build failed
+  without it.
+
 ### Model 254: original baseflow equation restored (S-02) — **results change**
 
 *Results:* **model 254 results change** (intended). All other models are unchanged: bit-identical to the

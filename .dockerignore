@@ -1,25 +1,20 @@
-**/.classpath
-**/.dockerignore
-**/.env
-**/.git
-**/.gitignore
-**/.project
-**/.settings
-**/.toolstarget
-**/.vs
-**/.vscode
-**/*.*proj.user
-**/*.dbmdl
-**/*.jfm
-**/azds.yaml
-**/bin
-**/charts
-**/docker-compose*
-**/compose*
-**/Dockerfile*
-**/node_modules
-**/npm-debug.log
-**/obj
-**/secrets.dev.yaml
-**/values.dev.yaml
-README.md
+# Files not copied into the Docker image (see Dockerfile)
+.git
+# anything compiled or generated on the host: the image builds its own
+build
+autom4te.cache
+Makefile.in
+configure
+config.h.in
+aclocal.m4
+**/__pycache__
+# outputs of example runs made on the host (NOT the reference results in
+# examples/results/ and examples/more/*/results_benchmark/, which must be kept)
+examples/*.h5
+examples/*.pea
+examples/*.dat
+examples/*.rec
+examples/out_2015/*.dat
+examples/out_2015/*.pea
+examples/out_2015/*.rec
+examples/more/*/results/*
