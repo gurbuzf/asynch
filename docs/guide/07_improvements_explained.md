@@ -44,6 +44,12 @@ A "silent" error is always worse than a crash: a crash is noticed, a wrong numbe
 | Numerical solver | B-14: per-link solver settings (`.rkd`) never worked | **High** | fixed |
 | Outputs | B-15: a missing output folder lost all results, yet the run "succeeded" | **High** | fixed |
 | Network | B-16: a junction with more than 8 upstream streams crashed the run | **High** | fixed |
+| Model equations | B-23: models 263, 601, 602, 603 read parameters from outside their memory | **High** | fixed |
+| Library / Python | B-20: user-defined outputs of some states were written as 0 | **High** | fixed |
+| Python | A-01: the Python interface did not work at all | **High** | replaced (chapter 10) |
+| Models | B-24: 7 model numbers without equations crashed; solvers of one program shared tables | Medium | fixed |
+| Library | B-17: library functions that crashed with built-in models, or were missing | Medium | fixed |
+| Inputs | B-18: dam models could start in the wrong regime when read from an `.ini` file | Medium | fixed |
 | Library | B-06: programs using ASYNCH as a library got a wrong link count above 65 535 links | Medium | fixed |
 | Numerical solver | B-04: an invalid solver number crashed the program | Medium | fixed |
 | Outputs | B-02: snapshots depended slightly on the number of processors | Medium | fixed |
@@ -51,6 +57,7 @@ A "silent" error is always worse than a crash: a crash is noticed, a wrong numbe
 | Examples | two examples pointed to a computer at the University of Iowa | Medium | fixed |
 | Memory | B-05, B-07, B-08: freeing the wrong memory, a leak, misaligned reads | Low | fixed |
 | Messages | B-09, B-10: debug text printed at every step; compiler warnings | Low | fixed |
+| Code | B-19, B-21, B-22: an unused out-of-range read, a filter applied to the wrong model, a typo multiplied by 0 | Low | fixed |
 
 ## 7.4 The critical issues
 
@@ -142,6 +149,27 @@ the run at once with a message naming it. If writing still fails at the end (a f
 ends with an error code. *C lesson*: a program tells whoever started it whether it succeeded through its **exit
 code** (the value returned by `main`, 0 = success). Printing an error is not enough.
 
+### B-23: four models read parameters from outside their memory — High
+
+**What happened.** Each link keeps its parameters in a small table. For models 263, 601, 602 and 603 the table was
+declared one or two places shorter than the number of values the model reads from its parameter file. The last
+value was written just past the end of the table, into memory that belongs to something else, and the model then read
+it back from there (model 263 even read two values that were never stored: `v_B` and `k_tl`).
+
+**Why it matters.** The results of these models depended on whatever happened to be in that memory: they could be
+right by luck, change from one computer to another, or crash. Nothing warned. None of the shipped examples uses these
+models, which is why it went unnoticed; a new unit test that checks the sizes of every model found it.
+
+**Now.** The tables have room for every value. Model 263 needs **16 values per link** in its parameter file (it used
+16 in its equations all along).
+
+### B-20: user-defined outputs could be written as 0 — High
+
+A program (or now a Python script) can add its own outputs, computed from the states of a link. The solver must be
+told which states such an output uses, so that it computes them at the output times. The code did the opposite of what
+it meant: it added the states that were already computed, and skipped the others, which were then written as 0.
+Tested: an output of the surface storage of model 190 was 0 at every time, instead of values around 0.001 m.
+
 ## 7.6 Medium and low issues, in brief
 
 * **B-04** (Medium): a solver number other than 0, 1 or 2 (the `.gbl` comment even suggested 3 and 4) crashed
@@ -157,12 +185,43 @@ code** (the value returned by `main`, 0 = success). Printing an error is not eno
   crashed the run. Now one limit of 16 applies everywhere, and a network exceeding it is refused with a clear message.
 * **B-06** (Medium): the function that reports the number of links used a type that stops at 65 535. A 70 000-link
   network was reported as 4 464 links. It only affected programs that use ASYNCH as a library, such as the Python API.
+* **B-24** (Medium): seven model numbers (200, 260, 300, 301, 315, 607, 2000) have sizes but no equations in
+  ASYNCH; choosing one crashed at the first step. They are now refused with a message. Also, the tables of the
+  numerical methods were shared by every solver of a program: harmless for the `asynch` program (one solver), wrong
+  for a Python script that creates several.
+* **B-17** (Medium): functions of the library used by other programs (such as the Python package) crashed with the
+  built-in models, or did not exist although declared.
+* **B-18** (Medium): for models with dams, the initial "regime" (e.g. whether a spillway flows) was stored on the
+  wrong link when the initial state came from an `.ini` file.
+* **B-19, B-21, B-22** (Low): model 190 read a third forcing that does not exist, into a variable it never used;
+  custom models received the snapshot filter of the built-in model with the same number; a wrong constant in a formula
+  that is only ever evaluated where it is multiplied by 0.
 * **B-05, B-07, B-08** (Low): memory handling errors that did not change results: freeing the wrong address, a
   buffer never released, numbers read from misaligned memory addresses.
 * **B-09, B-10** (Low): models 402 and 403 printed a debug line at every step; compiler warnings about
   a missing declaration and a wrong print format.
 
-## 7.7 Tools added along the way
+## 7.7 Python, and tests for everything
+
+The Python interface of the original ASYNCH could not work any more (issue A-01: Python 2, not built, and it
+assumed a memory layout that had changed). It is replaced by a new package, described in chapter 10. What it
+changes for a user:
+
+* a simulation can be run, stopped, inspected and changed from a Python script (states, parameters, outputs);
+* **new models can be written in Python**, as C code that is compiled automatically (as fast as the built-in
+  models) or as Python functions (slower, no compiler needed);
+* global files and input files can be created from Python.
+
+How we know the package is right: the files it writes are identical to those of the `asynch` program, byte for byte;
+models 190 and 191 rewritten through it give exactly the numbers of the built-in models; and simple models with a known
+exact solution (a chain of linear reservoirs) are reproduced to better than 1e-8.
+
+`make check` now runs three sets of tests (chapter 9): 22 C unit tests, 62 tests of the Python package, and all the
+examples against their reference results. The C unit tests check, among other things, the coefficient tables of the
+three numerical methods against the textbook conditions (a check that would have caught B-13) and the setup of every
+built-in model; they found B-22, B-23 and B-24.
+
+## 7.8 Tools added along the way
 
 * `tests/regression/run_examples.py`: runs every example and compares every output with the references and,
   optionally, with the original code (chapter 9).

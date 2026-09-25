@@ -13,6 +13,7 @@ complements the original reference manual in `docs/*.rst` (every file format, ev
 | 0 | [What ASYNCH is](00_what_is_asynch.md) | explain what the model computes, what a run is, and the vocabulary |
 | 1 | [Setting up](01_setup.md) | install everything on Ubuntu/WSL or with Docker, and run a first simulation |
 | 2 | [Running the model](02_running_the_model.md) | understand every input, run the examples, change a parameter, read and plot results |
+| 10 | [Using ASYNCH from Python](10_python.md) | run and control simulations from Python, write global files, **create new models** |
 
 **Understand the science and the code**
 
@@ -50,7 +51,7 @@ On Ubuntu 24.04 without Docker, follow [chapter 1, option A](01_setup.md#option-
 
 1. **One logical change per commit**, with a `CHANGELOG.md` entry that says *what*, *why*, and
    *whether results change*.
-2. **Run `tests/regression/run_examples.py` before and after.** The reference results of the original
+2. **Run `make check` (all tests) and `tests/regression/run_examples.py --compare-to <previous build>` before and after.** The reference results of the original
    repository are never modified. If results move beyond the tolerance, the change is scientific and
    must be explained.
 3. **Never mix a reorganisation of the code with a change of behaviour.** A reorganisation must leave results

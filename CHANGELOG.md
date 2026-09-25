@@ -8,6 +8,58 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Tests: C unit tests, Python tests and examples in `make check`; fixes B-22 to B-24
+
+*Results:* unchanged for every example (bit-identical to the previous commit with 1 process; 1 and 2 processes
+pass against the references; sanitizer build clean). Models 263 and 601-603 (not in the examples) now read their
+parameters from their own memory (B-23), which can change their results.
+
+#### Added
+- `tests/check_asynch.c`: 22 unit tests (was 1): order conditions, error estimators, dense output and observed order
+  of the three Runge-Kutta methods; sizes and routines of every built-in model; sorting and the id lookup; model
+  specification checks; the API on an empty solver. Runs without `fork` (MPI).
+- `tests/run_python_tests.sh`, `tests/run_regression.sh`: `make check` also runs the Python tests and every example
+  against the reference results (skipped if Python 3 or NumPy is missing).
+
+#### Fixed
+- **B-22** (`src/solvers/dopri5_dense.c`): wrong constant in the derivative of the Dormand-Prince dense output
+  (no effect: only evaluated where it is multiplied by 0).
+- **B-23** (`src/models/definitions.c`): models 263, 601, 602 and 603 read one or two more parameters per link than
+  their parameter array held; the reader wrote past it and the models read past it. The arrays now hold every value
+  (model 263 reads 16 values per link).
+- **B-24** (`src/riversys.c`, `src/system.c`, `src/solvers/rk4_3_dense.c`, `src/asynch_interface.c`): models 200, 260,
+  300, 301, 315, 607 and 2000 have no equations and crashed at the first step; they are refused with a message. The
+  Runge-Kutta tables were a static array shared by all solvers of a program; each solver now owns them, and
+  `Destroy_RKMethod` frees what the constructors allocate.
+
+### Python package `asynch` (replaces `py/`, `asynchdist.py`, `asynchdist_custom.py`)
+
+*Results:* unchanged. A run from Python writes files identical to the `asynch` program.
+
+#### Added
+- `python/asynch`: a `ctypes` binding of `libasynch.so` (every function of `asynch_interface.h` and `asynch_api.h` that
+  does not need a C structure) and:
+  - `Simulation`: run a global file, advance in steps, gather and set the states of every link, global and link
+    parameters (derived parameters recomputed), peaks, forcings, snapshots, custom time series and peak flow
+    outputs, MPI (`mpirun`, or an mpi4py communicator). Problems that would abort in C (missing files or output
+    folders, undefined outputs, too few global parameters) are reported as Python exceptions.
+  - `Model`: new models from Python, as C code (compiled and cached; measured as fast as a built-in model) or as Python
+    functions (about 140 times slower). Models 190 and 191 written this way reproduce the built-in models exactly.
+  - `GlobalConfig`: read, change and write global files; `asynch.io`: output readers, input writers.
+  - `python3 -m asynch run|info|library`.
+- `examples/python/`: `run_example.py`, `sensitivity.py`, `custom_model.py` (the old `asynchdist_custom.py`, ported),
+  `new_network.py`.
+- `tests/python/`: 62 tests (see `docs/guide/10_python.md`).
+- `docs/guide/10_python.md`; `docs/python_api.rst` rewritten; main `README.md` rewritten; the Docker image has the
+  package ready (`PYTHONPATH`, `ldconfig`).
+
+#### Changed
+- `Asynch_Free` frees a solver at any stage of its setup (it assumed a fully loaded solver).
+- `tools/python/asynch_io.py` now imports the readers of `asynch.io`.
+
+#### Removed
+- `py/`, `asynchdist.py`, `asynchdist_custom.py`: the Python 2 interface, which could not work any more (A-01).
+
 ### C interface for other languages (`asynch_api.h`); fixes B-17 to B-21
 
 *Results:* unchanged. Every output of every example is bit-identical to the previous commit (1 process); 1 and 2

@@ -95,13 +95,17 @@ The program is now `~/asynch/build/src/asynch`. Check it:
 
 ```bash
 make check
-python3 ../tests/regression/run_examples.py --asynch src/asynch
 ```
 
-`make check` runs the C unit test (`PASS: check_asynch`). The second command runs every example and
-compares its results with the reference results shipped with the original ASYNCH (chapter 9).
-*You should see* a list of cases marked `PASS` or `XFAIL` (a known, documented difference), ending with
-`0 unexpected failure(s)`. It takes about a minute.
+This runs three sets of tests (chapter 9) and takes about a minute:
+
+* `check_asynch`: 22 C unit tests (the solver's coefficient tables, every built-in model's setup, ...);
+* `run_python_tests.sh`: 62 tests of the Python package (chapter 10), with the library just built;
+* `run_regression.sh`: every example, compared with the reference results shipped with the original ASYNCH.
+
+*You should see* `# PASS:  3` and `# FAIL:  0` at the end. The details are in `tests/*.log`; for example
+`tests/run_regression.sh.log` lists the examples as `PASS` or `XFAIL` (a known, documented difference) and ends with
+`0 unexpected failure(s)`.
 
 ### A.5 Run your first simulation
 
@@ -133,8 +137,21 @@ mpirun -n 2 ../build/src/asynch clearcreek.gbl
 
 You have run the model. Chapter 2 explains what went in, what came out, and how to change it.
 
-**Optional: make `asynch` available everywhere.** `sudo make install` (run in `~/asynch/build`) copies it to
-`/usr/local/bin`, after which you can type `asynch` instead of `../build/src/asynch`.
+**Optional: make `asynch` available everywhere.** `sudo make install && sudo ldconfig` (run in `~/asynch/build`)
+copies the program to `/usr/local/bin` and the library `libasynch.so` to `/usr/local/lib`, after which you can type
+`asynch` instead of `../build/src/asynch`.
+
+### A.6 (optional) Use ASYNCH from Python
+
+```bash
+export PYTHONPATH=~/asynch/python          # add this line to ~/.bashrc to keep it
+cd ~/asynch/examples
+python3 python/run_example.py
+```
+
+*You should see* `test_2015.gbl: model 190, 11 links, 300 minutes` followed by the five largest peak flows. The package
+uses the library of the build folder, or the installed one after `sudo make install`. Chapter 10 explains the
+package, another way to install it, and how to write new models with it.
 
 ---
 
@@ -175,6 +192,7 @@ You are now in a terminal *inside* the container, in the examples folder. Try:
 ```bash
 mpirun -n 2 asynch test.gbl
 python3 ../tests/regression/run_examples.py --np 2
+python3 python/run_example.py              # the Python package (chapter 10) is ready to use
 exit
 ```
 

@@ -23,6 +23,8 @@ asynch/
 ├── src/
 │   ├── asynch_cli.c               main(): the `asynch` command-line program
 │   ├── asynch_interface.c/.h      the public C API: Asynch_Init, Asynch_Parse_GBL, Asynch_Advance, ...
+│   ├── asynch_api.c/.h            C API for other languages: plain arrays and handles, custom models (chapter 10)
+│   ├── globals.c                  my_rank, np: the two global variables of the library
 │   ├── structs.h                  all core data structures
 │   ├── config_gbl.c               parser for the .gbl global file
 │   ├── riversys.c                 reads topology (.rvr), parameters (.prm), initial states; builds the Link array
@@ -50,10 +52,17 @@ asynch/
 │   ├── db.c                       PostgreSQL access
 │   ├── blas.c                     small vector helpers (daxpy, dcopy, norms)
 │   └── assim/, assim_cli.c        data assimilation (built only if PETSc is found)
-├── py/                            Python API (BROKEN, see issue A-01)
-├── tests/check_asynch.c           C unit tests (one test at the moment)
+├── python/asynch/                 the Python package (chapter 10)
+│   ├── _lib.py                    loads libasynch.so, declares every C function (ctypes)
+│   ├── solver.py                  Simulation: run, states, parameters, outputs
+│   ├── model.py                   Model: new models in C code or Python functions
+│   ├── config.py                  GlobalConfig: read/write .gbl files
+│   └── io.py                      read output files, write input files
+├── tests/check_asynch.c           C unit tests (22 tests: RK tables, model setups, sorting, API checks)
+├── tests/python/                  tests of the Python package
 ├── tests/regression/              example-based regression harness (see 09_reproducibility.md)
 ├── examples/                      runnable examples + reference results
+├── examples/python/               Python examples (run, sensitivity, custom model, new network)
 ├── docs/*.rst                     original Sphinx documentation (formats, models, API)
 └── docs/guide/                    this guide
 ```

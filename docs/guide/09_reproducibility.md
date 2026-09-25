@@ -1,12 +1,26 @@
 # 9. Reproducibility and regression testing
 
-> **Rule for every change to the C code:** run the regression harness before and
-> after the change. If a result moves by more than the tolerance, the change is
+> **Rule for every change to the C code:** run `make check` and the regression harness (with `--compare-to` the
+> previous build) before and after the change. If a result moves by more than the tolerance, the change is
 > *scientific* and must be explained in the `CHANGELOG.md`.
 >
 > **The benchmark is the set of example results shipped with the original ASYNCH repository**
 > (`examples/results/` and `examples/more/*/results_benchmark/`). These files are never
 > modified or regenerated. Every result is measured against them.
+
+## 9.0 All the tests: `make check`
+
+Run in the build folder, `make check` runs three sets of tests, in about a minute:
+
+| Test | File | What it checks |
+|---|---|---|
+| `check_asynch` | `tests/check_asynch.c` | 22 C unit tests: the Runge-Kutta tables satisfy the order conditions (sum of b = 1, rows of A add up to c, ...) and reach their order on y' = y; their dense output is consistent; every built-in model has consistent sizes and all the functions the solver calls; sorting and the id lookup; argument checks of `asynch_api.h` |
+| `run_python_tests.sh` | `tests/python/` | 62 tests of the Python package: runs identical to the `asynch` program, byte for byte; models written in Python identical to the built-in ones; exact solutions of reservoir chains; 70 000 links; 2 MPI processes; the example scripts |
+| `run_regression.sh` | `tests/regression/run_examples.py` | every example against the reference results (9.1) |
+
+The outcome is at the end (`# PASS: 3`, `# FAIL: 0`); the details are in `tests/*.log` of the build folder. If Python
+or NumPy is missing, the last two are reported as `SKIP`. The unit tests found three bugs (B-22 to B-24, chapter 8)
+when they were first written.
 
 ## 9.1 The harness
 

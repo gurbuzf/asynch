@@ -2,6 +2,25 @@
 
 Newest first.
 
+## 2026-09-25: link count, Python API, tests, README (owner request)
+
+- Link count above 65 535 (B-06) fixed earlier; now also covered by a Python test on a 70 000-link network.
+- New C interface `src/asynch_api.h/.c` (arrays + opaque handles, model specification). Fixed on the way:
+  B-17..B-21. Model 190 re-implemented through it: bit-identical to built-in (np=1).
+- Python package `python/asynch` (ctypes): Simulation, Model (C-code backend compiled/cached, Python backend),
+  GlobalConfig, io, `python -m asynch`. Old py/ and asynchdist*.py removed (A-01 resolved).
+  Measured: C-code model 0.12 s vs built-in 0.11 s vs Python 16 s (5 000 links, 2 h). Runs from Python are
+  byte-identical to the CLI; custom model 191 port reproduces built-in 191 exactly.
+- Tests: tests/check_asynch.c 22 unit tests (found B-22 DOPRI b' typo, B-23 param overflow in 263/601-603,
+  B-24 models without equations + static shared RK tables); tests/python 62 tests; make check runs
+  C + Python + regression (45 s). All clean in release and ASan builds; examples bit-identical to previous commit.
+- Findings not fixed: .rec files hold 7 significant digits, so a restart from .rec is not exact (h5 is);
+  documented in chapter 10 tests. Model 263 now needs 16 disk params per link (was declared 15).
+- Docs: chapter 10 (Python), README rewritten, 01/03/07/08/09 updated, docs/python_api.rst rewritten,
+  Dockerfile (ldconfig, PYTHONPATH).
+- Not yet verified: the Docker image build with these changes, and chapter 10 install option (b) (venv) on a
+  fresh machine.
+
 ## 2026-09-25: owner feedback: clarity for non-programmers, plots, Docker, decision A
 
 - Owner chose A: model 254 baseflow restored to 2015 form. All 6 original reference files now reproduced

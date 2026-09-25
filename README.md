@@ -1,191 +1,153 @@
-[![Build Status](https://travis-ci.org/Iowa-Flood-Center/asynch.svg?branch=master)](https://travis-ci.org/Iowa-Flood-Center/asynch)
-
 # ASYNCH
 
-A numerical library for solving differential equations with a tree structure. Emphasis is given to hillslope-link river basin models.
+ASYNCH solves large systems of ordinary differential equations that have the shape of a tree, such as a
+river network cut into thousands of links (hillslope-link models). Each link is integrated with its own
+adaptive time step (an *asynchronous* Runge-Kutta method), and the network can be split between many
+processors with MPI. It comes with more than 50 built-in hydrological models, such as model 190 and the
+Top Layer model 254 used at the Iowa Flood Center.
 
-> **New here? Start with the [ASYNCH guide](docs/guide/README.md).** It explains in plain words
-> what the model does ([chapter 0](docs/guide/00_what_is_asynch.md)), how to install it on your own
-> computer or with Docker and run a first simulation ([chapter 1](docs/guide/01_setup.md)), how to run
-> and change simulations ([chapter 2](docs/guide/02_running_the_model.md)), and then the equations,
-> the solver and the C code. [Chapter 7](docs/guide/07_improvements_explained.md) lists what was fixed
-> and how serious each problem was. The instructions further down this page are the original ones;
-> where they differ, follow the guide. Changes are recorded in [CHANGELOG.md](CHANGELOG.md).
+What you can do with it:
 
+* **Run simulations** from the command line: `asynch my_basin.gbl`, on one or many processors.
+* **Use it from Python**: run, stop, inspect and change simulations, build input files and global files in a
+  script, and **define new models in Python** while the computation runs at C speed
+  ([Python guide](docs/guide/10_python.md)).
+* **Use it from C** as a library (`libasynch.so`, `asynch_interface.h`, `asynch_api.h`).
 
-## Requirements
+> **New here? Start with the [ASYNCH guide](docs/guide/README.md).** It explains in plain words what the model
+> computes ([chapter 0](docs/guide/00_what_is_asynch.md)), how to install it and run a first simulation
+> ([chapter 1](docs/guide/01_setup.md)), how to run and change simulations ([chapter 2](docs/guide/02_running_the_model.md)),
+> then the equations, the solver, the C code, and the Python package ([chapter 10](docs/guide/10_python.md)).
+> [Chapter 7](docs/guide/07_improvements_explained.md) lists the problems that were found and fixed, and how serious
+> each was. Every change is recorded in [CHANGELOG.md](CHANGELOG.md).
 
-### Redhat & Centos
+## Quick start with Docker (any system)
 
-The same as **Fedora** but make sure you have the `epel-release` and the `PowerTools` repositories enabled.
-
-```shell
- sudo dnf install epel-release
- sudo dnf config-manager --set-enabled PowerTools
- sudo dnf update
+```bash
+git clone https://github.com/gurbuzf/asynch.git && cd asynch && git checkout modernization
+docker build -t asynch .                 # installs everything, compiles, runs all the tests (about 10 minutes)
+docker run --rm -it asynch               # a shell inside the container, in the examples folder
+mpirun -n 2 asynch clearcreek.gbl        # a 6 359-link basin, on 2 processors
+python3 python/run_example.py            # the same kind of run from Python
 ```
 
-If you get an error when enabling `PowerTools` because of `config-manager`, run this:
-```shell
- sudo dnf install 'dnf-command(config-manager)'
-```
+Details, and how to share a folder with the container: [chapter 1, option B](docs/guide/01_setup.md#option-b-docker-windows-macos-linux).
 
-### Fedora
+## Install on Ubuntu 24.04 (or Windows with WSL2)
 
-#### Packages
+```bash
+sudo apt-get update
+sudo apt-get install -y git ca-certificates gcc gfortran make autoconf automake libtool pkg-config \
+    openmpi-bin libopenmpi-dev libhdf5-dev hdf5-tools libpq-dev zlib1g-dev check \
+    python3 python3-numpy python3-h5py python3-matplotlib
 
-- autoconf
-- automake
-- openmpi-devel
-- hdf5-devel
-- libpq-devel
-- zlib
-- gcc-gfortran
-- gcc
-
-#### Optional
-- openblas-devel
-
-If you want ***openblas*** support with ***openmpi***, you can install the optional package, but it is not necessary for the app to work.
-
-Run this command after installing the dependencies, this will create ***symbolic links*** of all the binaries of openmpi inside the `/usr/bin/` directory so the system can detect them:
-```shell
-sudo ln -s /usr/lib64/openmpi/bin/* /usr/bin/
-```
-
-### Ubuntu & Debian
-
-#### Packages
-
-- autoconf
-- automake
-- gcc
-- make
-- openmpi-bin
-- libopenmpi-dev
-- zlib1g-dev
-- hdf5-tools
-- libhdf5-dev
-- libhdf5-openmpi-dev
-- libhdf5-cpp-103
-- libpq-dev
-- pkg-config
-
-#### Optional
-- libopenblas64-0-openmp
-- libopenblas64-0-openmp-dev
-- libopenblas64-openmp-dev
-- libopenblas-dev
-
-If you want ***openblas*** support with ***openmpi***, you can install the optional package, but it is not necessary for the app to work.
-
-## Compiling
-
-Please run the following comands to compile `asynch`:
-
-This will generate all the `configure` files and the `makefiles`.
-```shell
+git clone https://github.com/gurbuzf/asynch.git && cd asynch && git checkout modernization
 autoreconf --install
 cd build
 ../configure CFLAGS="-O3 -DNDEBUG -Wno-format-security"
-make
-make install
+make -j4
+make check                               # C unit tests, Python tests, examples vs reference results
+sudo make install && sudo ldconfig       # asynch -> /usr/local/bin, libasynch.so -> /usr/local/lib
 ```
 
-The default installation location in `/usr/local/`, you can find the `binaries` and  `libs` in `/usr/local/bin/` and `/usr/local/lib`.
+`make check` ends with `# PASS: 3` and `# FAIL: 0`. What each package is for, and what to do when a step fails:
+[chapter 1, option A](docs/guide/01_setup.md#option-a-native-install-on-ubuntu-2404). A different installation
+folder: `../configure --prefix=/my/folder ...`.
 
-If you want a custom location, you can use the `--prefix` option when running configure:
+Run the examples (paths inside a global file are relative to the folder you run from):
 
-```shell
-../configure CFLAGS="-O3 -DNDEBUG -Wno-format-security" --prefix=/custom/location/
+```bash
+cd ../examples
+mpirun -n 2 asynch test.gbl              # 11 links, model 190
+mpirun -n 4 asynch clearcreek.gbl        # Clear Creek, Iowa: 6 359 links, model 254
 ```
 
-## Docker
+## ASYNCH from Python
 
-### Note/Disclaimer
-The decision to use **fedora:latest** as the default container for docker was mainly because `asynch` needs `GLIBC > 2.29`, **Fedora 34** uses `GLIBC 2.33`, while **Redhat 8** and **Centos 8** uses `GLIBC 2.28`, I was having a little trouble setting up ``GLIBC`` inside the container for **centos:latest**. The app did compile, but is wasn't reading the ``GLIBC`` compilation I did for version ``2.29``. I think the app should be deployed using **Centos**, so if anyone wants to work around that issue, know that it is possible to solve and close to be solved.
-
-Also, ***openblas*** was not working for docker, so *the docker compilation **does not** have **openblas support**.*
-
-#### Windows
-
-**Windows** users need to have `wsl2` installed and use a linux distro to run docker inside it.
-**Enable the Windows instructions** inside the `Dockerfile` to be able to use the program correctly.
-
-
-### Running Docker
-
-Make sure you have **docker** installed in your machine, then follow this instructions:
-
-1.  Clone this repository
-2. Build the docker image, **this will take a long time**.
-	```shell
-	sudo docker build -t asynch-image .
-	```
-3. Log in into the image:
-	```shell
-	sudo docker run -it asynch-image
-	```
-4. By default, the dockerfile leaves you inside the `examples/` directory, so just see the **Running Example** instructions.
-
-5. If you want to share data between your machine and the docker, run the followiing command:
-	```shell
-	sudo docker run -it -v /your/machine/examples:/docker-image/location/examples/ asynch-image
-	```
-	Change `/your/machine/examples/` for the location where you want your data to be located inside your machine, and change `/docker-image/location/examples/` to the location where you want your files to be inside the docker image.
-	
-    **Note:** All data is saved inside your machine.
-
-6. Go to the location where your *example files* are inside the docker image, and execute them. **See Running Example.**
-
-## Running Example
-
-If everything when correctly, go to the `examples/` directory and execute the following command:
-
-```shell
-mpirun -n 4 asynch clearcreek.gbl
+```bash
+export PYTHONPATH=~/asynch/python        # or: pip install ./python in a virtual environment
 ```
 
-If you are running inside a docker container, add the `--allow-run-as-root` flag:
+```python
+from asynch import Simulation
 
-```shell
-mpirun -n 4 --allow-run-as-root asynch clearcreek.gbl
+with Simulation("test_2015.gbl") as sim:         # in examples/
+    sim.advance(60)                              # the first hour
+    g = sim.global_params
+    g[3] = 0.5                                   # model 190: runoff coefficient RC
+    sim.global_params = g                        # derived link parameters are recomputed
+    sim.run()                                    # the rest; writes the output files of the global file
+    peak_time, peak_q = sim.peaks                # for every link, in the order of sim.link_ids
 ```
 
-The output should be the following:
+A new model, written in C and compiled on the fly (or as plain Python functions, without a compiler):
 
-```shell
-Computations complete. Total time for calculations: 1.320425
+```python
+from asynch import Model, Simulation
 
-Results written to file clearcreek.h5.
-Peakflows written to file clearcreek.pea.
+model = Model(states=["q"], global_params=["k"], params=["A_h"], forcings=["rain"],
+              param_factors={"A_h": 1e6})        # km2 -> m2 when reading the parameter file
+model.equations = """
+    double inflow = upstream_q + rain * A_h * (0.001 / 3600.0);    /* mm/h on m2 -> m3/s */
+    d_q = (inflow - q) / k;                                        /* per minute */
+"""
+with Simulation("my_network.gbl", model=model) as sim:
+    sim.run()
 ```
 
-Inside the `clearcreek.pea` file, you should see the beginning exactly like this:
+More in [chapter 10](docs/guide/10_python.md) and in [`examples/python/`](examples/python): a sensitivity loop, a
+custom model with its own outputs (it reproduces the built-in model 191 exactly), and a network, its input files and
+its model built entirely from Python.
 
-```shell
-6359
-254
-```
+## Tests
 
+`make check` (in the build folder) runs:
 
+* 22 C unit tests (`tests/check_asynch.c`): the coefficient tables of the numerical methods, the setup of every
+  built-in model, sorting and lookups, argument checks;
+* 62 tests of the Python package (`tests/python`): runs identical to the `asynch` program byte for byte, models written
+  in Python identical to the built-in ones, exact solutions, 70 000-link networks, MPI;
+* every example, compared with the reference results shipped with ASYNCH (`tests/regression/run_examples.py`).
+
+How results are compared, and how to compare a change with the original code: [chapter 9](docs/guide/09_reproducibility.md).
 
 ## Documentation
 
-The documentation is available [here](http://asynch.readthedocs.io/). Thank you to the people running Read the Docs for such an excellent service.
+| | |
+|---|---|
+| [docs/guide/](docs/guide/README.md) | the guide: concepts, installation, running, equations, solver, C primer, Python, fixes, reproducibility |
+| [docs/*.rst](docs/) | the reference manual: every file format, every built-in model, the C API ([online](http://asynch.readthedocs.io/), older version) |
+| [CHANGELOG.md](CHANGELOG.md) | every change, and whether it changes numerical results |
 
-The source for the documentation is in the `docs` folder. Here are the instructions to built and read it locally. The documentation is built with [Doxygen](http://www.doxygen.org/) and [Sphinx](http://www.sphinx-doc.org). The sphinx template is from [ReadtheDocs](https://docs.readthedocs.io). [Breathe](https://breathe.readthedocs.io) provides a bridge between the Sphinx and Doxygen documentation systems.
+To build the reference manual locally (Doxygen and Sphinx):
 
-    pip install --user sphinx sphinx-autobuild sphinx_rtd_theme breathe recommonmark
-    apt-get doxygen
+```bash
+pip install --user sphinx sphinx-autobuild sphinx_rtd_theme breathe recommonmark
+sudo apt-get install doxygen
+cd docs && doxygen api.dox && doxygen devel.dox && make html     # result in docs/.build/html
+```
 
-    cd docs  
-    doxygen api.dox
-    doxygen devel.dox
-    make html
+## Repository layout
 
-The html documentation is generated in `docs/.build/html`.
+```
+src/              the C library and the asynch program (models in src/models/, solvers in src/solvers/)
+python/asynch/    the Python package
+examples/         example basins, global files and reference results; examples/python/ for Python
+tests/            C unit tests, Python tests, regression harness, synthetic network generator
+tools/python/     plotting and comparison scripts
+docs/             reference manual (.rst) and guide (docs/guide/)
+```
 
-## Testing
+A map of the code, file by file: [chapter 3](docs/guide/03_code_map.md).
 
-Asynch doesn't have a good test covergage at the moment but the unit test framework is in place.
+## Other systems (not tested)
+
+**Fedora**: install `autoconf automake libtool gcc gcc-gfortran make openmpi-devel hdf5-devel libpq-devel zlib-devel
+check-devel python3-numpy`, then make the MPI programs visible with `sudo ln -s /usr/lib64/openmpi/bin/* /usr/bin/`,
+and build as above. **Red Hat / CentOS**: as Fedora, after enabling the `epel-release` and `PowerTools` repositories
+(`sudo dnf install epel-release && sudo dnf config-manager --set-enabled PowerTools`). OpenBLAS is optional.
+**macOS**: use Docker. See also [chapter 1, option C](docs/guide/01_setup.md#option-c-other-systems-not-tested).
+
+## License
+
+See [LICENSE](LICENSE).

@@ -45,6 +45,9 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [B-19](#b-19) | **fixed** | code reading | Model 190 read a third forcing value that does not exist (unused, no effect on results) |
 | [B-20](#b-20) | **fixed** | confirmed | Custom outputs of non-interpolated states were written as 0 / memory contents |
 | [B-21](#b-21) | **fixed** | code reading | Custom models inherited the snapshot filter of the built-in model with the same number |
+| [B-22](#b-22) | **fixed** | unit test | Wrong constant in the Dormand-Prince dense-output derivative (no effect: multiplied by 0) |
+| [B-23](#b-23) | **fixed** | unit test | Models 263 and 601-603 wrote/read one or two parameters past the per-link array |
+| [B-24](#b-24) | **fixed** | unit test | 7 model numbers without equations crashed; RK tables shared by all solvers of a program |
 | [R-01](#r-01) | fixed | confirmed | No automated regression tests; only one unit test (`days_in_month`) |
 | [R-02](#r-02) | **resolved** | confirmed | clearcreek references (2015) differ: another configuration, and a 2021 change to model 254 |
 | [R-03](#r-03) | medium | confirmed | Model 259 benchmark cannot be reproduced from the files in the repository |
@@ -341,6 +344,33 @@ that a state exists) was fixed in `Initialize_Model`.
 `SetOutputConstraints` chooses a filter for `.h5` snapshots from the model number of the global file, even for a
 custom model, whose states may mean something else. Custom models now get no filter.
 
+### B-22
+**Wrong constant in the derivative of the Dormand-Prince dense output.** *Low, confirmed by a unit test.*
+`DOPRI5_bderiv` (`src/solvers/dopri5_dense.c`) had `1144640195640` where 32805 x 3489224 = `114463993320` belongs
+(the fifth coefficient). The derivative is only evaluated at theta = 1 (`src/steppers/explicit_index1_dam.c`), where
+this term is multiplied by 0, so no result was affected. **Fixed** (2026-09-25).
+
+### B-23
+**Models 263, 601, 602 and 603 wrote and read past the parameter array of every link.** *High for users of these
+models, confirmed by a unit test.* `SetParamSizes` (`src/models/definitions.c`) declared fewer parameters per link
+(`num_params`) than it reads from disk (`num_disk_params`): 14 < 15 (263 and 601), 16 < 17 (602), 20 < 21 (603). The
+reader stores every value read into an array of `num_params` doubles, so the last one was written past it. The
+precalculations of 601-603 then read it (`v_0`, used for `invtau`) from there, and the equations of 263 read two values
+(`v_B`, `k_tl`) past the array: results depended on whatever memory followed. **Fixed** (2026-09-25): the arrays have
+room for every value read (15, 17, 21; 16 for model 263, whose equations use 16 values, all read from disk: its
+parameter files or database queries must give 16 values per link).
+
+### B-24
+**Seven model numbers crashed at the first step; the Runge-Kutta tables were shared by all solvers.** *Medium,
+confirmed by unit tests.*
+* Models 200, 260, 300, 301, 315, 607 and 2000 have sizes in `SetParamSizes` but no equations (200 is meant for
+  another program; 260's equation is commented out; the others have no `InitRoutines` branch). A run called a null
+  function. `Initialize_Model` now stops with `Error: model N cannot be integrated by ASYNCH ... (no equations)`.
+* `Build_RKData` (`src/riversys.c`) built the tables into a `static` array, shared by every solver of the program.
+  With two solvers (easy from Python), creating the second rebuilt the tables of the first. Each solver now owns its
+  array, and `Destroy_RKMethod` frees what the constructors allocate (it freed nothing; RK 4(3) pointed `b` to a static
+  table, so it could not be freed consistently).
+
 ---
 
 ## Reproducibility
@@ -348,7 +378,9 @@ custom model, whose states may mean something else. Custom models now get no fil
 ### R-01
 **No regression testing.** *High.* `make check` runs a single unit test (`days_in_month`).
 Nothing checks that the model still produces the same hydrographs. **Addressed by**
-`tests/regression/run_examples.py` (see [09_reproducibility.md](09_reproducibility.md)).
+`tests/regression/run_examples.py` (see [09_reproducibility.md](09_reproducibility.md)). Since 2026-09-25
+`make check` runs 22 C unit tests (`tests/check_asynch.c`), 62 tests of the Python package (`tests/python`) and the
+9 example comparisons; the unit tests found B-22, B-23 and B-24.
 
 ### R-02
 **Clearcreek reference is from another configuration, and model 254 changed in 2021.** *Medium, confirmed.*
@@ -417,10 +449,10 @@ tolerance**, never byte by byte.
 * It re-declares C structs (`UnivVars`, …) in `ctypes` with the *old* field layout.
   Even if it loaded, it would read and write memory at the wrong offsets.
 
-**Possible approach:** rewrite it as a thin binding over a small, stable
-C API that exposes only *opaque handles* and getter/setter functions (never struct
-layouts). Build it as a shared library and wrap it with `ctypes` or `cffi`. A first useful scope:
-run a `.gbl`, get/set states and parameters, read hydrographs into NumPy.
+**Resolved** (2026-09-25): replaced by the package in `python/` (chapter 10), a `ctypes` binding over the
+shared library `libasynch.so` and a small C interface (`src/asynch_api.h`) that exposes only numbers, arrays and
+opaque handles, never structure layouts. `py/`, `asynchdist.py` and `asynchdist_custom.py` were removed; the custom
+model of `asynchdist_custom.py` is ported in `examples/python/custom_model.py` and reproduces model 191 exactly.
 
 ---
 
