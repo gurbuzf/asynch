@@ -88,9 +88,34 @@ CASES = [
         "workdir": ".",
         "gbl": "clearcreek.gbl",
         "compare": [("clearcreek.pea", "results/clearcreek.pea", "pea")],
+        # See docs/guide/05_known_issues.md, issue "R-02". The same reference is checked with its
+        # original configuration in the case "clearcreek, 2015 configuration".
+        "xfail": ("the reference was produced by the 2015 configuration (6000 min from 2014-05-01), "
+                  "not by clearcreek.gbl (1440 min from 2017-01-01)"),
+    },
+]
+# The 2015 configurations that produced examples/results/*.dat, *.pea and *.rec
+# (see the header of examples/test_2015.gbl and examples/clearcreek_2015.gbl).
+CASES += [
+    {
+        "name": "test, 2015 configuration (model 190)",
+        "workdir": ".",
+        "gbl": "test_2015.gbl",
+        "compare": [("out_2015/test.dat", "results/test.dat", "dat"),
+                    ("out_2015/test.pea", "results/test.pea", "pea"),
+                    ("out_2015/test.rec", "results/test.rec", "rec")],
+        "xfail": None,
+    },
+    {
+        "name": "clearcreek, 2015 configuration (model 254)",
+        "workdir": ".",
+        "gbl": "clearcreek_2015.gbl",
+        "compare": [("out_2015/clearcreek.dat", "results/clearcreek.dat", "dat"),
+                    ("out_2015/clearcreek.pea", "results/clearcreek.pea", "pea"),
+                    ("out_2015/clearcreek.rec", "results/clearcreek.rec", "rec")],
         # See docs/guide/05_known_issues.md, issue "R-02".
-        "xfail": ("reference dates from 2015 and was produced by a longer simulation "
-                  "(outlet peak at 3001 min, but clearcreek.gbl simulates 1440 min)"),
+        "xfail": ("model 254 was changed in 2021 (commit 93241a3: baseflow floor max(0.001, q_b)); "
+                  "without that line the references are reproduced within the solver tolerance"),
     },
 ]
 for _m in (192, 196, 258, 259):
@@ -122,7 +147,10 @@ def read_pea(path):
     header, body = lines[:2], lines[2:]
     rows["header"] = [float(x) for h in header for x in h]
     for parts in body:
-        rows["link %s" % parts[0]] = [float(x) for x in parts[1:]]
+        vals = [float(x) for x in parts[1:]]
+        # The time of the peak is kept apart: it gets its own tolerance (see PEAK_TIME_ATOL).
+        rows["link %s" % parts[0]] = vals[:1] + vals[2:]
+        rows["link %s time of peak" % parts[0]] = vals[1:2]
     return rows
 
 
@@ -204,14 +232,23 @@ def read_h5_any(path):
     return rows
 
 
-READERS = {"pea": read_pea, "csv": read_csv, "h5": read_h5}
+READERS = {"pea": read_pea, "csv": read_csv, "h5": read_h5,
+           "dat": None, "rec": None}      # set below, once read_text_numbers is defined
+READERS["dat"] = READERS["rec"] = read_text_numbers
 # Readers used when comparing two executables, chosen by file extension.
 ANY_READERS = {".pea": read_pea, ".csv": read_csv, ".h5": read_h5_any,
                ".dat": read_text_numbers, ".rec": read_text_numbers}
 
 
+# Tolerance [minutes] for the time of a peak. On a flat-topped hydrograph the time of the maximum
+# is ill-conditioned: a change of 1e-7 m3/s can move it by many minutes (observed: up to ~15 min
+# between two runs of the same code with 2 processes). The peak value itself is checked with the
+# normal tolerances. Set with --peak-time-atol.
+PEAK_TIME_ATOL = 20.0
+
+
 def compare(new, ref, rtol, atol):
-    """Return (ok, messages, max_abs, max_rel)."""
+    """Return (ok, messages, max_abs, max_rel). Max differences exclude times of peaks."""
     msgs = []
     max_abs = max_rel = 0.0
     missing = sorted(set(ref) - set(new))
@@ -227,12 +264,19 @@ def compare(new, ref, rtol, atol):
             msgs.append("%s: %d values, expected %d" % (key, len(a), len(b)))
             n_bad += 1
             continue
+        is_time = key.endswith("time of peak")
         for x, y in zip(a, b):
             if math.isnan(x) or math.isnan(y):
                 if not (math.isnan(x) and math.isnan(y)):
                     n_bad += 1
                 continue
             d = abs(x - y)
+            if is_time:
+                if d > PEAK_TIME_ATOL:
+                    n_bad += 1
+                    if n_bad <= 3:
+                        msgs.append("%s: got %.10g, expected %.10g" % (key, x, y))
+                continue
             max_abs = max(max_abs, d)
             if y != 0.0:
                 max_rel = max(max_rel, d / abs(y))
@@ -342,16 +386,20 @@ def find_mpirun():
 
 
 def main():
+    global PEAK_TIME_ATOL
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--asynch", default=os.path.join(REPO, "build", "src", "asynch"),
                     help="path to the asynch executable (default: build/src/asynch)")
     ap.add_argument("--np", type=int, default=1, help="number of MPI processes (default 1)")
     ap.add_argument("--rtol", type=float, default=1e-4, help="relative tolerance (default 1e-4)")
-    ap.add_argument("--atol", type=float, default=1e-5,
-                    help="absolute tolerance (default 1e-5, 10x tighter than the loosest solver "
-                         "tolerance used by the examples)")
+    ap.add_argument("--atol", type=float, default=None,
+                    help="absolute tolerance (default 1e-5 with 1 process, 1e-3 with several: two runs "
+                         "of the same code with several processes differ by up to ~1e-4, see "
+                         "docs/guide/06_reproducibility.md)")
     ap.add_argument("--only", help="run only cases whose name contains this text")
     ap.add_argument("--keep", action="store_true", help="keep the temporary run directory")
+    ap.add_argument("--peak-time-atol", type=float, default=PEAK_TIME_ATOL,
+                    help="tolerance in minutes for the time of peaks in .pea files (default 20)")
     ap.add_argument("--timeout", type=int, default=600,
                     help="seconds after which a run is killed and counted as a failure (default 600)")
     ap.add_argument("--verbose", action="store_true",
@@ -359,6 +407,9 @@ def main():
     ap.add_argument("--compare-to", metavar="ASYNCH",
                     help="also run this executable (e.g. the original code) and compare every output file")
     args = ap.parse_args()
+    PEAK_TIME_ATOL = args.peak_time_atol
+    if args.atol is None:
+        args.atol = 1e-5 if args.np == 1 else 1e-3
 
     for exe in [args.asynch] + ([args.compare_to] if args.compare_to else []):
         if not os.path.isfile(exe):
@@ -394,6 +445,10 @@ def main():
         if args.only and args.only not in case["name"]:
             continue
         wd = os.path.join(run_root, case["workdir"])
+        for produced, _, _ in case["compare"]:   # asynch does not create output directories
+            for root in (run_root, orig_root if args.compare_to else None):
+                if root:
+                    os.makedirs(os.path.join(root, case["workdir"], os.path.dirname(produced)), exist_ok=True)
         # files already present (inputs, or outputs of an earlier case in the same directory)
         skip = {os.path.relpath(os.path.join(run_root, i), wd) for i in inputs} | list_outputs(wd, set())
         rc, tail = run_asynch(mpi_cmd, args.asynch, wd, case["gbl"], env, args.timeout)

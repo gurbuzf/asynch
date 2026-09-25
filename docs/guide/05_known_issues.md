@@ -39,7 +39,7 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [B-12](#b-12) | **fixed** | code reading |
 | [B-14](#b-14) | **fixed** | confirmed | Reading an `.rkd` file (per-link tolerances) never finished: 5 defects in `Build_RKData` | `.uini` reader misses "not enough values" (checks `== 0`, `fscanf` returns `EOF`); clearcreek.uini is short |
 | [R-01](#r-01) | fixed | confirmed | No automated regression tests; only one unit test (`days_in_month`) |
-| [R-02](#r-02) | medium | confirmed | `examples/results/clearcreek.pea` (2015) does not match today's `clearcreek.gbl` |
+| [R-02](#r-02) | explained | confirmed | clearcreek references (2015) differ: another configuration, and a 2021 change to model 254 |
 | [R-03](#r-03) | medium | confirmed | Model 259 benchmark cannot be reproduced from the files in the repository |
 | [R-04](#r-04) | fixed | confirmed | Examples 258/259 pointed to a file on the original developers' cluster |
 | [R-05](#r-05) | info | confirmed | Results change at noise level with the number of MPI processes |
@@ -51,7 +51,7 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [P-02](#p-02) | medium | code reading | Snapshots gather every link through rank 0 one message at a time |
 | [P-03](#p-03) | ? | hypothesis | Scheduler, barriers and step-size resets in `Advance`: needs profiling |
 | [S-01](#s-01) | open question | code reading | Parent states indexed with `dim` instead of `max_dim` in the equations |
-| [S-02](#s-02) | open question | code reading | Model 254 baseflow uses `max(0.001, q_b)` in its sink term |
+| [S-02](#s-02) | open question | confirmed | Model 254 baseflow uses `max(0.001, q_b)` in its sink term, added in 2021; changes results vs 2015 |
 | [S-03](#s-03) | open question | code reading | Potential evaporation assumes a 30-day month |
 | [S-04](#s-04) | open question | code reading | Models 400–405: `temperature == 0` treated as "no snow" |
 | [S-05](#s-05) | open question | code reading | Snapshot filter rewrites cumulative states with `fmod(x, 1e200)` |
@@ -269,14 +269,25 @@ Nothing checks that the model still produces the same hydrographs. **Addressed b
 `tests/regression/run_examples.py` (see [06_reproducibility.md](06_reproducibility.md)).
 
 ### R-02
-**Clearcreek reference is from another configuration.** *Medium, confirmed.*
-`examples/results/clearcreek.pea` was committed in 2015 (commit `f02517e`, the first
-import), by code and inputs that have changed a lot since. 5 013 of the 6 359 links
-still match it within tolerance. For the outlet (link 2527), however, the reference peak is
-at **3001 min**, while `clearcreek.gbl` only simulates **1440 min** (one day), so the
-reference was produced with a longer simulation, and today's outlet "peak" is simply the last value
-of the run. The reference cannot be used to validate the current example.
-**Options:** regenerate the reference from the current inputs (once B-01 is fixed), or restore the original configuration.
+**Clearcreek reference is from another configuration, and model 254 changed in 2021.** *Medium, confirmed.*
+`examples/results/clearcreek.pea` (with `.dat` and `.rec`) was committed in May 2015 (commit
+`b73fc2d`, the first import). For the outlet (link 2527) the reference peak is at **3001 min**,
+while `clearcreek.gbl` only simulates **1440 min** (one day), so the reference cannot validate
+today's example as it stands.
+
+*Explained* (2026-09-25). The 2015 global file (`Global254.gbl` in `b73fc2d`) simulated **6000
+minutes starting 2014-05-01**. All input files are byte-for-byte the same today. That configuration
+is now `examples/clearcreek_2015.gbl`. Running it:
+* with today's code, the references are **not** reproduced (hydrograph differences up to 0.085 m³/s;
+  zeros where the reference has small baseflow values);
+* with today's code and **one line** of `model254` restored to its 2015 form
+  (`double q_b = y_i[6];` instead of `max(0.001, y_i[6])`), hydrographs and final states agree with the
+  references within the solver tolerance (largest difference 9.4e-5, solver abs tolerance 1e-4), and peak
+  discharges within 1.7e-4 m³/s.
+
+So the difference is model 254 itself: the floor `max(0.001, q_b)` was added in January 2021, in commit
+`93241a3`, whose message is "added model 194". That change of the operational model is not
+mentioned anywhere. See S-02. The reference files are kept unchanged.
 
 ### R-03
 **Model 259 benchmark cannot be reproduced.** *Medium, confirmed.* The 2018 commit that
@@ -285,8 +296,8 @@ today's code**, and both differ from the benchmark (outlet peak 0.696 vs 0.755 m
 So the code has *not* changed. The benchmark was produced with an input that is not
 in the repository, most likely model 259's own `evap.mon` on the original cluster
 (`/Dedicated/IFC/.../mdl259a/evap.mon`). With zero evaporation the peak is 0.845, so the
-original file lies between the two. **Options:** regenerate the benchmark with
-the repository's `evap.mon`.
+original file lies between the two. The benchmark files are kept unchanged; the case stays
+a known mismatch unless the original evaporation file is found.
 
 ### R-04
 **Examples 258/259 referenced a cluster path.** *Fixed.* Their `.gbl`
@@ -402,9 +413,14 @@ reservoirs or coupled models). Recommendation: use `max_dim` (it is already pass
 
 ### S-02
 Model 254's baseflow equation uses `q_b = max(0.001, y[6])` in its outflow term
-(`equations.c:1638`). The baseflow state can therefore never drain below 0.001 m³/s
-through that term. This is a numerical safeguard (it avoids `q_b → 0` problems), but it
-changes the water balance at low flow and should be documented as part of the model.
+(`equations.c:1638`). When the baseflow is below 0.001 m³/s, the channel still loses baseflow as if
+it were 0.001 m³/s, so it drains faster than the linear reservoir would and is then clamped to 0 by
+`check_consistency`. This changes the water balance at low flow.
+
+This line was **not** part of the original model: it was added in January 2021 (commit `93241a3`,
+"added model 194") and changed model 254's results (see R-02). With the 2015 form (`q_b = y[6]`),
+today's code reproduces the original repository's clearcreek references within the solver tolerance.
+Whether to keep the floor is a modelling decision. Until it is taken, the code is left unchanged.
 
 ### S-03
 Potential evapotranspiration is converted from mm/month to m/min with a fixed 30-day

@@ -2,14 +2,16 @@
 
 > **Rule for every change to the C code:** run the regression harness before and
 > after the change. If a result moves by more than the tolerance, the change is
-> *scientific*. It must be explained in the `CHANGELOG.md` and, if intended, the
-> benchmark is regenerated in the same commit, with the reason written down.
+> *scientific* and must be explained in the `CHANGELOG.md`.
+>
+> **The benchmark is the set of example results shipped with the original ASYNCH repository**
+> (`examples/results/` and `examples/more/*/results_benchmark/`). These files are never
+> modified or regenerated. Every result is measured against them.
 
 ## 6.1 The harness
 
 `tests/regression/run_examples.py` runs every example shipped in `examples/` and
-compares the produced files with the reference ("benchmark") files stored in the
-repository.
+compares the produced files with those original reference ("benchmark") files.
 
 ```bash
 # after building (see 01_build_and_run.md)
@@ -31,7 +33,9 @@ python3 tests/regression/run_examples.py --asynch /path/to/other/asynch --keep
 |---|---|---|---|
 | `test` | 190 (constant runoff) | `test.pea` | `examples/results/test.pea` |
 | `test with .rkd file` | 190, tolerances from `examples/test.rkd` | `test_rkd.pea` | `examples/results/test.pea` (same settings, same result) |
-| `clearcreek` | 254 (top layer) | `clearcreek.pea` | `examples/results/clearcreek.pea`, **known mismatch** (R-02) |
+| `test, 2015 configuration` | 190 | hydrographs `.dat`, peaks `.pea`, final states `.rec` | `examples/results/test.dat`, `.pea`, `.rec` |
+| `clearcreek` | 254 (top layer) | `clearcreek.pea` | `examples/results/clearcreek.pea`, **known mismatch**: the reference comes from the 2015 configuration (next line) |
+| `clearcreek, 2015 configuration` | 254 | `.dat`, `.pea`, `.rec` | `examples/results/clearcreek.dat`, `.pea`, `.rec`, **known mismatch** (R-02: model 254 changed in 2021) |
 | `model_192` | 192 | hydrograph `.csv`, peaks `.pea`, snapshot `.h5` | `examples/more/model_192/results_benchmark/` |
 | `model_196` | 196 | idem | idem |
 | `model_258` | 258 | idem | idem |
@@ -39,6 +43,24 @@ python3 tests/regression/run_examples.py --asynch /path/to/other/asynch --keep
 
 A *known mismatch* (`XFAIL`) is reported but does not make the run fail. A **crash is
 always a failure**, even for those cases.
+
+### The 2015 configurations
+
+The reference files in `examples/results/` (`.dat`, `.pea`, `.rec`) were all produced in May 2015
+(commit `b73fc2d`) with global files that are no longer in the repository: `Global190.gbl` (300
+minutes) and `Global254.gbl` (6000 minutes), both starting on 2014-05-01. The input files
+(topology, parameters, rain, evaporation) are byte-for-byte the same today.
+`examples/test_2015.gbl` and `examples/clearcreek_2015.gbl` are those two configurations written in
+today's format; they write into `examples/out_2015/`. Run them like any example:
+
+```bash
+cd examples
+mpirun -n 2 ../build/src/asynch test_2015.gbl        # compare out_2015/test.* with results/test.*
+```
+
+Results: the `test` references are reproduced (hydrographs within 5e-7). The `clearcreek` references
+are reproduced within the solver tolerance only when one line of model 254 is restored to its
+2015 form; see issue R-02 in [05_known_issues.md](05_known_issues.md).
 
 ### Comparing with the original code (`--compare-to`)
 
@@ -71,9 +93,10 @@ or a file the original wrote but the new code did not, makes the case **FAIL**, 
 | processes | same code, two runs | what a change must achieve |
 |---|---|---|
 | `--np 1` | bit-identical | **bit-identical**, unless the change is meant to alter results |
-| `--np 2`, `--np 4` | differences up to ~1e-6 relative (asynchronous scheduling, see §6.2) | within tolerance |
+| `--np 2`, `--np 4` | differ: ~1e-6 relative on 1-day runs; up to ~1e-4 absolute on the 6000-minute clearcreek run (measured: three 4-process runs of the original code differed by 8.4e-5, 9.7e-5 and 1.15e-4) | within tolerance |
 
 So a pure bug fix or refactoring must give "N of N output files identical" with one process.
+That is the strict test. Runs with several processes check that nothing breaks in parallel.
 
 ## 6.2 Why compare with a tolerance?
 
@@ -86,14 +109,22 @@ The solver itself only guarantees accuracy up to its tolerances, which are given
 the `.gbl` file (typically `1e-3`…`1e-6` absolute and `1e-6` relative for discharge). So
 differences below those tolerances carry no information. The harness accepts
 
-    |new − ref| ≤ atol + rtol·|ref|        with  atol = 1e-5,  rtol = 1e-4
+    |new − ref| ≤ atol + rtol·|ref|        with  rtol = 1e-4  and
+                                          atol = 1e-5 with 1 process, 1e-3 with several
 
 and **always prints the largest absolute and relative difference**. A real regression (a
 changed equation, a wrong unit, a parameter off by one index) produces differences of
-percent or more, orders of magnitude above this threshold.
+percent or more, orders of magnitude above this threshold. The larger `atol` with several
+processes covers the run-to-run variation measured above (up to ~1e-4). Both can be set with
+`--atol` and `--rtol`.
 
-Files are compared by **link id** (`.pea`, `.h5`) or by row (`.csv`), so a different
-order of links in the file (which happens with MPI) does not matter.
+**Time of the peak.** In `.pea` files, the time of each peak is compared with its own tolerance,
+20 minutes by default (`--peak-time-atol`). On a flat-topped hydrograph the minute of the maximum is
+ill-conditioned: two runs of the same code with 2 processes put some clearcreek peaks 15 minutes
+apart while their values agree to 1e-7 m³/s. The peak *value* is always checked with the normal tolerance.
+
+Files are compared by **link id** (`.pea`, `.h5`) or by row (`.csv`, `.dat`, `.rec`), so a different
+order of links in the file (which happens with MPI) does not matter for `.pea` and `.h5`.
 
 ## 6.3 Reference baseline (commit `84da43a` + example path fix)
 

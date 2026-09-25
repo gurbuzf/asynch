@@ -8,6 +8,37 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Regression tests against all reference results of the original repository
+
+*Results:* no change to the model (examples and tests only).
+
+#### Added
+- `examples/test_2015.gbl`, `examples/clearcreek_2015.gbl`, `examples/out_2015/`: the configurations
+  that produced the reference results shipped with ASYNCH (`examples/results/*.dat`, `*.pea`, `*.rec`,
+  commit `b73fc2d`, May 2015), written in today's global file format: 300 and 6000 minutes from
+  2014-05-01, `.dat` hydrographs every 5 minutes, `.rec` final states. The input files are unchanged
+  since 2015.
+- Two regression cases running them. All six original reference files are now checked:
+  - `test`: `.dat`, `.pea` and `.rec` are **reproduced** (largest hydrograph difference 5e-7).
+  - `clearcreek`: **not reproduced**, known mismatch. Restoring one line of model 254 to its 2015 form
+    reproduces them within the solver tolerance (largest difference 9.4e-5, solver abs tolerance 1e-4).
+    The floor `max(0.001, q_b)` in the baseflow equation was added in January 2021 (commit `93241a3`,
+    "added model 194") and changed model 254's results. The model code is left unchanged: whether to keep
+    the floor is a modelling decision (issue S-02).
+
+#### Changed
+- `tests/regression/run_examples.py`:
+  - compares `.dat` and `.rec` files;
+  - compares the time of each peak with its own tolerance (`--peak-time-atol`, default 20 min), because
+    the minute of a flat maximum is ill-conditioned; peak values keep the normal tolerance;
+  - uses `atol` 1e-3 by default with several MPI processes (1e-5 with one). Three 4-process runs of the
+    unchanged original code differed from each other by up to 1.15e-4 on the 6000-minute clearcreek run.
+    The strict test stays the 1-process run, which must be bit-identical;
+  - creates the output directories of each case.
+- `docs/guide/06_reproducibility.md`: the reference files of the original repository are the benchmark
+  and are never modified. It also documents the 2015 configurations and the tolerance policy.
+- `docs/guide/05_known_issues.md`: R-02 explained, S-02 history. R-03 unchanged (benchmark kept).
+
 ### Fix B-14 and B-05: `.rkd` files (tolerances and method per link) work again
 
 *Results:* unchanged for every existing example (bit-identical to the original code with 1 process,

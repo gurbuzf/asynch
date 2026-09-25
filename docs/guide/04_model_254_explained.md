@@ -130,7 +130,8 @@ m³/s. The parents' discharges are read from `y_p[i*dim]` (the parent's state 0)
             = (60·v_B/L) · ( A_h·q_sc/60 + Σ_parents q_b,parent − q_b' )
 
 The second form shows it is a linear reservoir with rate 60·v_B/L [1/min] (v_B in m/s,
-L in m). The `.rst` documentation omits the factor 60 in front of the parents' baseflow (D-02).
+L in m). The floor `max(0.001, q_b)` was added in 2021. The original (2015) model used `q_b` directly,
+and the reference results shipped with ASYNCH were computed without the floor (issues S-02, R-02). The `.rst` documentation omits the factor 60 in front of the parents' baseflow (D-02).
 
 ## 4.5 Initial state (`ReadInitData`, `definitions.c` ~line 3573)
 
