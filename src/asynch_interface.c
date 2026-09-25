@@ -461,6 +461,7 @@ void Asynch_Free(AsynchSolver* asynch)
     free(asynch->assignments);
     for (i = 0; i < asynch->num_methods; i++)
         Destroy_RKMethod(&asynch->rk_methods[i]);
+    free(asynch->rk_methods);
     if (asynch->save_list)
         free(asynch->save_list);
     if (asynch->peaksave_list)

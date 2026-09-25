@@ -391,7 +391,9 @@ case 20:	num_global_params = 9;
     
     case 601:	num_global_params = 1;
         globals->uses_dam = 0;
-        globals->num_params = 14;
+        //Room for the 15 values read from disk: the last one (v_0) is only used by the precalculations,
+        //which store invtau in params[13]. Until 2026 this said 14: the reader wrote v_0 past the array (B-23).
+        globals->num_params = 15;
         globals->dam_params_size = 0;
         globals->area_idx = 0;
         globals->areah_idx = 2;
@@ -403,7 +405,9 @@ case 20:	num_global_params = 9;
 
     case 602:	num_global_params = 1;
         globals->uses_dam = 0;
-        globals->num_params = 16;
+        //Room for the 17 values read from disk: the last one (v_0) is only used by the precalculations,
+        //which store invtau in params[15]. Until 2026 this said 16: the reader wrote v_0 past the array (B-23).
+        globals->num_params = 17;
         globals->dam_params_size = 0;
         globals->area_idx = 0;
         globals->areah_idx = 2;
@@ -415,7 +419,9 @@ case 20:	num_global_params = 9;
     
     case 603:	num_global_params = 1;
         globals->uses_dam = 0;
-        globals->num_params = 20;
+        //Room for the 21 values read from disk: the last one (v_0) is only used by the precalculations,
+        //which store invtau in params[19]. Until 2026 this said 20: the reader wrote v_0 past the array (B-23).
+        globals->num_params = 21;
         globals->dam_params_size = 0;
         globals->area_idx = 0;
         globals->areah_idx = 2;
@@ -680,11 +686,14 @@ case 20:	num_global_params = 9;
   case 263: //256 with distributed params
 		num_global_params = 13;
 		globals->uses_dam = 0;
-		globals->num_params = 14;
+		//The equations read 16 link parameters, all from disk (A_i, L_i, A_h, v_0, lambda_1, lambda_2, v_h,
+		//k_i_factor, k_3, h_b, S_L, A, B, exponent, v_B, k_tl). Until 2026 this said 14 and 15: the reader
+		//wrote past the parameter array and the equations read v_B and k_tl from beyond it (issue B-23).
+		globals->num_params = 16;
 		globals->dam_params_size = 0;
 		globals->area_idx = 0;
 		globals->areah_idx = 2;
-		globals->num_disk_params = 15;
+		globals->num_disk_params = 16;
 		globals->convertarea_flag = 0;
 		globals->num_forcings = 3;
 		globals->min_error_tolerances = 8;

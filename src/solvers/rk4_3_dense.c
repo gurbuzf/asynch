@@ -54,12 +54,12 @@ void TheRKDense4_3(RKMethod* method)
     //A[3][2] = 1;
     method->A = A[0];
 
-    static double b[] = { 1.0 / 6.0, 2.0 / 6.0, 2.0 / 6.0, 1.0 / 6.0 };
-    //b[0] = 1.0 / 6.0;
-    //b[1] = 2.0 / 6.0;
-    //b[2] = 2.0 / 6.0;
-    //b[3] = 1.0 / 6.0;
-    method->b = b;
+    //b is allocated, as in the other methods, so that Destroy_RKMethod can free it
+    method->b = malloc(method->num_stages * sizeof(double));
+    method->b[0] = 1.0 / 6.0;
+    method->b[1] = 2.0 / 6.0;
+    method->b[2] = 2.0 / 6.0;
+    method->b[3] = 1.0 / 6.0;
 
     method->dense_b(1.0, method->b_theta);
 

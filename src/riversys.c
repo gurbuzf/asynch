@@ -701,8 +701,9 @@ int Build_RKData(
 {
     FILE* rkdata = NULL;
 
-    //Build all the RKMethods
-    static RKMethod rk_methods[4];
+    //Build all the RKMethods. Each solver owns its array (freed by Asynch_Free): with a static array,
+    //several solvers in one program (e.g. Python) would share and overwrite the same tables.
+    RKMethod *rk_methods = calloc(4, sizeof(RKMethod));
     RKDense3_2(&rk_methods[0]);
     TheRKDense4_3(&rk_methods[1]);
     DOPRI5_dense(&rk_methods[2]);
@@ -904,6 +905,16 @@ int Initialize_Model(
             }
 
             max_dim = (max_dim < system[i].dim) ? system[i].dim : max_dim;
+
+            //A model without equations (e.g. model 200, meant for another program) would crash at the first step
+            if (!system[i].differential || !system[i].solver || !system[i].check_consistency)
+            {
+                if (!my_error_code)
+                    printf("[%i]: Error: model %hu cannot be integrated by ASYNCH at link %u (no %s).\n", my_rank,
+                        globals->model_uid, system[i].ID, !system[i].differential ? "equations" :
+                        (!system[i].solver ? "solver" : "consistency check"));
+                my_error_code = 1;
+            }
 
             //Be sure the problem dimension and number of error tolerances are compatible
             //if (assignments[i] == my_rank)

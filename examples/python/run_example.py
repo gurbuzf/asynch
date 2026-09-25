@@ -17,7 +17,8 @@ from asynch import Simulation
 gbl = sys.argv[1] if len(sys.argv) > 1 else "test_2015.gbl"
 
 with Simulation(gbl) as sim:
-    print("%s: model %d, %d links, %g minutes" % (gbl, sim.model_uid, sim.num_links, sim.duration_total))
+    if sim.rank == 0:                                  # with mpirun, every process runs this script
+        print("%s: model %d, %d links, %g minutes" % (gbl, sim.model_uid, sim.num_links, sim.duration_total))
     sim.run()                                          # integrate, then write the outputs of the global file
     peak_time, peak_q = sim.peaks
     ids = sim.link_ids

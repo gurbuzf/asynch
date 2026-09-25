@@ -189,12 +189,12 @@ void Destroy_RKMethod(RKMethod* method)
 {
     assert(method != NULL);
 
-    //if (method->b)
-    //    free(method->b);
-    //if (method->b_theta)
-    //    free(method->b_theta);
-    //if (method->b_theta_deriv)
-    //    free(method->b_theta_deriv);
+    //The constructors (src/solvers/*.c) allocate these; A, c, e and d are static tables
+    free(method->b);
+    free(method->b_theta);
+    free(method->b_theta_deriv);
+    free(method->w);
+    method->b = method->b_theta = method->b_theta_deriv = method->w = NULL;
 }
 
 //Frees an ErrorData allocated for one link (when tolerances come from an .rkd file)
