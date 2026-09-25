@@ -89,8 +89,7 @@ Asynch_Create_Peakflows_Output   write .pea
 Asynch_Delete_Temporary_Files, Asynch_Free
 ```
 
-Because it is a sequence of API calls, you can write your own `main()` (or, in the
-future, a Python script) that does the same thing and changes something in between,
+Because it is a sequence of API calls, you can write your own `main()` that does the same thing and changes something in between,
 e.g. overwriting parameters after `Asynch_Load_Network_Parameters`.
 
 ## 2.4 The core data structures (`src/structs.h`)

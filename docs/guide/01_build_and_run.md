@@ -71,7 +71,7 @@ $ make check        # runs the (single) C unit test
 $ python3 ../tests/regression/run_examples.py --np 2
 ```
 The second command runs all examples and compares them with the reference results. The expected
-output today is described in [06_reproducibility.md §6.3](06_reproducibility.md#63-baseline-measured-in-phase-1-commit-84da43a--example-path-fix).
+output today is described in [06_reproducibility.md §6.3](06_reproducibility.md#63-reference-baseline-commit-84da43a--example-path-fix).
 
 ## 1.3 Run an example
 

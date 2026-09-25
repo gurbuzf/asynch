@@ -8,15 +8,14 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
-### Phase 1: understanding and audit (2026-09-25)
+### 2026-09-25: documentation, regression tests, example fixes
 
 No change to the C source code: the model computes exactly what it computed before.
 
 #### Added
 - `docs/guide/`: a learner/developer guide covering building and running, a code map,
-  the numerical method, model 254 equation by equation, a C primer, reproducibility,
-  and prompts for the next phases.
-- `docs/guide/05_known_issues.md`: the audit. 12 bugs (4 confirmed by running the code,
+  the numerical method, model 254 equation by equation, a C primer and reproducibility.
+- `docs/guide/05_known_issues.md`: known issues. 12 bugs (4 confirmed by running the code,
   including a heap buffer overflow in the flagship `clearcreek` example), 5
   reproducibility issues, the broken Python API, dead code, performance hypotheses,
   6 scientific review items and 3 documentation errors, each with file:line and evidence.
@@ -34,7 +33,7 @@ No change to the C source code: the model computes exactly what it computed befo
   runs, but does not match its benchmark (issue R-03: the 2018 code gives the same
   output as today's, so the benchmark was produced with inputs that are not in the repository).
 
-#### Baseline (for comparison by future changes)
+#### Baseline
 Release build `-O3 -DNDEBUG`, GCC 13.3, OpenMPI 4.1.6, HDF5 1.10.10, commit `84da43a` + the fix above:
 
 | case | np=1 | np=2 | np=4 |

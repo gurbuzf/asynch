@@ -59,7 +59,7 @@ percent or more, orders of magnitude above this threshold.
 Files are compared by **link id** (`.pea`, `.h5`) or by row (`.csv`), so a different
 order of links in the file (which happens with MPI) does not matter.
 
-## 6.3 Baseline measured in Phase 1 (commit `84da43a` + example path fix)
+## 6.3 Reference baseline (commit `84da43a` + example path fix)
 
 Release build (`-O3 -DNDEBUG`), Ubuntu 24.04, GCC 13, OpenMPI 4.1, HDF5 1.10:
 
@@ -75,7 +75,7 @@ Release build (`-O3 -DNDEBUG`), Ubuntu 24.04, GCC 13, OpenMPI 4.1, HDF5 1.10:
 With a debug build (no `-DNDEBUG`), every case additionally fails with exit code 134
 because of the double `fclose` at shutdown (B-03). The outputs are still correct.
 
-## 6.4 Tools used for the audit (and useful later)
+## 6.4 Useful tools
 
 **AddressSanitizer / UndefinedBehaviorSanitizer** detect invalid memory accesses and
 undefined behaviour *while the program runs*, with the exact source line. Build a

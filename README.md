@@ -6,8 +6,8 @@ A numerical library for solving differential equations with a tree structure. Em
 
 > **New here?** Start with the [developer & learner guide](docs/guide/README.md): it covers
 > building, running and reading the outputs, how the code and the solver work, model 254
-> equation by equation, and the [known issues](docs/guide/05_known_issues.md) found in the
-> 2026 audit. Please read the known issues before production use. Changes are recorded
+> equation by equation, and the [known issues](docs/guide/05_known_issues.md). Please read
+> the known issues before production use. Changes are recorded
 > in [CHANGELOG.md](CHANGELOG.md), and results can be verified with
 > `python3 tests/regression/run_examples.py`.
 

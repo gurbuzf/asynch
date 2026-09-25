@@ -1,23 +1,22 @@
-# 5. Known issues: code audit (Phase 1)
+# 5. Known issues
 
-This is the result of the Phase 1 audit (September 2026). **Nothing here has been
-fixed yet.** The list comes first so that every future fix can be
-discussed, prioritised and verified against the regression harness
-([06_reproducibility.md](06_reproducibility.md)) one by one.
+Known bugs, risks and open scientific questions in ASYNCH, found by building and running
+the code and by reading it (September 2026). Any fix should be verified with the regression
+harness ([06_reproducibility.md](06_reproducibility.md)).
 
 How each item was established:
 
 * **Confirmed**: reproduced by running the code. The evidence is quoted: a crash,
   an AddressSanitizer report, a comparison.
 * **Code reading**: visible in the source, but not (yet) triggered by an example.
-* **For discussion**: a scientific or design question, not necessarily a bug.
-  These need a hydrologist's judgement (yours), not just a programmer's.
+* **Open question**: a scientific or design question, not necessarily a bug.
+  These need a hydrologist's judgement, not just a programmer's.
 
 Severity scale: **critical** (memory corruption / wrong results / crash in normal
 use), **high** (crash or wrong result in a plausible configuration), **medium**,
 **low** (cosmetic, or only in unusual situations).
 
-Line numbers refer to commit `84da43a` (the state of `master` at the time of the audit).
+Line numbers refer to commit `84da43a` (the state of `master` at the time of writing).
 
 ---
 
@@ -37,7 +36,7 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of the
 | [B-10](#b-10) | low | compiler | Missing prototype for `Create_Rain_Data_Par_IBin`; wrong `printf` format in `check_state.c` |
 | [B-11](#b-11) | low | code reading | ~75 `fscanf`/`fread` return values ignored: malformed input files are not detected |
 | [B-12](#b-12) | medium | code reading | `.uini` reader misses "not enough values" (checks `== 0`, `fscanf` returns `EOF`); clearcreek.uini is short |
-| [R-01](#r-01) | high | confirmed | No automated regression tests; only one unit test (`days_in_month`) |
+| [R-01](#r-01) | fixed | confirmed | No automated regression tests; only one unit test (`days_in_month`) |
 | [R-02](#r-02) | medium | confirmed | `examples/results/clearcreek.pea` (2015) does not match today's `clearcreek.gbl` |
 | [R-03](#r-03) | medium | confirmed | Model 259 benchmark cannot be reproduced from the files in the repository |
 | [R-04](#r-04) | fixed | confirmed | Examples 258/259 pointed to a file on the original developers' cluster |
@@ -49,12 +48,12 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of the
 | [P-01](#p-01) | low | confirmed | CLI sleeps 1 s during initialisation |
 | [P-02](#p-02) | medium | code reading | Snapshots gather every link through rank 0 one message at a time |
 | [P-03](#p-03) | ? | hypothesis | Scheduler, barriers and step-size resets in `Advance`: needs profiling |
-| [S-01](#s-01) | for discussion | code reading | Parent states indexed with `dim` instead of `max_dim` in the equations |
-| [S-02](#s-02) | for discussion | code reading | Model 254 baseflow uses `max(0.001, q_b)` in its sink term |
-| [S-03](#s-03) | for discussion | code reading | Potential evaporation assumes a 30-day month |
-| [S-04](#s-04) | for discussion | code reading | Models 400–405: `temperature == 0` treated as "no snow" |
-| [S-05](#s-05) | for discussion | code reading | Snapshot filter rewrites cumulative states with `fmod(x, 1e200)` |
-| [S-06](#s-06) | for discussion | code reading | Model 254 evaporation always runs at the full potential rate; clamping then creates water |
+| [S-01](#s-01) | open question | code reading | Parent states indexed with `dim` instead of `max_dim` in the equations |
+| [S-02](#s-02) | open question | code reading | Model 254 baseflow uses `max(0.001, q_b)` in its sink term |
+| [S-03](#s-03) | open question | code reading | Potential evaporation assumes a 30-day month |
+| [S-04](#s-04) | open question | code reading | Models 400–405: `temperature == 0` treated as "no snow" |
+| [S-05](#s-05) | open question | code reading | Snapshot filter rewrites cumulative states with `fmod(x, 1e200)` |
+| [S-06](#s-06) | open question | code reading | Model 254 evaporation always runs at the full potential rate; clamping then creates water |
 | [D-01..03](#d-01-to-d-03) | low | code reading | `docs/builtin_models.rst` disagrees with the model 254 code in 3 places |
 
 ---
@@ -157,7 +156,7 @@ the solver is freed (debug builds).
 
 `src/asynch_interface.c:500` returns `unsigned short` (max 65 535). State-wide
 networks (e.g. Iowa, ~400 000 links) are silently truncated. The CLI does not use it,
-but any external program (and a future Python API) would.
+but any external program would.
 
 ### B-07
 **`DumpStateH5` edge cases.** *Medium, code reading.*
@@ -209,8 +208,8 @@ with too few values is accepted, and the missing states keep whatever was in mem
 
 ### R-01
 **No regression testing.** *High.* `make check` runs a single unit test (`days_in_month`).
-Nothing checks that the model still produces the same hydrographs. **Done in this
-phase:** `tests/regression/run_examples.py` (see [06_reproducibility.md](06_reproducibility.md)).
+Nothing checks that the model still produces the same hydrographs. **Addressed by**
+`tests/regression/run_examples.py` (see [06_reproducibility.md](06_reproducibility.md)).
 
 ### R-02
 **Clearcreek reference is from another configuration.** *Medium, confirmed.*
@@ -220,7 +219,7 @@ still match it within tolerance. For the outlet (link 2527), however, the refere
 at **3001 min**, while `clearcreek.gbl` only simulates **1440 min** (one day), so the
 reference was produced with a longer simulation, and today's outlet "peak" is simply the last value
 of the run. The reference cannot be used to validate the current example.
-**Needs a decision:** regenerate the reference (after fixing B-01), or restore the original configuration.
+**Options:** regenerate the reference from the current inputs (once B-01 is fixed), or restore the original configuration.
 
 ### R-03
 **Model 259 benchmark cannot be reproduced.** *Medium, confirmed.* The 2018 commit that
@@ -229,11 +228,11 @@ today's code**, and both differ from the benchmark (outlet peak 0.696 vs 0.755 m
 So the code has *not* changed. The benchmark was produced with an input that is not
 in the repository, most likely model 259's own `evap.mon` on the original cluster
 (`/Dedicated/IFC/.../mdl259a/evap.mon`). With zero evaporation the peak is 0.845, so the
-original file lies between the two. **Needs a decision:** regenerate the benchmark with
+original file lies between the two. **Options:** regenerate the benchmark with
 the repository's `evap.mon`.
 
 ### R-04
-**Examples 258/259 referenced a cluster path.** *Fixed in this phase.* Their `.gbl`
+**Examples 258/259 referenced a cluster path.** *Fixed.* Their `.gbl`
 files pointed to `/Dedicated/IFC/projects/asynch_1_4_3b/tests/mdl25Xa/evap.mon`. They now
 use `../common/evap.mon`, like the other examples. With this change, model 258 reproduces its
 benchmark **bit for bit**.
@@ -262,7 +261,7 @@ tolerance**, never byte by byte.
 * It re-declares C structs (`UnivVars`, …) in `ctypes` with the *old* field layout.
   Even if it loaded, it would read and write memory at the wrong offsets.
 
-**Recommendation (for discussion):** rewrite it as a thin binding over a small, stable
+**Possible approach:** rewrite it as a thin binding over a small, stable
 C API that exposes only *opaque handles* and getter/setter functions (never struct
 layouts). Build it as a shared library and wrap it with `ctypes` or `cffi`. A first useful scope:
 run a `.gbl`, get/set states and parameters, read hydrographs into NumPy.
@@ -295,7 +294,7 @@ Recommendation: move the dead files to an `attic/` folder (or delete them; git k
 `case`/`if` in `SetParamSizes`, `SetOutputConstraints`, `ConvertParams`,
 `InitRoutines`, `Precalculations`, `ReadInitData` (all in `definitions.c`, 4 063
 lines), plus its equations in `equations.c` (6 293 lines). Mistakes like B-01 are a
-direct consequence. Recommendation (later phase): one descriptor per model (struct
+direct consequence. Possible improvement: one descriptor per model (struct
 with sizes + function pointers) in one file per model family.
 
 ### M-03
@@ -331,7 +330,7 @@ In `Advance` (`src/advance.c`):
 
 ---
 
-## Scientific review items (for discussion)
+## Scientific review items (open questions)
 
 These are not necessarily bugs. They are places where a modelling choice is hidden in the
 code and should be written down, and possibly revisited, by a hydrologist.

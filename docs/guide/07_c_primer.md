@@ -1,7 +1,7 @@
 # 7. Just enough C to read ASYNCH
 
 This page teaches the C you need for this codebase, using **real code from ASYNCH**, and
-the real bugs found in the audit as examples of what goes wrong. If you know Python,
+the real bugs listed in [Known issues](05_known_issues.md) as examples of what goes wrong. If you know Python,
 the comparisons in *italics* will help.
 
 ## 7.1 How a C program is built

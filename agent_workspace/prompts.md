@@ -1,4 +1,4 @@
-# 8. Prompts for the next phases
+# Prompts for upcoming tasks
 
 Ready-to-use task descriptions for an AI coding assistant (or a human contributor).
 They are designed to be **self-contained, verifiable and hard to misread**. Each one
