@@ -46,6 +46,7 @@ The owner asked (2026-09-25) to proceed with the recommended option for each:
    **Reopened for S-02 (2026-09-25):** the floor `max(0.001, q_b)` is not original. It was added in
    2021 (`93241a3`), and without it the original clearcreek references are reproduced. Asked the owner
    whether to restore the 2015 form. The code stays unchanged until they answer.
+   **Owner chose A (restore the 2015 form), 2026-09-25. Done.**
 4. **M-01** → move dead source files to `attic/` (history kept, nothing compiled). Adopted.
 
 ### Original wording

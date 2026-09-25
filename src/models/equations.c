@@ -1635,7 +1635,10 @@ void model254(double t, const double * const y_i, unsigned int dim, const double
     double s_s = y_i[3];	//[m]
                             //double s_precip = y_i[4];	//[m]
                             //double V_r = y_i[5];	//[m^3]
-    double q_b = max(0.001,y_i[6]);	//[m^3/s]
+    double q_b = y_i[6];	//[m^3/s]
+    //Original (2015) form of the model. From 2021 to 2026 this line was max(0.001,y_i[6]) (commit 93241a3),
+    //which drained baseflow below 0.001 m^3/s too fast and changed results. The 2015 form reproduces the
+    //reference results shipped with ASYNCH (examples/results/clearcreek.*). See docs/guide, issue S-02.
 
                             //Evaporation
     double e_p, e_t, e_s;

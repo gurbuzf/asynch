@@ -125,13 +125,14 @@ m³/s. The parents' discharges are read from `y_p[i*dim]` (the parent's state 0)
 
 **Baseflow** (lines 1638, 1682-1686), a linear reservoir in the channel fed only by the subsurface:
 
-    q_b' = max(0.001, q_b)                                   (S-02)
-    dq_b/dt = (v_B / L) · ( A_h·q_sc − 60·q_b' + 60·Σ_parents q_b,parent )
-            = (60·v_B/L) · ( A_h·q_sc/60 + Σ_parents q_b,parent − q_b' )
+    (from 2021 to 2026 the code used q_b' = max(0.001, q_b) here; the original equation below was restored, S-02)
+    dq_b/dt = (v_B / L) · ( A_h·q_sc − 60·q_b + 60·Σ_parents q_b,parent )
+            = (60·v_B/L) · ( A_h·q_sc/60 + Σ_parents q_b,parent − q_b )
 
 The second form shows it is a linear reservoir with rate 60·v_B/L [1/min] (v_B in m/s,
-L in m). The floor `max(0.001, q_b)` was added in 2021. The original (2015) model used `q_b` directly,
-and the reference results shipped with ASYNCH were computed without the floor (issues S-02, R-02). The `.rst` documentation omits the factor 60 in front of the parents' baseflow (D-02).
+L in m). From 2021 to 2026 the code used `max(0.001, q_b)` instead of `q_b` in the outflow term. That was
+not part of the original model, and it has been removed (issues S-02, R-02), so the equation above is again
+the one that produced the reference results shipped with ASYNCH. The `.rst` documentation omits the factor 60 in front of the parents' baseflow (D-02).
 
 ## 4.5 Initial state (`ReadInitData`, `definitions.c` ~line 3573)
 
@@ -150,6 +151,6 @@ physical when evaporation over-draws a nearly empty storage (see S-06).
 * **D-01** `docs/builtin_models.rst`: 1/τ has `L · 10⁻³` in the denominator with L in km. It should
   be `L · 10³` (km → m). The code is correct (L is converted to metres in `ConvertParams`).
 * **D-02** `docs/builtin_models.rst`: the baseflow equation writes `+ q_b,in(t)`. The code uses
-  `+ 60·q_b,in`, which is the dimensionally consistent form, and applies the `max(0.001, ·)` floor.
+  `+ 60·q_b,in`, which is the dimensionally consistent form.
 * **D-03** `docs/builtin_models.rst`: V_r is described as a flux in m³/s. It is an accumulated
   depth in m (the integral of q_pc [m/min]).

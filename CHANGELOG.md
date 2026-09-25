@@ -8,6 +8,29 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Model 254: original baseflow equation restored (S-02) — **results change**
+
+*Results:* **model 254 results change** (intended). All other models are unchanged: bit-identical to the
+original code with 1 process. With this change, **all six reference result files shipped with the original
+ASYNCH repository are reproduced**:
+- `test`: hydrographs, peaks and final states. This was already the case.
+- `clearcreek`: hydrographs within 9.5e-5 m³/s, final states within 1.5e-5, peaks within 1.7e-4 m³/s.
+  Before this change the hydrographs differed by up to 0.085 m³/s.
+
+The same holds at 1, 2 and 4 processes.
+
+#### Changed
+- `src/models/equations.c` (`model254`): the baseflow outflow used `max(0.001, q_b)` instead of `q_b`.
+  That line was added in January 2021 in a commit titled "added model 194" (`93241a3`); it is not in the
+  original model or in its documentation. When baseflow fell below 0.001 m³/s, the channel lost baseflow
+  as if it were 0.001 m³/s, so baseflow emptied too fast and was then forced to 0. Decision of the model
+  owner: restore the 2015 equation, `q_b = y[6]`.
+- `tests/regression/run_examples.py`: the case `clearcreek, 2015 configuration` now passes. It is compared
+  with its reference at the solver's own tolerance (1e-4), and peak values at 2e-4. Peaks are recorded only
+  at the end of solver steps, so 9 of 6 359 links, whose crest fell between steps, differ by up to 1.7e-4.
+  Cases can declare an intended difference from the original code (`changed_vs_original`); the difference
+  is then reported without failing.
+
 ### Fix B-09, B-10: debug output of models 402/403, missing prototype
 
 *Results:* unchanged. Every example is bit-identical to the original code with 1 process.

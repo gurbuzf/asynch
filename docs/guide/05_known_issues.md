@@ -39,7 +39,7 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [B-12](#b-12) | **fixed** | code reading |
 | [B-14](#b-14) | **fixed** | confirmed | Reading an `.rkd` file (per-link tolerances) never finished: 5 defects in `Build_RKData` | `.uini` reader misses "not enough values" (checks `== 0`, `fscanf` returns `EOF`); clearcreek.uini is short |
 | [R-01](#r-01) | fixed | confirmed | No automated regression tests; only one unit test (`days_in_month`) |
-| [R-02](#r-02) | explained | confirmed | clearcreek references (2015) differ: another configuration, and a 2021 change to model 254 |
+| [R-02](#r-02) | **resolved** | confirmed | clearcreek references (2015) differ: another configuration, and a 2021 change to model 254 |
 | [R-03](#r-03) | medium | confirmed | Model 259 benchmark cannot be reproduced from the files in the repository |
 | [R-04](#r-04) | fixed | confirmed | Examples 258/259 pointed to a file on the original developers' cluster |
 | [R-05](#r-05) | info | confirmed | Results change at noise level with the number of MPI processes |
@@ -51,7 +51,7 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [P-02](#p-02) | medium | code reading | Snapshots gather every link through rank 0 one message at a time |
 | [P-03](#p-03) | ? | hypothesis | Scheduler, barriers and step-size resets in `Advance`: needs profiling |
 | [S-01](#s-01) | open question | code reading | Parent states indexed with `dim` instead of `max_dim` in the equations |
-| [S-02](#s-02) | open question | confirmed | Model 254 baseflow uses `max(0.001, q_b)` in its sink term, added in 2021; changes results vs 2015 |
+| [S-02](#s-02) | **resolved** | confirmed | Model 254 baseflow floor `max(0.001, q_b)` (added 2021) removed; original 2015 equation restored |
 | [S-03](#s-03) | open question | code reading | Potential evaporation assumes a 30-day month |
 | [S-04](#s-04) | open question | code reading | Models 400–405: `temperature == 0` treated as "no snow" |
 | [S-05](#s-05) | open question | code reading | Snapshot filter rewrites cumulative states with `fmod(x, 1e200)` |
@@ -290,6 +290,12 @@ So the difference is model 254 itself: the floor `max(0.001, q_b)` was added in 
 `93241a3`, whose message is "added model 194". That change of the operational model is not
 mentioned anywhere. See S-02. The reference files are kept unchanged.
 
+**Resolved** (2026-09-25): the 2015 equation was restored (S-02). `examples/clearcreek_2015.gbl` now
+reproduces all three reference files: hydrographs within 9.5e-5, final states within 1.5e-5, and peak values
+within 1.7e-4 m³/s (only 9 of 6 359 links above 1e-4; their peak times moved by 3–7 minutes, because peaks
+are recorded at solver steps). `examples/clearcreek.gbl` itself still simulates a different period (one day
+from 2017-01-01), so its comparison with the 2015 file stays a known mismatch by design.
+
 ### R-03
 **Model 259 benchmark cannot be reproduced.** *Medium, confirmed.* The 2018 commit that
 added the benchmark (`cba763b`) was built and run: it produces output **bit-identical to
@@ -421,7 +427,9 @@ it were 0.001 m³/s, so it drains faster than the linear reservoir would and is 
 This line was **not** part of the original model: it was added in January 2021 (commit `93241a3`,
 "added model 194") and changed model 254's results (see R-02). With the 2015 form (`q_b = y[6]`),
 today's code reproduces the original repository's clearcreek references within the solver tolerance.
-Whether to keep the floor is a modelling decision. Until it is taken, the code is left unchanged.
+**Resolved** (2026-09-25, owner's decision): the 2015 form `q_b = y[6]` is restored. The original
+reference results for clearcreek (`examples/results/clearcreek.dat`, `.pea`, `.rec`) are now reproduced
+within the solver tolerance.
 
 ### S-03
 Potential evapotranspiration is converted from mm/month to m/min with a fixed 30-day
