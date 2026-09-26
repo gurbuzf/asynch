@@ -1,4 +1,4 @@
-# asynch-hydro: the Python package of ASYNCH (`import asynch`)
+# asynch-hlm: the Python package of ASYNCH (`import asynch`)
 
 Python interface to [ASYNCH](https://github.com/gurbuzf/asynch), the asynchronous solver of hydrological models on river networks.
 The numerical work is done by the C library `libasynch.so`; Python drives it.
@@ -22,7 +22,7 @@ Installation, tutorial and reference: <https://gurbuzf.github.io/asynch/guide/10
 with it (the `mpich` package, with `mpiexec`). Nothing to build:
 
 ```sh
-pip install --upgrade pip && pip install asynch_hydro-<version>-py3-none-manylinux_2_31_x86_64.whl
+pip install --upgrade pip && pip install asynch_hlm-<version>-py3-none-manylinux_2_31_x86_64.whl
 asynch test.gbl               # the program; mpiexec -n 4 asynch test.gbl
 ```
 

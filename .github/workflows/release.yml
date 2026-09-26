@@ -4,7 +4,7 @@
 # of CHANGELOG.md for that version. Attached: the source archive made by `make dist` (it builds without autotools:
 # ./configure && make), the self-contained Linux wheel (pip install it: the Python package, the library and the
 # `asynch` program, nothing to build; workflow wheel.yml) and the documentation website as a zip file.
-# The wheel is also published on PyPI (as asynch-hydro) when the repository variable PUBLISH_TO_PYPI is "true": see
+# The wheel is also published on PyPI (as asynch-hlm) when the repository variable PUBLISH_TO_PYPI is "true": see
 # the job `pypi` below and docs/contribute.rst.
 name: Release
 
@@ -96,7 +96,7 @@ jobs:
               --title "ASYNCH ${VERSION}" --notes-file notes.md
 
   # PyPI, with Trusted Publishing: PyPI accepts this workflow of this repository, no password or token is stored.
-  # Set up once on pypi.org (a "pending publisher" for project asynch-hydro: owner gurbuzf, repository asynch,
+  # Set up once on pypi.org (a "pending publisher" for project asynch-hlm: owner gurbuzf, repository asynch,
   # workflow release.yml, environment pypi), then set the repository variable PUBLISH_TO_PYPI to "true".
   pypi:
     needs: release
@@ -104,7 +104,7 @@ jobs:
     runs-on: ubuntu-24.04
     environment:
       name: pypi
-      url: https://pypi.org/project/asynch-hydro/
+      url: https://pypi.org/project/asynch-hlm/
     permissions:
       id-token: write
       contents: read

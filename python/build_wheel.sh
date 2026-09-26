@@ -1,6 +1,6 @@
 #!/bin/sh
 # Builds the self-contained wheel of the asynch package: the Python code, libasynch.so, the asynch program and the
-# libraries they need (HDF5, libpq, ...), so that `pip install asynch_hydro-*.whl` works without building ASYNCH. MPI is
+# libraries they need (HDF5, libpq, ...), so that `pip install asynch_hlm-*.whl` works without building ASYNCH. MPI is
 # not copied: the wheel requires the `mpich` package of PyPI, which brings the MPI library and `mpiexec`.
 #
 #   python/build_wheel.sh BUILD_DIR [OUT_DIR]

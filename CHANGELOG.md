@@ -35,8 +35,8 @@ change and whether it changes numerical results; only the results of model 254 (
   token), when the repository variable `PUBLISH_TO_PYPI` is `true`; `docs/contribute.rst` gives the one-time setup.
 
 #### Changed
-- The Python distribution is named `asynch-hydro` (`asynch` is another project on PyPI); the import name is still
-  `asynch`. The wheel file is `asynch_hydro-<version>-py3-none-manylinux_2_31_x86_64.whl`.
+- The Python distribution is named `asynch-hlm` (`asynch` is another project on PyPI); the import name is still
+  `asynch`. The wheel file is `asynch_hlm-<version>-py3-none-manylinux_2_31_x86_64.whl`.
 
 ### Ready-made Linux wheel: `pip install` without building; fix A-02 (h5py next to asynch)
 

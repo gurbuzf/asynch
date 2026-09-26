@@ -77,7 +77,7 @@ carries the library and the `asynch` program already compiled; pip also installs
 ```bash
 python3 -m venv ~/asynch-venv && source ~/asynch-venv/bin/activate
 pip install --upgrade pip                  # pip 20.3 or newer reads the wheel's platform tag
-pip install https://github.com/gurbuzf/asynch/releases/download/v1.5.0/asynch_hydro-1.5.0-py3-none-manylinux_2_31_x86_64.whl
+pip install https://github.com/gurbuzf/asynch/releases/download/v1.5.0/asynch_hlm-1.5.0-py3-none-manylinux_2_31_x86_64.whl
 asynch test.gbl                            # the program; mpiexec -n 4 asynch test.gbl on 4 processes
 ```
 

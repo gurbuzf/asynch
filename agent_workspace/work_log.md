@@ -7,7 +7,7 @@ Newest first.
 - Parallel already worked (mpiexec -n N python script.py); added asynch.run_parallel / run_script_parallel for
   notebooks (start mpiexec). Found: multi-process tests compared printed lines, which Open MPI can cut into each
   other (likely the unexplained single failure earlier): tests now read one file per process.
-- PyPI: "asynch" is taken (ClickHouse driver) -> distribution renamed asynch-hydro (import asynch). Trusted
+- PyPI: "asynch" is taken (ClickHouse driver) -> distribution renamed asynch-hlm (import asynch). Trusted
   Publishing job in release.yml, gated by repo variable PUBLISH_TO_PYPI; setup steps in docs/contribute.rst (owner
   must create the PyPI account / pending publisher). twine check passes.
 
