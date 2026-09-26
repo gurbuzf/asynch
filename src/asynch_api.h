@@ -176,7 +176,7 @@ int Asynch_Model_Spec_Set_Nonnegative(AsynchModelSpec* spec, int mode);
 /// Custom consistency check (replaces the built-in one). Its `user` argument is the spec's user pointer.
 int Asynch_Model_Spec_Set_Check_Consistency(AsynchModelSpec* spec, CheckConsistencyFunc* func);
 
-/// Factors applied to the parameters read from disk (num_disk_params values), e.g. 1000 for km -> m.
+/// Factors applied to the parameters read from disk (num_disk_params values), e.g. 1000 to convert km to m.
 int Asynch_Model_Spec_Set_Param_Factors(AsynchModelSpec* spec, const double* factors);
 
 /// Position of the upstream area and of the hillslope area in the link parameters (used by the peak

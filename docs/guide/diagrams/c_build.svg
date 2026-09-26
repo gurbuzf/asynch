@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 224" width="900" height="224">
+<!-- ASYNCH documentation diagram. Colours come from the site theme (docs/_static/custom.css); the second value of each var() is the light-theme fallback used when the file is viewed alone. -->
+<style>
+.d-frame{fill:var(--d-bg,#f7f9fc)}
+.d-card{fill:var(--d-card,#fff);stroke:var(--d-line,#cdd6e1);stroke-width:1.5}
+.d-t{font-family:var(--d-font,Inter,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif);font-size:14px;fill:var(--d-text,#17212f)}
+.d-b{font-weight:700}
+.d-s{font-size:12px;fill:var(--d-muted,#5b6b7f)}
+.d-cap{font-size:11px;font-weight:700;letter-spacing:.08em;fill:var(--d-muted,#5b6b7f)}
+.d-m{font-family:var(--d-mono,'JetBrains Mono',Menlo,Consolas,monospace)}
+.d-ln{stroke:var(--d-line2,#7d8ca0);stroke-width:2;fill:none}
+.d-lnl{stroke:var(--d-line,#cdd6e1);stroke-width:1.5;fill:none}
+.d-dash{stroke-dasharray:6 5}
+.d-acc{fill:var(--d-accent,#1f5fae)}.d-accs{fill:var(--d-accent-soft,#e3eefb)}
+.d-accl{stroke:var(--d-accent,#1f5fae);fill:none;stroke-width:2}
+.d-acct{fill:var(--d-accent,#1f5fae)}
+.d-w{fill:var(--d-water,#2f7fd8)}.d-ws{fill:var(--d-water-soft,#cfe3f8)}
+.d-wl{stroke:var(--d-water,#2f7fd8);fill:none;stroke-linecap:round}
+.d-land{fill:var(--d-land,#dcebd0);stroke:var(--d-land-dark,#6fa35a);stroke-width:1.2}
+.d-landl{stroke:var(--d-land-dark,#6fa35a);fill:none;stroke-width:2}
+.d-landt{fill:var(--d-land-dark,#6fa35a)}
+.d-soil{fill:var(--d-soil,#f1e4d0);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-deep{fill:var(--d-deep,#e4d6c2);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-soilt{fill:var(--d-soil-dark,#b58b58)}
+.d-rainl{stroke:var(--d-rain,#5a9be6);stroke-width:2.2;stroke-linecap:round;fill:none}
+.d-sun{fill:var(--d-sun,#e59a1c)}.d-sunl{stroke:var(--d-sun,#e59a1c);fill:none;stroke-width:2}
+.d-ok{fill:var(--d-ok,#2e8540)}.d-okl{stroke:var(--d-ok,#2e8540);fill:none;stroke-width:2}
+.d-bad{fill:var(--d-bad,#b42318)}
+.d-p0{fill:var(--d-p0,#1f5fae)}.d-p1{fill:var(--d-p1,#0f8a7e)}.d-p2{fill:var(--d-p2,#c4461a)}.d-p3{fill:var(--d-p3,#8a4fbf)}
+.d-p0l{stroke:var(--d-p0,#1f5fae)}.d-p1l{stroke:var(--d-p1,#0f8a7e)}.d-p2l{stroke:var(--d-p2,#c4461a)}
+.d-inv{fill:var(--d-card,#fff)}
+</style>
+<rect class="d-frame" x="0" y="0" width="900" height="224" rx="12"/>
+<defs><marker id="cb-a" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path fill="var(--d-line2,#7d8ca0)" d="M0 0L10 5L0 10z"/></marker></defs>
+<text class="d-t d-cap" x="20" y="36">SOURCE</text>
+<rect class="d-accs" x="20" y="50" width="130" height="28" rx="6"/><text class="d-t d-m d-acct" x="85" y="69" text-anchor="middle" font-size="12">advance.c</text>
+<rect class="d-accs" x="20" y="86" width="130" height="28" rx="6"/><text class="d-t d-m d-acct" x="85" y="105" text-anchor="middle" font-size="12">riversys.c</text>
+<rect class="d-accs" x="20" y="122" width="130" height="28" rx="6"/><text class="d-t d-m d-acct" x="85" y="141" text-anchor="middle" font-size="12">… 60 .c files</text>
+<rect class="d-card" x="20" y="168" width="130" height="28" rx="6"/><text class="d-t d-m " x="85" y="187" text-anchor="middle" font-size="12">structs.h, …</text>
+<text class="d-t d-s" x="85" y="208" text-anchor="middle" font-size="11">headers: declarations</text>
+<rect class="d-card" x="200" y="72" width="150" height="66" rx="12"/>
+<text class="d-t d-b" x="275" y="100" text-anchor="middle">Preprocessor</text><text class="d-t d-s" x="275" y="120" text-anchor="middle">#include, #define, #if</text>
+<rect class="d-card" x="390" y="72" width="150" height="66" rx="12"/>
+<text class="d-t d-b" x="465" y="100" text-anchor="middle">Compiler</text><text class="d-t d-s" x="465" y="120" text-anchor="middle">each .c → one .o file</text>
+<rect class="d-card" x="580" y="72" width="150" height="66" rx="12"/>
+<text class="d-t d-b" x="655" y="100" text-anchor="middle">Linker</text><text class="d-t d-s" x="655" y="120" text-anchor="middle">+ MPI, HDF5, libpq</text>
+<path class="d-ln" d="M150 64C176 64 172 105 196 105" marker-end="url(#cb-a)"/><path class="d-ln" d="M150 100H196" marker-end="url(#cb-a)"/><path class="d-ln" d="M150 136C176 136 172 105 196 105"/><path class="d-ln d-dash" d="M150 182C180 182 180 120 200 120" marker-end="url(#cb-a)"/>
+<path class="d-ln" d="M350 105H386" marker-end="url(#cb-a)"/><path class="d-ln" d="M540 105H576" marker-end="url(#cb-a)"/>
+<text class="d-t d-cap" x="776" y="36">RESULT</text>
+<path class="d-ln" d="M730 105C752 105 750 76 772 76" marker-end="url(#cb-a)"/><path class="d-ln" d="M730 105C752 105 750 136 772 136" marker-end="url(#cb-a)"/>
+<rect class="d-acc" x="776" y="54" width="110" height="44" rx="10"/><text class="d-t d-b d-m d-inv" x="831" y="74" text-anchor="middle" font-size="13">asynch</text><text class="d-t d-inv" x="831" y="90" text-anchor="middle" font-size="11">the program</text>
+<rect class="d-acc" x="776" y="114" width="110" height="44" rx="10"/><text class="d-t d-b d-m d-inv" x="831" y="134" text-anchor="middle" font-size="12">libasynch.so</text><text class="d-t d-inv" x="831" y="150" text-anchor="middle" font-size="11">the library</text>
+<text class="d-t d-s" x="465" y="170" text-anchor="middle"><tspan class="d-m">make</tspan> runs these steps again only for the files that changed</text>
+</svg>

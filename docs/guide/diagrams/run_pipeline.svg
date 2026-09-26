@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 350" width="900" height="350">
+<!-- ASYNCH documentation diagram. Colours come from the site theme (docs/_static/custom.css); the second value of each var() is the light-theme fallback used when the file is viewed alone. -->
+<style>
+.d-frame{fill:var(--d-bg,#f7f9fc)}
+.d-card{fill:var(--d-card,#fff);stroke:var(--d-line,#cdd6e1);stroke-width:1.5}
+.d-t{font-family:var(--d-font,Inter,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif);font-size:14px;fill:var(--d-text,#17212f)}
+.d-b{font-weight:700}
+.d-s{font-size:12px;fill:var(--d-muted,#5b6b7f)}
+.d-cap{font-size:11px;font-weight:700;letter-spacing:.08em;fill:var(--d-muted,#5b6b7f)}
+.d-m{font-family:var(--d-mono,'JetBrains Mono',Menlo,Consolas,monospace)}
+.d-ln{stroke:var(--d-line2,#7d8ca0);stroke-width:2;fill:none}
+.d-lnl{stroke:var(--d-line,#cdd6e1);stroke-width:1.5;fill:none}
+.d-dash{stroke-dasharray:6 5}
+.d-acc{fill:var(--d-accent,#1f5fae)}.d-accs{fill:var(--d-accent-soft,#e3eefb)}
+.d-accl{stroke:var(--d-accent,#1f5fae);fill:none;stroke-width:2}
+.d-acct{fill:var(--d-accent,#1f5fae)}
+.d-w{fill:var(--d-water,#2f7fd8)}.d-ws{fill:var(--d-water-soft,#cfe3f8)}
+.d-wl{stroke:var(--d-water,#2f7fd8);fill:none;stroke-linecap:round}
+.d-land{fill:var(--d-land,#dcebd0);stroke:var(--d-land-dark,#6fa35a);stroke-width:1.2}
+.d-landl{stroke:var(--d-land-dark,#6fa35a);fill:none;stroke-width:2}
+.d-landt{fill:var(--d-land-dark,#6fa35a)}
+.d-soil{fill:var(--d-soil,#f1e4d0);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-deep{fill:var(--d-deep,#e4d6c2);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-soilt{fill:var(--d-soil-dark,#b58b58)}
+.d-rainl{stroke:var(--d-rain,#5a9be6);stroke-width:2.2;stroke-linecap:round;fill:none}
+.d-sun{fill:var(--d-sun,#e59a1c)}.d-sunl{stroke:var(--d-sun,#e59a1c);fill:none;stroke-width:2}
+.d-ok{fill:var(--d-ok,#2e8540)}.d-okl{stroke:var(--d-ok,#2e8540);fill:none;stroke-width:2}
+.d-bad{fill:var(--d-bad,#b42318)}
+.d-p0{fill:var(--d-p0,#1f5fae)}.d-p1{fill:var(--d-p1,#0f8a7e)}.d-p2{fill:var(--d-p2,#c4461a)}.d-p3{fill:var(--d-p3,#8a4fbf)}
+.d-p0l{stroke:var(--d-p0,#1f5fae)}.d-p1l{stroke:var(--d-p1,#0f8a7e)}.d-p2l{stroke:var(--d-p2,#c4461a)}
+.d-inv{fill:var(--d-card,#fff)}
+</style>
+<rect class="d-frame" x="0" y="0" width="900" height="350" rx="12"/>
+<defs>
+  <marker id="rp-a" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path fill="var(--d-line2,#7d8ca0)" d="M0 0L10 5L0 10z"/></marker>
+  <marker id="rp-b" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path class="d-acc" d="M0 0L10 5L0 10z"/></marker>
+</defs>
+<text class="d-t d-cap" x="24" y="34">INPUTS</text>
+<text class="d-t d-cap" x="382" y="34">ASYNCH</text>
+<text class="d-t d-cap" x="652" y="34">OUTPUTS</text>
+<!-- inputs -->
+<g>
+  <rect class="d-card" x="24" y="48" width="240" height="46" rx="10" stroke="var(--d-accent,#1f5fae)" stroke-width="2"/>
+  <rect class="d-acc" x="34" y="59" width="50" height="24" rx="6"/><text class="d-t d-m d-b d-inv" x="59" y="76" text-anchor="middle" font-size="12">.gbl</text>
+  <text class="d-t d-b" x="94" y="68" font-size="13">global file</text><text class="d-t d-s" x="94" y="84">model, dates, all file names</text>
+
+  <rect class="d-card" x="24" y="104" width="240" height="46" rx="10"/>
+  <rect class="d-accs" x="34" y="115" width="50" height="24" rx="6"/><text class="d-t d-m d-b d-acct" x="59" y="132" text-anchor="middle" font-size="12">.rvr</text>
+  <text class="d-t d-b" x="94" y="124" font-size="13">network</text><text class="d-t d-s" x="94" y="140">which link flows into which</text>
+
+  <rect class="d-card" x="24" y="160" width="240" height="46" rx="10"/>
+  <rect class="d-accs" x="34" y="171" width="50" height="24" rx="6"/><text class="d-t d-m d-b d-acct" x="59" y="188" text-anchor="middle" font-size="12">.prm</text>
+  <text class="d-t d-b" x="94" y="180" font-size="13">link parameters</text><text class="d-t d-s" x="94" y="196">areas, channel lengths</text>
+
+  <rect class="d-card" x="24" y="216" width="240" height="46" rx="10"/>
+  <rect class="d-accs" x="34" y="227" width="50" height="24" rx="6"/><text class="d-t d-m d-b d-acct" x="59" y="244" text-anchor="middle" font-size="12">.uini</text>
+  <text class="d-t d-b" x="94" y="236" font-size="13">initial state</text><text class="d-t d-s" x="94" y="252">states at the start</text>
+
+  <rect class="d-card" x="24" y="272" width="240" height="46" rx="10"/>
+  <rect class="d-accs" x="34" y="283" width="50" height="24" rx="6"/><text class="d-t d-m d-b d-acct" x="59" y="300" text-anchor="middle" font-size="12">.str</text>
+  <text class="d-t d-b" x="94" y="292" font-size="13">forcings</text><text class="d-t d-s" x="94" y="308">rain, evaporation (.mon), …</text>
+</g>
+<!-- connectors in -->
+<g class="d-ln">
+  <path d="M264 71C300 71 300 183 330 183"/><path d="M264 127C300 127 300 183 330 183"/><path d="M264 183H330"/>
+  <path d="M264 239C300 239 300 183 330 183"/><path d="M264 295C300 295 300 183 330 183"/>
+</g>
+<path class="d-ln" d="M330 183h26" marker-end="url(#rp-a)"/>
+<!-- the program -->
+<rect class="d-card" x="362" y="48" width="252" height="270" rx="14" stroke="var(--d-accent,#1f5fae)" stroke-width="2"/>
+<g>
+  <circle class="d-acc" cx="392" cy="95" r="14"/><text class="d-t d-b d-inv" x="392" y="100" text-anchor="middle">1</text>
+  <text class="d-t d-b" x="416" y="92">Read</text><text class="d-t d-s" x="416" y="108">files → links, parameters</text>
+  <path class="d-accl" d="M392 112v34" marker-end="url(#rp-b)"/>
+  <circle class="d-acc" cx="392" cy="170" r="14"/><text class="d-t d-b d-inv" x="392" y="175" text-anchor="middle">2</text>
+  <text class="d-t d-b" x="416" y="167">Split</text><text class="d-t d-s" x="416" y="183">links shared between processors</text>
+  <path class="d-accl" d="M392 187v34" marker-end="url(#rp-b)"/>
+  <circle class="d-acc" cx="392" cy="245" r="14"/><text class="d-t d-b d-inv" x="392" y="250" text-anchor="middle">3</text>
+  <text class="d-t d-b" x="416" y="242">Solve</text><text class="d-t d-s" x="416" y="258">every link steps forward in</text><text class="d-t d-s" x="416" y="273">time, at its own pace</text>
+</g>
+<!-- connectors out -->
+<path class="d-ln" d="M614 183h10"/>
+<g class="d-ln">
+  <path d="M624 183C640 183 632 99 646 99" marker-end="url(#rp-a)"/><path d="M624 183H646" marker-end="url(#rp-a)"/><path d="M624 183C640 183 632 267 646 267" marker-end="url(#rp-a)"/>
+</g>
+<!-- outputs -->
+<g>
+  <rect class="d-card" x="652" y="66" width="226" height="66" rx="10"/>
+  <text class="d-t d-b" x="666" y="90" font-size="13">Hydrographs</text><text class="d-t d-m d-s" x="770" y="90" font-size="11">.h5 .csv .dat</text>
+  <text class="d-t d-s" x="666" y="108">discharge over time at the</text><text class="d-t d-s" x="666" y="123">links you choose</text>
+  <rect class="d-card" x="652" y="150" width="226" height="66" rx="10"/>
+  <text class="d-t d-b" x="666" y="174" font-size="13">Peak flows</text><text class="d-t d-m d-s" x="770" y="174" font-size="11">.pea</text>
+  <text class="d-t d-s" x="666" y="192">highest discharge at every link,</text><text class="d-t d-s" x="666" y="207">and when it happened</text>
+  <rect class="d-card" x="652" y="234" width="226" height="66" rx="10"/>
+  <text class="d-t d-b" x="666" y="258" font-size="13">Snapshot</text><text class="d-t d-m d-s" x="770" y="258" font-size="11">.rec .h5</text>
+  <text class="d-t d-s" x="666" y="276">all states at one time: the</text><text class="d-t d-s" x="666" y="291">starting point of a next run</text>
+</g>
+<text class="d-t d-s" x="144" y="338" text-anchor="middle">the .gbl names all the other files</text>
+</svg>

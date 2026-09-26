@@ -1,5 +1,10 @@
 # 4. How the solver works (the mathematics behind `advance.c`)
 
+<div class="meta-row"><span class="audience">Modellers, code readers</span><span>Some calculus</span><span>20 minutes</span></div>
+
+<p class="lead">Why every link can have its own time step, how the scheduler decides which link to advance, and what
+happens inside one Runge-Kutta step.</p>
+
 Reference: S. Small, L. Jay, R. Mantilla, R. Curtu, L. Cunha, M. Fonley, W. Krajewski,
 *An asynchronous solver for systems of ODEs linked by a directed tree structure*,
 Advances in Water Resources 53 (2013) 23–32. Numerical background: Hairer, Nørsett &
@@ -11,7 +16,9 @@ The river network is split into **links**. A link is a channel segment plus the
 hillslope that drains into it. Each link *i* carries a small state vector
 yᵢ(t) (for model 254: discharge, three storages, and three auxiliary states), governed by
 
-    dyᵢ/dt = fᵢ( t, yᵢ, y_parent1, y_parent2, ..., forcings(t), parameters )
+$$
+\frac{d\mathbf{y}_i}{dt} = \mathbf{f}_i\big(t,\ \mathbf{y}_i,\ \mathbf{y}_{\text{parent}_1}, \mathbf{y}_{\text{parent}_2}, \dots,\ \text{forcings}(t),\ \text{parameters}\big)
+$$
 
 The coupling only goes **downstream**: a link needs the states of its parents
 (upstream links), never of its child. The whole system is one huge ODE (7 × 400 000
@@ -33,9 +40,14 @@ So the computation sweeps from the headwaters to the outlet, with each link runn
 its own pace. Headwater links (no parents) can run ahead freely. A link waits only for
 its own parents.
 
+![Three links advancing in time, each with its own steps: the child C may step to t + h once both parents are past it](diagrams/async_clock.svg)
+
 ## 4.3 The scheduler (`src/advance.c`, function `Advance`)
 
-```
+![The scheduler loop of Advance(): pick a ready link, step it, tell its child; exchange data when nothing is ready](diagrams/scheduler.svg)
+
+:::{dropdown} The same loop as pseudo-code
+```text
 while t < end of simulation:                       # one "pass" per block of forcing data
     load the next block of forcing data (rain, ...) → sets maxtime for this pass
     write a snapshot if one is due
@@ -51,6 +63,7 @@ while t < end of simulation:                       # one "pass" per block of for
             free the parents' solution nodes that nobody needs anymore
     synchronise all processes (barriers)
 ```
+:::
 
 Important details:
 
@@ -68,8 +81,15 @@ Important details:
 
 An explicit Runge–Kutta method with *s* stages (Butcher coefficients A, b, c):
 
-    kⱼ = f( t + cⱼh,  y₀ + h Σ_{l<j} A_{jl} k_l,  parents(t + cⱼh) )      j = 1..s
-    y₁ = y₀ + h Σ bⱼ kⱼ
+$$
+\mathbf{k}_j = \mathbf{f}\Big(t + c_j h,\ \ \mathbf{y}_0 + h \sum_{l<j} A_{jl}\,\mathbf{k}_l,\ \ \text{parents}(t + c_j h)\Big), \qquad j = 1,\dots,s
+$$
+
+$$
+\mathbf{y}_1 = \mathbf{y}_0 + h \sum_{j=1}^{s} b_j\,\mathbf{k}_j
+$$
+
+![One step of one link: parents' values, stages, new state, error estimates; accept, or retry with a smaller h](diagrams/rk_step.svg)
 
 In the code:
 
@@ -79,13 +99,21 @@ In the code:
 2. **Stages** `temp_k[i]` are computed with `link_i->differential(...)`, i.e. the model function.
 3. **New state** `new_y = y₀ + h Σ b[i] k[i]`, passed through `check_consistency` (clamping).
 4. **Two error estimates**, each measured in a scaled max-norm
-   `err = max_i |estimate_i| / (atol_i + rtol_i · max(|y₀_i|, |y₁_i|))`:
+
+   $$
+   \text{err} = \max_i \frac{|\text{estimate}_i|}{\text{atol}_i + \text{rtol}_i \cdot \max(|y_{0,i}|,\ |y_{1,i}|)}
+   $$
+
    * `err_1` for the step itself (coefficients `e`),
    * `err_d` for the dense output (coefficients `d`). This one is specific to ASYNCH:
      the interpolated values are what the child links consume, so they must also be accurate.
 5. **Accept** if both are < 1. The new step size is
-   `h_new = h · min(facmax, max(facmin, fac · (1/err)^(1/order)))`, taking the smaller of
-   the two proposals. `facmin, facmax, fac` are the `.1 10.0 .9` line of the `.gbl`.
+
+   $$
+   h_\text{new} = h \cdot \min\!\Big(\text{facmax},\ \max\big(\text{facmin},\ \text{fac}\cdot(1/\text{err})^{1/\text{order}}\big)\Big)
+   $$
+
+   taking the smaller of the two proposals. `facmin, facmax, fac` are the `.1 10.0 .9` line of the `.gbl`.
 6. If accepted: store the stage values k (only for the "dense" states, e.g. q), write
    outputs that fall inside the step (by dense output), update the peak flow, advance
    the forcing index if a rain change was reached, free the parents' old nodes.
@@ -98,7 +126,7 @@ Available methods (index in the `.gbl`):
 | 0 | RK 3(2) dense | 3 | 3 / 2 |
 | 1 | RK 4(3) dense | 4 | 4 / 3 |
 | 2 | Dormand–Prince 5(4) dense | 7 | 5 / 4 |
-| 3 | Radau IIA (implicit) | | not usable: its solver is not compiled, and ASYNCH refuses the index |
+| 3 | Radau IIA (implicit) | | <span class="st open">not usable</span> its solver is not compiled, and ASYNCH refuses the index |
 
 ## 4.5 Initial step size (`src/rksteppers.c`, `InitialStepSize`)
 
@@ -110,6 +138,11 @@ to switch to `max(1e-6, h0·1e-3)`. This only changes the first trial step, whic
 error control then corrects.
 
 ## 4.6 Why results change slightly with the number of processes
+
+:::{note}
+With one process a run is exactly repeatable. With several, the last digits can change from run to run, always within
+the tolerances you set.
+:::
 
 With several MPI processes, the order in which links are computed, and the time when
 parent data arrives, depend on timing. The step sequence of a link, and hence its

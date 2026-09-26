@@ -1,26 +1,41 @@
 # 10. Using ASYNCH from Python
 
-ASYNCH's numerical work is done by a C library. The `asynch` Python package drives that library: it
-reads global files, runs simulations, reads and changes the states and parameters of every link while
-the model runs, and lets you **define new models in Python** while the computation still runs in C.
+<div class="meta-row"><span class="audience">Python users</span><span>Some Python</span><span>30 minutes</span></div>
+
+<p class="lead">ASYNCH's numerical work is done by a C library. The <code>asynch</code> Python package drives that
+library: it reads global files, runs simulations, reads and changes the states and parameters of every link while the
+model runs, and lets you define new models in Python while the computation still runs in C.</p>
+
+::::{grid} 1 2 2 4
+:gutter: 2
+
+:::{grid-item-card} {octicon}`play` Run
+:link: "#103-first-steps-run-a-global-file"
+:link-type: url
+A global file, like the `asynch` program.
+:::
+
+:::{grid-item-card} {octicon}`sliders` Inspect
+:link: "#104-states-parameters-and-time"
+:link-type: url
+States and parameters, while it runs.
+:::
+
+:::{grid-item-card} {octicon}`beaker` New model
+:link: "#107-a-new-model"
+:link-type: url
+Equations in C, Numba or Python.
+:::
+
+:::{grid-item-card} {octicon}`cpu` MPI
+:link: "#109-several-processors-mpi"
+:link-type: url
+Several processors, from Python.
+:::
+::::
 
 The old Python interface (`py/`, `asynchdist.py`) had been broken for years (issue A-01, chapter 8)
 and is replaced by this package.
-
-* [10.1 What you get](#101-what-you-get)
-* [10.2 Installation](#102-installation)
-* [10.3 First steps: run a global file](#103-first-steps-run-a-global-file)
-* [10.4 States, parameters and time](#104-states-parameters-and-time)
-* [10.5 Global files from Python](#105-global-files-from-python)
-* [10.6 Your own outputs](#106-your-own-outputs)
-* [10.7 A new model](#107-a-new-model)
-* [10.8 A new network, from scratch](#108-a-new-network-from-scratch)
-* [10.9 Several processors (MPI)](#109-several-processors-mpi)
-* [10.10 Reference](#1010-reference)
-* [10.11 How it works, and how it is tested](#1011-how-it-works-and-how-it-is-tested)
-* [10.12 Troubleshooting](#1012-troubleshooting)
-
----
 
 ## 10.1 What you get
 
@@ -51,20 +66,17 @@ Keeping the computation in the C library means one solver for the `asynch` progr
 from Python gives exactly the numbers of the program (tested: identical files). The package finds the library by itself
 (see *Check* below).
 
+![How the Python package sits on the C library, and where the equations of a model defined in Python run](diagrams/python_layers.svg)
+
 ### Install
 
 Python 3.8 or newer and NumPy are required; optional: h5py (to read `.h5` files), Numba (models written in Python at
 C speed, 10.7), mpi4py (only to use MPI from your own Python code, 10.9). A C compiler is needed for models written
 in C; it is already installed if you built ASYNCH.
 
-**With Docker** (chapter 1, option B) nothing else is needed: the image has the package ready.
-
-```bash
-docker run --rm -it asynch
-python3 python/run_example.py            # inside the container, in /asynch/examples
-```
-
-**On Ubuntu / WSL** (chapter 1, option A), after `make` in `~/asynch/build`:
+::::{tab-set}
+:::{tab-item} Ubuntu or WSL
+After `make` in `~/asynch/build` (chapter 1, option A):
 
 ```bash
 cd ~/asynch/build
@@ -82,8 +94,25 @@ pip install numba                                         # optional, for jit="n
 ~/asynch/python` does the same (without `--no-build-isolation`, pip downloads `setuptools` first). The package is
 then in the environment's `site-packages`, and the command `asynch-py` is available (the same as `python3 -m asynch`).
 Extras: `pip install "~/asynch/python[all]"` also installs h5py, numba and mpi4py.
+:::
 
-*Without installing*, for a quick try: `export PYTHONPATH=~/asynch/python`.
+:::{tab-item} Docker
+Nothing else is needed: the image of chapter 1 (option B) has the package ready.
+
+```bash
+docker run --rm -it asynch
+python3 python/run_example.py            # inside the container, in /asynch/examples
+```
+:::
+
+:::{tab-item} Without installing
+For a quick try from the source tree:
+
+```bash
+export PYTHONPATH=~/asynch/python
+```
+:::
+::::
 
 ### Check
 
@@ -91,7 +120,12 @@ Extras: `pip install "~/asynch/python[all]"` also installs h5py, numba and mpi4p
 python3 -m asynch library
 ```
 
-*You should see* the path of the library, e.g. `/usr/local/lib/libasynch.so`. The package looks for it, in order, in the
+:::{admonition} You should see
+:class: expect
+The path of the library, e.g. `/usr/local/lib/libasynch.so`.
+:::
+
+The package looks for it, in order, in the
 environment variable `ASYNCH_LIBRARY`, next to the package, in the build folder of the source tree
 (`~/asynch/build/src/.libs/`), then in the system folders. To use a particular build:
 
@@ -305,6 +339,8 @@ list or an array; they are compiled when the simulation starts (about a second).
 **Which one?** Measured on model 190 rewritten each way, 5 000 links, 2 simulated hours, one process (the results of
 all four are identical to the last bit):
 
+![Run time of the same model written four ways; plain Python was 4 times slower before this release](diagrams/speed.svg)
+
 | Equations | Run time | |
 |---|---|---|
 | built-in model (C) | 0.10 s | reference |
@@ -326,7 +362,7 @@ arrays at every call, which are now cached (the remaining 4 s are the Python cod
 ## 10.8 A new network, from scratch
 
 `examples/python/new_network.py` writes everything with `asynch.io` and `GlobalConfig`: the network (`write_rvr`, a
-dictionary link -> upstream links), the parameters (`write_prm`), the initial state (`write_uini`), the rain
+dictionary from each link to its upstream links), the parameters (`write_prm`), the initial state (`write_uini`), the rain
 (`write_ustr`), the global file, and a model; then runs it. Run it with `python3 python/new_network.py my_folder`.
 
 ## 10.9 Several processors (MPI)
@@ -341,6 +377,12 @@ mpirun -n 4 python3 python/run_example.py clearcreek_2015.gbl
 (Its largest peaks are not at the outlet, 0.56 m3/s, but at links 4086-4090, 0.58 m3/s: the flood wave flattens as it
 travels down. The 2015 reference results show the same.)
 
+<div class="stats">
+<div><p>2.9×</p><p>faster on 4 processes: Clear Creek from Python</p></div>
+<div><p>2.8×</p><p>faster on 4 processes: a model in plain Python</p></div>
+<div><p>0</p><p>changes to your script: just <code>mpirun -n 4</code></p></div>
+</div>
+
 **What it gains** (measured on a 4-core computer; each row gives the same results):
 
 | Run | 1 process | 2 processes | 4 processes |
@@ -353,8 +395,8 @@ travels down. The 2015 reference results show the same.)
 The 50 000-link network is a single long main channel with side streams, which is hard to share between processes;
 real basins such as Clear Creek branch more and gain more.
 
-**Rules:**
-
+:::{admonition} Rules for scripts run with MPI
+:class: important
 * `sim.rank` (0 .. n-1) and `sim.num_procs` tell a process who it is. Print from rank 0 only.
 * `sim.states`, `sim.peaks`, `set_states`, `run`, `advance`, `write_outputs` are **collective**: every process must
   call them, in the same order. They return the values of all links on every process.
@@ -373,6 +415,7 @@ real basins such as Clear Creek branch more and gain more.
 * Models written in Python (plain or Numba) work with MPI: each process evaluates the equations of its own links.
 * As with the `asynch` program, results with several processes differ from one process at the level of the solver
   tolerance (R-05, chapter 8).
+:::
 
 ## 10.10 Reference
 
@@ -410,11 +453,7 @@ explicit Runge-Kutta one. Data assimilation is a separate C program (`assim`, bu
 
 ## 10.11 How it works, and how it is tested
 
-```
-your script ──> asynch (Python) ──ctypes──> libasynch.so (C): asynch_api.h + asynch_interface.h ──> solver
-                    │                                          ^
-                    └── Model: generated C ── cc ──> model.so ─┘  (function pointers)
-```
+The layers are drawn in 10.2 (*Is it a library?*).
 
 * `ctypes` (part of Python) calls C functions of a shared library. The package only exchanges numbers, arrays and an
   opaque pointer to the solver with C, never the layout of a C structure: the old interface broke exactly because

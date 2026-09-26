@@ -3,6 +3,41 @@ Releases Notes
 
 ASYNCH release notes provide information on the features and improvements in each release. This page includes release notes for major releases and minor (bugfix) releases. If you are upgrading from an earlier version of ASYNCH, you will find essential information in the Breaking Changes associated with the relevant release notes.
 
+Version 1.5
+-----------
+
+Released 2026-09-26. Every change, with its effect on numerical results, is in the :doc:`changelog`; the problems found
+and fixed are explained in :doc:`guide/07_improvements_explained`.
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+* **Model 254 results change.** The baseflow equation of 2015 is restored: a line added in 2021 kept the baseflow state
+  ``q_b`` at 0 (S-02). Total discharge changes by at most 0.0003 m³/s on Clear Creek; the baseflow output was wrong since
+  2021. Apart from models 105 and 263 (below), all other models give the same results as 1.4.3.
+* **Runs stop earlier, with a message, instead of failing silently:** a missing or read-only output folder (checked
+  before computing; exit code 1), a numerical solver index other than 0, 1 or 2, a model number without equations
+  (200, 260, 300, 301, 315, 607, 2000), a link with more than 16 upstream links. An initial-state file with fewer values
+  than the model has states gives a warning, and the missing values are 0 (they came from random memory).
+* **Model 263** reads 16 values per link from its parameter file. In **models 105 and 263**, the states that have no
+  equation keep their initial values (their results depended on leftover memory, B-26).
+* **C API:** ``Asynch_Get_Num_Links`` returns ``unsigned int`` (it returned ``unsigned short``, wrong above 65 535
+  links). The library is also built as a shared library, ``libasynch.so``.
+* **Python:** the old interface (``py/``, ``asynchdist.py``) is replaced by the package ``asynch`` (``python/``).
+
+New Features
+~~~~~~~~~~~~
+
+* The Python package ``asynch``, installed with ``pip`` or ``make install-python``: run a global file (identical output
+  files), advance step by step, read and change states and parameters, add outputs, read and write every file format,
+  and define new models with equations in C, Numba or Python (:doc:`guide/10_python`, :doc:`python_api`). Works with
+  MPI (``mpirun -n 4 python3 script.py``) and mpi4py.
+* ``asynch_api.h``: a C interface for other languages and for custom models defined outside the source code.
+* ``make check`` runs 23 C unit tests, 70 Python tests and every example against the reference results of the original
+  repository (:doc:`guide/09_reproducibility`). GitHub Actions run it on every push.
+* Per-link solver settings (``.rkd`` files) and solver methods 0 and 1 work (they did not, B-14 and B-13).
+* A ``Dockerfile`` for a ready-made environment, and this documentation website.
+
 Version 1.4
 -----------
 

@@ -1,5 +1,7 @@
 # 8. Known issues
 
+<div class="meta-row"><span class="audience">Developers</span><span>The technical record</span><span>Reference</span></div>
+
 Known bugs, risks and open scientific questions in ASYNCH, found by building and running
 the code and by reading it (September 2026). Any fix should be verified with the regression
 harness ([09_reproducibility.md](09_reproducibility.md)).
@@ -12,9 +14,11 @@ How each item was established:
 * **Open question**: a scientific or design question, not necessarily a bug.
   These need a hydrologist's judgement, not just a programmer's.
 
-Severity scale: **critical** (memory corruption / wrong results / crash in normal
-use), **high** (crash or wrong result in a plausible configuration), **medium**,
-**low** (cosmetic, or only in unusual situations).
+Severity scale: <span class="sev critical">Critical</span> memory corruption, wrong results or a crash in normal
+use; <span class="sev high">High</span> a crash or wrong result in a plausible configuration;
+<span class="sev medium">Medium</span>; <span class="sev low">Low</span> cosmetic, or only in unusual situations.
+This is the technical severity. [Chapter 7](07_improvements_explained.md) ranks the same issues by their effect on a
+user of the model, which can differ (a crash is serious technically, but less dangerous than a silent error).
 
 Line numbers refer to commit `84da43a` (the state of `master` at the time of writing).
 
@@ -22,52 +26,55 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 
 ## Summary table
 
-| ID | Severity | Status | One-line description |
-|----|----------|--------|----------------------|
-| [B-01](#b-01) | **fixed** | confirmed | Model 254 uses model 256's snapshot filter: heap buffer overflow, crashes clearcreek on 1 process |
-| [B-02](#b-02) | **fixed** | code reading | Snapshot values are filtered only for links owned by MPI rank 0: output depends on process count |
-| [B-03](#b-03) | **fixed** | confirmed | Output file closed twice at shutdown: every debug build aborts at the end of a run |
-| [B-04](#b-04) | **fixed** | confirmed | Solver index 3 or 4 (advertised as "implicit") segfaults; the index is never validated |
-| [B-05](#b-05) | **fixed** | code reading | `Destroy_ErrorData` frees addresses of struct fields instead of the pointers |
-| [B-06](#b-06) | **fixed** | confirmed | `Asynch_Get_Num_Links` returns `unsigned short`: wrong for networks > 65 535 links |
-| [B-07](#b-07) | **fixed** | code reading | `DumpStateH5` loops past the array end if rank 0 owns no link; leaks its buffer |
-| [B-08](#b-08) | **fixed** | confirmed (UB sanitizer) | Misaligned `double` reads/writes in snapshot filters (undefined behaviour) |
-| [B-09](#b-09) | **fixed** | code reading | Model 402 dam check prints a debug line on every call |
-| [B-10](#b-10) | **fixed** (except riversys.c indentation) | compiler | Missing prototype for `Create_Rain_Data_Par_IBin`; wrong `printf` format in `check_state.c` |
-| [B-11](#b-11) | low | code reading | ~75 `fscanf`/`fread` return values ignored: malformed input files are not detected |
-| [B-12](#b-12) | **fixed** | code reading | `.uini` reader misses "not enough values" (checks `== 0`, `fscanf` returns `EOF`); clearcreek.uini is short |
-| [B-13](#b-13) | **fixed** | confirmed (ASan) | Solver methods 0 and 1 used Butcher coefficients from freed stack memory: random results or endless runs |
-| [B-14](#b-14) | **fixed** | confirmed | Reading an `.rkd` file (per-link tolerances) never finished: 5 defects in `Build_RKData` |
-| [B-15](#b-15) | **fixed** | confirmed | A missing output folder loses all results, yet the run ends with a success exit code |
-| [B-16](#b-16) | **fixed** | confirmed (ASan) | Links with more than 8 parents overflowed memory; reader and solver disagreed on the limit |
-| [B-17](#b-17) | **fixed** | confirmed | Library functions that crashed with built-in models or were missing (global parameters, duration, init file) |
-| [B-18](#b-18) | **fixed** | code reading | `.ini` readers stored the discontinuity state on the wrong link; other readers passed it as the dam flag |
-| [B-19](#b-19) | **fixed** | code reading | Model 190 read a third forcing value that does not exist (unused, no effect on results) |
-| [B-20](#b-20) | **fixed** | confirmed | Custom outputs of non-interpolated states were written as 0 / memory contents |
-| [B-21](#b-21) | **fixed** | code reading | Custom models inherited the snapshot filter of the built-in model with the same number |
-| [B-22](#b-22) | **fixed** | unit test | Wrong constant in the Dormand-Prince dense-output derivative (no effect: multiplied by 0) |
-| [B-23](#b-23) | **fixed** | unit test | Models 263 and 601-603 wrote/read one or two parameters past the per-link array |
-| [B-24](#b-24) | **fixed** | unit test | 7 model numbers without equations crashed; RK tables shared by all solvers of a program |
-| [B-25](#b-25) | **fixed** | test | Binary rain files: file past the range read, last file lasted 0.0001 min, overflow, crash on a missing file |
-| [R-01](#r-01) | fixed | confirmed | No automated regression tests; only one unit test (`days_in_month`) |
-| [R-02](#r-02) | **resolved** | confirmed | clearcreek references (2015) differ: another configuration, and a 2021 change to model 254 |
-| [R-03](#r-03) | medium | confirmed | Model 259 benchmark cannot be reproduced from the files in the repository |
-| [R-04](#r-04) | fixed | confirmed | Examples 258/259 pointed to a file on the original developers' cluster |
-| [R-05](#r-05) | info | confirmed | Results change at noise level with the number of MPI processes |
-| [A-01](#a-01) | **resolved** | confirmed | Old Python API broken beyond repair; replaced by the `python/` package (chapter 10) |
-| [M-01](#m-01) | **resolved** | confirmed | ~6 500 lines (15 %) of C were never compiled; removed |
-| [M-02](#m-02) | medium | code reading | A model is defined in 7 different places; duplicated unreachable code |
-| [M-03](#m-03) | low | confirmed | CI (Travis) is dead; build docs mention obsolete steps |
-| [P-01](#p-01) | low | confirmed | CLI sleeps 1 s during initialisation |
-| [P-02](#p-02) | medium | code reading | Snapshots gather every link through rank 0 one message at a time |
-| [P-03](#p-03) | ? | hypothesis | Scheduler, barriers and step-size resets in `Advance`: needs profiling |
-| [S-01](#s-01) | open question | code reading | Parent states indexed with `dim` instead of `max_dim` in the equations |
-| [S-02](#s-02) | **resolved** | confirmed | Model 254 baseflow floor `max(0.001, q_b)` (added 2021) removed; original 2015 equation restored |
-| [S-03](#s-03) | open question | code reading | Potential evaporation assumes a 30-day month |
-| [S-04](#s-04) | open question | code reading | Models 400–405: `temperature == 0` treated as "no snow" |
-| [S-05](#s-05) | open question | code reading | Snapshot filter rewrites cumulative states with `fmod(x, 1e200)` |
-| [S-06](#s-06) | open question | code reading | Model 254 evaporation always runs at the full potential rate; clamping then creates water |
-| [D-01..03](#d-01-to-d-03) | low | code reading | `docs/builtin_models.rst` disagrees with the model 254 code in 3 places |
+| ID | Severity | Status | Evidence | One-line description |
+|----|----------|--------|----------|----------------------|
+| [B-01](#b-01) | <span class="sev critical">Critical</span> | <span class="st fixed">fixed</span> | confirmed | Model 254 uses model 256's snapshot filter: heap buffer overflow, crashes clearcreek on 1 process |
+| [B-02](#b-02) | <span class="sev high">High</span> | <span class="st fixed">fixed</span> | code reading | Snapshot values are filtered only for links owned by MPI rank 0: output depends on process count |
+| [B-03](#b-03) | <span class="sev high">High</span> | <span class="st fixed">fixed</span> | confirmed | Output file closed twice at shutdown: every debug build aborts at the end of a run |
+| [B-04](#b-04) | <span class="sev high">High</span> | <span class="st fixed">fixed</span> | confirmed | Solver index 3 or 4 (advertised as "implicit") segfaults; the index is never validated |
+| [B-05](#b-05) | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> | code reading | `Destroy_ErrorData` frees addresses of struct fields instead of the pointers |
+| [B-06](#b-06) | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> | confirmed | `Asynch_Get_Num_Links` returns `unsigned short`: wrong for networks > 65 535 links |
+| [B-07](#b-07) | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> | code reading | `DumpStateH5` loops past the array end if rank 0 owns no link; leaks its buffer |
+| [B-08](#b-08) | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> | confirmed (UB sanitizer) | Misaligned `double` reads/writes in snapshot filters (undefined behaviour) |
+| [B-09](#b-09) | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> | code reading | Model 402 dam check prints a debug line on every call |
+| [B-10](#b-10) | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> (except riversys.c indentation) | compiler | Missing prototype for `Create_Rain_Data_Par_IBin`; wrong `printf` format in `check_state.c` |
+| [B-11](#b-11) | <span class="sev low">Low</span> | <span class="st open">open</span> | code reading | ~75 `fscanf`/`fread` return values ignored: malformed input files are not detected |
+| [B-12](#b-12) | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> | code reading | `.uini` reader misses "not enough values" (checks `== 0`, `fscanf` returns `EOF`); clearcreek.uini is short |
+| [B-13](#b-13) | <span class="sev critical">Critical</span> | <span class="st fixed">fixed</span> | confirmed (ASan) | Solver methods 0 and 1 used Butcher coefficients from freed stack memory: random results or endless runs |
+| [B-14](#b-14) | <span class="sev high">High</span> | <span class="st fixed">fixed</span> | confirmed | Reading an `.rkd` file (per-link tolerances) never finished: 5 defects in `Build_RKData` |
+| [B-15](#b-15) | <span class="sev high">High</span> | <span class="st fixed">fixed</span> | confirmed | A missing output folder loses all results, yet the run ends with a success exit code |
+| [B-16](#b-16) | <span class="sev high">High</span> | <span class="st fixed">fixed</span> | confirmed (ASan) | Links with more than 8 parents overflowed memory; reader and solver disagreed on the limit |
+| [B-17](#b-17) | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> | confirmed | Library functions that crashed with built-in models or were missing (global parameters, duration, init file) |
+| [B-18](#b-18) | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> | code reading | `.ini` readers stored the discontinuity state on the wrong link; other readers passed it as the dam flag |
+| [B-19](#b-19) | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> | code reading | Model 190 read a third forcing value that does not exist (unused, no effect on results) |
+| [B-20](#b-20) | <span class="sev high">High</span> | <span class="st fixed">fixed</span> | confirmed | Custom outputs of non-interpolated states were written as 0 / memory contents |
+| [B-21](#b-21) | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> | code reading | Custom models inherited the snapshot filter of the built-in model with the same number |
+| [B-22](#b-22) | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> | unit test | Wrong constant in the Dormand-Prince dense-output derivative (no effect: multiplied by 0) |
+| [B-23](#b-23) | <span class="sev high">High</span> | <span class="st fixed">fixed</span> | unit test | Models 263 and 601-603 wrote/read one or two parameters past the per-link array |
+| [B-24](#b-24) | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> | unit test | 7 model numbers without equations crashed; RK tables shared by all solvers of a program |
+| [B-25](#b-25) | <span class="sev high">High</span> | <span class="st fixed">fixed</span> | test | Binary rain files: file past the range read, last file lasted 0.0001 min, overflow, crash on a missing file |
+| [B-26](#b-26) | <span class="sev high">High</span> | <span class="st fixed">fixed</span> | valgrind, unit test | Models 105 and 263 left derivatives unset: states changed by values left in memory |
+| [B-27](#b-27) | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> | valgrind | Consistency check read the parents' non-dense states uninitialised (no effect on results) |
+| [R-01](#r-01) | <span class="sev high">High</span> | <span class="st fixed">fixed</span> | confirmed | No automated regression tests; only one unit test (`days_in_month`) |
+| [R-02](#r-02) | <span class="sev medium">Medium</span> | <span class="st fixed">resolved</span> | confirmed | clearcreek references (2015) differ: another configuration, and a 2021 change to model 254 |
+| [R-03](#r-03) | <span class="sev medium">Medium</span> | <span class="st open">open</span> | confirmed | Model 259 benchmark cannot be reproduced from the files in the repository |
+| [R-04](#r-04) | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> | confirmed | Examples 258/259 pointed to a file on the original developers' cluster |
+| [R-05](#r-05) | <span class="st neutral">n/a</span> | <span class="st info">information</span> | confirmed | Results change at noise level with the number of MPI processes |
+| [A-01](#a-01) | <span class="sev high">High</span> | <span class="st fixed">resolved</span> | confirmed | Old Python API broken beyond repair; replaced by the `python/` package (chapter 10) |
+| [M-01](#m-01) | <span class="sev low">Low</span> | <span class="st fixed">resolved</span> | confirmed | ~6 500 lines (15 %) of C were never compiled; removed |
+| [M-02](#m-02) | <span class="sev medium">Medium</span> | <span class="st open">open</span> | code reading | A model is defined in 7 different places; duplicated unreachable code |
+| [M-03](#m-03) | <span class="sev low">Low</span> | <span class="st fixed">partly fixed</span> | confirmed | CI (Travis) was dead: replaced by GitHub Actions; `.gitignore` still hides the examples |
+| [P-01](#p-01) | <span class="sev low">Low</span> | <span class="st open">open</span> | confirmed | CLI sleeps 1 s during initialisation |
+| [P-02](#p-02) | <span class="sev medium">Medium</span> | <span class="st open">open</span> | code reading | Snapshots gather every link through rank 0 one message at a time |
+| [P-03](#p-03) | <span class="st neutral">n/a</span> | <span class="st open">open</span> | hypothesis | Scheduler, barriers and step-size resets in `Advance`: needs profiling |
+| [S-01](#s-01) | <span class="st neutral">n/a</span> | <span class="st info">open question</span> | code reading | Parent states indexed with `dim` instead of `max_dim` in the equations |
+| [S-02](#s-02) | <span class="sev high">High</span> | <span class="st fixed">resolved</span> | confirmed | Model 254 baseflow floor `max(0.001, q_b)` (added 2021) removed; original 2015 equation restored |
+| [S-03](#s-03) | <span class="st neutral">n/a</span> | <span class="st info">open question</span> | code reading | Potential evaporation assumes a 30-day month |
+| [S-04](#s-04) | <span class="st neutral">n/a</span> | <span class="st info">open question</span> | code reading | Models 400–405: `temperature == 0` treated as "no snow" |
+| [S-05](#s-05) | <span class="st neutral">n/a</span> | <span class="st info">open question</span> | code reading | Snapshot filter rewrites cumulative states with `fmod(x, 1e200)` |
+| [S-06](#s-06) | <span class="st neutral">n/a</span> | <span class="st info">open question</span> | code reading | Model 254 evaporation always runs at the full potential rate; clamping then creates water |
+| [S-07](#s-07) | <span class="st neutral">n/a</span> | <span class="st info">open question</span> | code reading | Models 105 and 263: states without equations; what was intended? |
+| [D-01..03](#d-01-to-d-03) | <span class="sev low">Low</span> | <span class="st open">open</span> | code reading | `docs/builtin_models.rst` disagrees with the model 254 code in 3 places |
 
 ---
 
@@ -389,6 +396,29 @@ documented); the arrays are large enough; a missing file stops the run with its 
 irregular binary files, gives identical results. Runs whose files covered one step more than the declared range differ
 only by the 0.0001 min of that extra file.
 
+### B-26
+**Models 105 and 263 did not set every derivative: states took values left in memory.** *High for users of these
+models, confirmed with valgrind and a unit test.* A model function must write the derivative of each of its states
+into `ans`. `river_rainfall_summary` (model 105, 2 states) writes only the first; `model263` (8 states) adds the
+parents' state 4 to `ans[4]` without setting it first, and never writes `ans[5]` to `ans[7]`. The solver passes a
+work array (`Create_Workspace`, allocated with `malloc`) that holds values of an earlier stage or of another link, so
+these states changed by amounts that depended on memory contents. It was found because one run of `make check` from
+the source archive (built with `-O2`) did not finish in the loop over all models, right after model 263; valgrind then
+showed the uninitialised values, and the models were checked one by one.
+
+**Fixed** (2026-09-26): states without an equation keep their initial values (`ans[k] = 0`); the sum of model 263
+starts at 0. The intended equations of these states are an open question (S-07). The unit test that evaluates every
+model's equations now fills `ans` with NaN first and fails if any derivative is left unset: it reports exactly models
+105 and 263. The results of these two models change (they were undefined before); no example uses them.
+
+### B-27
+**The consistency check of the steppers read the parents' non-dense states uninitialised.** *Low, confirmed with
+valgrind; no effect on results.* When a link steps, the states of its parents are interpolated at the stage times, but
+only the *dense* ones (for model 254: states 0 and 6); `ExplicitRKSolver` (`src/steppers/explicit.c:88`) then applies
+the consistency check to the whole state vector of each parent, reading entries that were never written. The equations
+never use those entries. **Fixed** (2026-09-26): the work arrays are allocated with `calloc` (`src/system.c`). All
+examples give bit-identical results.
+
 ---
 
 ## Reproducibility
@@ -397,7 +427,7 @@ only by the 0.0001 min of that extra file.
 **No regression testing.** *High.* `make check` runs a single unit test (`days_in_month`).
 Nothing checks that the model still produces the same hydrographs. **Addressed by**
 `tests/regression/run_examples.py` (see [09_reproducibility.md](09_reproducibility.md)). Since 2026-09-25
-`make check` runs 23 C unit tests (`tests/check_asynch.c`), 68 tests of the Python package (`tests/python`) and the
+`make check` runs 23 C unit tests (`tests/check_asynch.c`), 70 tests of the Python package (`tests/python`) and the
 9 example comparisons; the tests found B-22 to B-25. Line coverage: 66.5 % (chapter 9).
 
 ### R-02
@@ -508,8 +538,10 @@ direct consequence. Possible improvement: one descriptor per model (struct
 with sizes + function pointers) in one file per model family.
 
 ### M-03
-**Tooling.** `.travis.yml` targets travis-ci.org, which shut down in 2021, so there
-is no working CI. Recommendation: GitHub Actions running the build and the regression harness.
+**Tooling.** `.travis.yml` targeted travis-ci.org, which shut down in 2021, so there
+was no working CI. **Fixed** (2026-09-26): `.travis.yml` was removed; GitHub Actions now build ASYNCH and run
+`make check` on every push (`.github/workflows/tests.yml`), and build and publish this documentation
+(`.github/workflows/docs.yml`).
 The root `.gitignore` also lists `examples` (and `*.rvr`, `*.str`, …), although those files
 are tracked. `git add examples/...` therefore refuses to stage changes to the examples, and
 `git add -u` (or `-f`) is needed. Recommendation: ignore only generated outputs (`examples/**/results/`).
@@ -593,6 +625,12 @@ a smooth factor `s/(s+ε)`), but this changes the model and must be a deliberate
 documented decision.
 
 ---
+
+### S-07
+Models 105 and 263 have states without equations (B-26): the storage of model 105, and states 5 to 7 of model 263,
+whose equations are commented out in `src/models/equations.c`. Since 1.5.0 these states keep their initial values.
+What the authors intended (for model 263, state 7 is even passed to the downstream links) needs the model's author or a
+hydrologist.
 
 ## Documentation errors
 

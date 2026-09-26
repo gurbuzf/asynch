@@ -110,7 +110,7 @@ class Model:
         Clip the states after every stage: "all" = every state >= 0, "discharge" = state 0 >= 1e-14 and
         the others >= 0 (as models 190 and 254). Ignored if :attr:`consistency` is set.
     param_factors : dict
-        Factor applied to a parameter when it is read, e.g. ``{"L": 1000.0}`` for km -> m.
+        Factor applied to a parameter when it is read, e.g. ``{"L": 1000.0}`` to convert km to m.
     area, hillslope_area : str
         Link parameters holding the upstream area and the hillslope area (written in the peak flow
         output), and ``areas_converted_to_m2`` if they were converted from km2 (then the peak output

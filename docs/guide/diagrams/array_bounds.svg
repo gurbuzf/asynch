@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 228" width="900" height="228">
+<!-- ASYNCH documentation diagram. Colours come from the site theme (docs/_static/custom.css); the second value of each var() is the light-theme fallback used when the file is viewed alone. -->
+<style>
+.d-frame{fill:var(--d-bg,#f7f9fc)}
+.d-card{fill:var(--d-card,#fff);stroke:var(--d-line,#cdd6e1);stroke-width:1.5}
+.d-t{font-family:var(--d-font,Inter,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif);font-size:14px;fill:var(--d-text,#17212f)}
+.d-b{font-weight:700}
+.d-s{font-size:12px;fill:var(--d-muted,#5b6b7f)}
+.d-cap{font-size:11px;font-weight:700;letter-spacing:.08em;fill:var(--d-muted,#5b6b7f)}
+.d-m{font-family:var(--d-mono,'JetBrains Mono',Menlo,Consolas,monospace)}
+.d-ln{stroke:var(--d-line2,#7d8ca0);stroke-width:2;fill:none}
+.d-lnl{stroke:var(--d-line,#cdd6e1);stroke-width:1.5;fill:none}
+.d-dash{stroke-dasharray:6 5}
+.d-acc{fill:var(--d-accent,#1f5fae)}.d-accs{fill:var(--d-accent-soft,#e3eefb)}
+.d-accl{stroke:var(--d-accent,#1f5fae);fill:none;stroke-width:2}
+.d-acct{fill:var(--d-accent,#1f5fae)}
+.d-w{fill:var(--d-water,#2f7fd8)}.d-ws{fill:var(--d-water-soft,#cfe3f8)}
+.d-wl{stroke:var(--d-water,#2f7fd8);fill:none;stroke-linecap:round}
+.d-land{fill:var(--d-land,#dcebd0);stroke:var(--d-land-dark,#6fa35a);stroke-width:1.2}
+.d-landl{stroke:var(--d-land-dark,#6fa35a);fill:none;stroke-width:2}
+.d-landt{fill:var(--d-land-dark,#6fa35a)}
+.d-soil{fill:var(--d-soil,#f1e4d0);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-deep{fill:var(--d-deep,#e4d6c2);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-soilt{fill:var(--d-soil-dark,#b58b58)}
+.d-rainl{stroke:var(--d-rain,#5a9be6);stroke-width:2.2;stroke-linecap:round;fill:none}
+.d-sun{fill:var(--d-sun,#e59a1c)}.d-sunl{stroke:var(--d-sun,#e59a1c);fill:none;stroke-width:2}
+.d-ok{fill:var(--d-ok,#2e8540)}.d-okl{stroke:var(--d-ok,#2e8540);fill:none;stroke-width:2}
+.d-bad{fill:var(--d-bad,#b42318)}
+.d-p0{fill:var(--d-p0,#1f5fae)}.d-p1{fill:var(--d-p1,#0f8a7e)}.d-p2{fill:var(--d-p2,#c4461a)}.d-p3{fill:var(--d-p3,#8a4fbf)}
+.d-p0l{stroke:var(--d-p0,#1f5fae)}.d-p1l{stroke:var(--d-p1,#0f8a7e)}.d-p2l{stroke:var(--d-p2,#c4461a)}
+.d-inv{fill:var(--d-card,#fff)}
+</style>
+<rect class="d-frame" x="0" y="0" width="900" height="228" rx="12"/>
+<defs><marker id="ab-a" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path class="d-acc" d="M0 0L10 5L0 10z"/></marker></defs>
+<rect class="d-acc" x="20" y="70" width="56" height="44" rx="8"/><text class="d-t d-b d-m d-inv" x="48" y="98" text-anchor="middle">y</text>
+<path class="d-accl" d="M76 92H108" marker-end="url(#ab-a)"/>
+<text class="d-t d-s" x="48" y="134" text-anchor="middle">the address</text><text class="d-t d-s" x="48" y="148" text-anchor="middle">of y[0]</text>
+<rect class="d-card" x="112" y="70" width="86" height="44" rx="6" stroke="var(--d-accent,#1f5fae)"/>
+<text class="d-t d-m" x="155" y="97" text-anchor="middle" font-size="13">q</text>
+<text class="d-t d-m d-s" x="155" y="60" text-anchor="middle">y[0]</text>
+<rect class="d-card" x="204" y="70" width="86" height="44" rx="6" stroke="var(--d-accent,#1f5fae)"/>
+<text class="d-t d-m" x="247" y="97" text-anchor="middle" font-size="13">s_p</text>
+<text class="d-t d-m d-s" x="247" y="60" text-anchor="middle">y[1]</text>
+<rect class="d-card" x="296" y="70" width="86" height="44" rx="6" stroke="var(--d-accent,#1f5fae)"/>
+<text class="d-t d-m" x="339" y="97" text-anchor="middle" font-size="13">s_t</text>
+<text class="d-t d-m d-s" x="339" y="60" text-anchor="middle">y[2]</text>
+<rect class="d-card" x="388" y="70" width="86" height="44" rx="6" stroke="var(--d-accent,#1f5fae)"/>
+<text class="d-t d-m" x="431" y="97" text-anchor="middle" font-size="13">s_s</text>
+<text class="d-t d-m d-s" x="431" y="60" text-anchor="middle">y[3]</text>
+<rect class="d-card" x="480" y="70" width="86" height="44" rx="6" stroke="var(--d-accent,#1f5fae)"/>
+<text class="d-t d-m" x="523" y="97" text-anchor="middle" font-size="13">s_precip</text>
+<text class="d-t d-m d-s" x="523" y="60" text-anchor="middle">y[4]</text>
+<rect class="d-card" x="572" y="70" width="86" height="44" rx="6" stroke="var(--d-accent,#1f5fae)"/>
+<text class="d-t d-m" x="615" y="97" text-anchor="middle" font-size="13">V_r</text>
+<text class="d-t d-m d-s" x="615" y="60" text-anchor="middle">y[5]</text>
+<rect class="d-card" x="664" y="70" width="86" height="44" rx="6" stroke="var(--d-accent,#1f5fae)"/>
+<text class="d-t d-m" x="707" y="97" text-anchor="middle" font-size="13">q_b</text>
+<text class="d-t d-m d-s" x="707" y="60" text-anchor="middle">y[6]</text>
+<rect x="756" y="70" width="86" height="44" rx="6" fill="var(--a-red-soft,#fde8e6)" stroke="var(--d-bad,#b42318)" stroke-width="1.8" stroke-dasharray="5 4"/>
+<text class="d-t d-b" x="799" y="97" text-anchor="middle" font-size="13" style="fill:var(--d-bad,#b42318)">?</text>
+<text class="d-t d-m d-b" x="799" y="60" text-anchor="middle" font-size="12" style="fill:var(--d-bad,#b42318)">y[7]</text>
+<path class="d-accl" d="M112 126v8H750v-8" stroke-width="1.5"/>
+<text class="d-t d-s" x="431" y="152" text-anchor="middle">the 7 states of model 254: the memory reserved for y</text>
+<text class="d-t d-s d-b" x="791" y="160" text-anchor="middle" style="fill:var(--d-bad,#b42318)">not part of y:</text>
+<text class="d-t d-s" x="791" y="175" text-anchor="middle">someone else's data</text>
+<text class="d-t" x="450" y="212" text-anchor="middle" font-size="13">C does not check the index: <tspan class="d-m">states[7] = 0</tspan> silently overwrites the neighbouring memory (bug B-01).</text>
+</svg>

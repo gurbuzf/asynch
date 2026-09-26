@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 350" width="860" height="350">
+<!-- ASYNCH documentation diagram. Colours come from the site theme (docs/_static/custom.css); the second value of each var() is the light-theme fallback used when the file is viewed alone. -->
+<style>
+.d-frame{fill:var(--d-bg,#f7f9fc)}
+.d-card{fill:var(--d-card,#fff);stroke:var(--d-line,#cdd6e1);stroke-width:1.5}
+.d-t{font-family:var(--d-font,Inter,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif);font-size:14px;fill:var(--d-text,#17212f)}
+.d-b{font-weight:700}
+.d-s{font-size:12px;fill:var(--d-muted,#5b6b7f)}
+.d-cap{font-size:11px;font-weight:700;letter-spacing:.08em;fill:var(--d-muted,#5b6b7f)}
+.d-m{font-family:var(--d-mono,'JetBrains Mono',Menlo,Consolas,monospace)}
+.d-ln{stroke:var(--d-line2,#7d8ca0);stroke-width:2;fill:none}
+.d-lnl{stroke:var(--d-line,#cdd6e1);stroke-width:1.5;fill:none}
+.d-dash{stroke-dasharray:6 5}
+.d-acc{fill:var(--d-accent,#1f5fae)}.d-accs{fill:var(--d-accent-soft,#e3eefb)}
+.d-accl{stroke:var(--d-accent,#1f5fae);fill:none;stroke-width:2}
+.d-acct{fill:var(--d-accent,#1f5fae)}
+.d-w{fill:var(--d-water,#2f7fd8)}.d-ws{fill:var(--d-water-soft,#cfe3f8)}
+.d-wl{stroke:var(--d-water,#2f7fd8);fill:none;stroke-linecap:round}
+.d-land{fill:var(--d-land,#dcebd0);stroke:var(--d-land-dark,#6fa35a);stroke-width:1.2}
+.d-landl{stroke:var(--d-land-dark,#6fa35a);fill:none;stroke-width:2}
+.d-landt{fill:var(--d-land-dark,#6fa35a)}
+.d-soil{fill:var(--d-soil,#f1e4d0);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-deep{fill:var(--d-deep,#e4d6c2);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-soilt{fill:var(--d-soil-dark,#b58b58)}
+.d-rainl{stroke:var(--d-rain,#5a9be6);stroke-width:2.2;stroke-linecap:round;fill:none}
+.d-sun{fill:var(--d-sun,#e59a1c)}.d-sunl{stroke:var(--d-sun,#e59a1c);fill:none;stroke-width:2}
+.d-ok{fill:var(--d-ok,#2e8540)}.d-okl{stroke:var(--d-ok,#2e8540);fill:none;stroke-width:2}
+.d-bad{fill:var(--d-bad,#b42318)}
+.d-p0{fill:var(--d-p0,#1f5fae)}.d-p1{fill:var(--d-p1,#0f8a7e)}.d-p2{fill:var(--d-p2,#c4461a)}.d-p3{fill:var(--d-p3,#8a4fbf)}
+.d-p0l{stroke:var(--d-p0,#1f5fae)}.d-p1l{stroke:var(--d-p1,#0f8a7e)}.d-p2l{stroke:var(--d-p2,#c4461a)}
+.d-inv{fill:var(--d-card,#fff)}
+</style>
+<rect class="d-frame" x="0" y="0" width="860" height="350" rx="12"/>
+<defs><marker id="ac-a" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path fill="var(--d-line2,#7d8ca0)" d="M0 0L10 5L0 10z"/></marker></defs>
+<text class="d-t d-b" x="24" y="78">Link A</text><text class="d-t d-s" x="24" y="94">headwater: fast</text>
+<path class="d-lnl" d="M170 80H830"/>
+<rect class="d-accs" x="170" y="70" width="550" height="20" rx="4"/>
+<path class="d-accl" d="M170 70v20M195 70v20M222 70v20M248 70v20M275 70v20M300 70v20M330 70v20M362 70v20M392 70v20M425 70v20M460 70v20M494 70v20M530 70v20M566 70v20M602 70v20M640 70v20M680 70v20M720 70v20"/>
+
+<text class="d-t d-b" x="24" y="148">Link B</text><text class="d-t d-s" x="24" y="164">headwater: slower</text>
+<path class="d-lnl" d="M170 150H830"/>
+<rect class="d-accs" x="170" y="140" width="470" height="20" rx="4"/>
+<path class="d-accl" d="M170 140v20M222 140v20M280 140v20M340 140v20M400 140v20M460 140v20M520 140v20M580 140v20M640 140v20"/>
+
+<text class="d-t d-b" x="24" y="238">Link C</text><text class="d-t d-s" x="24" y="254">child of A and B</text>
+<path class="d-lnl" d="M170 240H830"/>
+<rect class="d-accs" x="170" y="230" width="230" height="20" rx="4"/>
+<path class="d-accl" d="M170 230v20M290 230v20M400 230v20"/>
+<rect x="400" y="230" width="180" height="20" rx="4" fill="none" stroke="var(--d-accent,#1f5fae)" stroke-width="2" stroke-dasharray="5 4"/>
+<text class="d-t d-b d-acct" x="490" y="222" text-anchor="middle" font-size="13">next step of C</text>
+<path class="d-ln d-dash" d="M580 58V262"/>
+<text class="d-t d-b" x="580" y="50" text-anchor="middle" font-size="13">t + h</text>
+<text class="d-t d-b" x="400" y="276" text-anchor="middle" font-size="13">t</text>
+<circle class="d-ok" cx="580" cy="80" r="11"/><path d="M574 80l4 4 8-8" stroke="var(--d-card,#fff)" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<circle class="d-ok" cx="580" cy="150" r="11"/><path d="M574 150l4 4 8-8" stroke="var(--d-card,#fff)" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="d-ln" d="M170 292H836" marker-end="url(#ac-a)"/>
+<text class="d-t d-s" x="170" y="310" text-anchor="middle">start</text><text class="d-t d-s" x="836" y="310" text-anchor="end">time</text>
+<text class="d-t" x="430" y="336" text-anchor="middle" font-size="13">Shaded: time already computed; each tick is one step. C may step from t to t + h: both parents are past t + h.</text>
+</svg>

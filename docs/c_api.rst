@@ -73,7 +73,7 @@ A basic program that uses the ASYNCH solvers to perform calculations and takes a
     return EXIT_SUCCESS;
   }
 
-Details of each function call can be found in Section [sec: user interface routines].
+Details of each function call can be found in :ref:`User Interface Routines`.
 
 The program begins by initializing the asynchsolver object. The MPI communicator consisting of all processes (:code:`MPI_COMM_WORLD`) is used for the calculations. Next, the global file specified as a command line argument to the program is parsed. Based upon the information specified by the global file, the different components of the network are constructed.
 
@@ -90,7 +90,7 @@ Of course, outputting more information might be useful (timing results, command 
 User Interface Routines
 -----------------------
 
-In this section, routines for operating the solver are described. These routines can be used to create an instance of an ASYNCH solver, and manipulate properties such as total simulation time, when data output occurs, etc... Creation of custom outputs is discussed in Section [sec: custom outputs] and creation of custom models is discussed in Section [sec: custom-models].
+In this section, routines for operating the solver are described. These routines can be used to create an instance of an ASYNCH solver, and manipulate properties such as total simulation time, when data output occurs, etc... Creation of custom outputs is discussed in :ref:`Custom Outputs` and creation of custom models is discussed in :doc:`custom_models`.
 
 Solver Constructor / Destructor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -211,8 +211,7 @@ Time series outputs can be customized so as to produce results specific to a par
 instance, fluxes that are used internally to the model, or values that are not needed at all for
 computing state solutions, may be outputted.
 
-To create a custom output, specify the name of your new output in the global file (see Section [sec:
-time series output]). Next, in your program after reading the global file but before performing
+To create a custom output, specify the name of your new output in the global file (see :ref:`Time Series Output`). Next, in your program after reading the global file but before performing
 simulations, call the routine *Asynch_Set_Output* to set your output. Then perform any calculations
 or further modifications as usual.
 

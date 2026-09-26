@@ -1,6 +1,9 @@
 # 0. What ASYNCH is, in plain words
 
-*No programming knowledge needed for this page.*
+<div class="meta-row"><span class="audience">For everyone</span><span>No programming needed</span><span>10 minutes</span></div>
+
+<p class="lead">ASYNCH computes how much water flows in every stream of a river basin, minute by minute, from the rain
+that falls on it. This page explains how it sees a basin, what "solving" means, and what goes in and comes out.</p>
 
 ## 0.1 The problem it solves
 
@@ -14,19 +17,7 @@ Iowa, for example, with about 400 000 stream segments. The Iowa Flood Center use
 ASYNCH cuts the river network into **links**. A link is a stretch of channel between two
 junctions, together with the **hillslope**: the land on both sides that drains into that stretch.
 
-```
-            rain                              rain
-             │                                  │
-   hillslope ▼  ─────────►   link A  ◄──────── ▼ hillslope
-                              │
-                              ▼
-   hillslope ─────────►    link C (child of A and B)  ◄─── hillslope
-                              ▲
-                              │
-   hillslope ─────────►   link B
-                              │
-                              ▼  ... to the outlet
-```
+![A river network cut into links: each link is a channel plus the hillslope that drains into it](diagrams/hillslope_link.svg)
 
 * Water on a hillslope is held in a few **storages**: water ponded on the surface, water in the
   top soil, water deeper in the soil. It moves from one storage to the next and finally into the channel.
@@ -56,24 +47,14 @@ states after each step. Two ideas make it special:
 2. **It works in parallel.** The network is split between several processors (**MPI
    processes**). Each processor computes its links and passes the flows to the others.
 
+![The network shared between three processes: only the links that cross a boundary exchange messages](diagrams/mpi_split.svg)
+
 The accuracy of each step is controlled automatically: if the estimated error is larger than
 the **tolerance** you set, the step is redone with a smaller step size.
 
 ## 0.4 A model run, from start to finish
 
-```
-  INPUTS                                     ASYNCH                        OUTPUTS
-  ------                                     ------                        -------
-  global file (.gbl)  ─┐                                               ┌─► hydrographs (.dat/.csv/.h5):
-   which model, dates, │                                               │    discharge vs time at chosen links
-   which files, ...    │                                               │
-  network (.rvr)       ├──► read ─► split between ─► step all links ───┼─► peak flows (.pea):
-  link parameters (.prm)│          processors        forward in time   │    highest discharge at each link
-  initial state (.uini)│                                               │
-  rain (.str), evapo-  │                                               └─► snapshot (.rec/.h5):
-   ration (.mon), ...  ┘                                                    all states at the end, to
-                                                                            restart a later run
-```
+![A model run: the input files, the three stages inside ASYNCH, the output files](diagrams/run_pipeline.svg)
 
 * **The global file (`.gbl`)** is the only file you give on the command line. It is a text file that
   lists everything else: the model number, the start and end date, the parameters that are the same
@@ -86,12 +67,16 @@ the **tolerance** you set, the step is redone with a smaller step size.
 
 A run is started from a terminal with one command:
 
-```
-mpirun -n 4 asynch clearcreek.gbl
+```console
+$ mpirun -n 4 asynch clearcreek.gbl
 ```
 
-"Run `asynch` with the global file `clearcreek.gbl`, split over 4 processors." Chapter 1 shows how
-to install everything, and chapter 2 how to run and change a simulation.
+"Run `asynch` with the global file `clearcreek.gbl`, split over 4 processors."
+
+:::{tip}
+Next: [chapter 1](01_setup.md) installs everything and runs this example; [chapter 2](02_running_the_model.md)
+explains how to change a simulation and read its results.
+:::
 
 ## 0.5 What is in this repository
 

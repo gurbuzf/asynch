@@ -60,90 +60,27 @@ with GitHub Pages. It needs, once, *Settings > Pages > Source: GitHub Actions* i
 Managing releases
 -----------------
 
-Once you are happy with your changes in the ``develop`` branch and ran a couple of test simulations, here is the procedure to release a new version ``x.y.z`` (e.g. ``1.5.0``):
+Versions follow `semantic versioning <https://semver.org/>`__: ``x.y.z``. To release version ``x.y.z``:
 
-Branch
-~~~~~~
+1. Set the version in ``configure.ac`` (``AC_INIT([asynch], [x.y.z], ...)``), ``python/pyproject.toml`` and
+   ``python/asynch/__init__.py`` (``__version__``).
+2. In ``CHANGELOG.md``, rename the section ``[Unreleased]`` to ``[x.y.z] - YYYY-MM-DD``, with a short summary of the
+   version at its top, and start a new empty ``[Unreleased]`` section. Add the version to :doc:`release_notes`: what
+   changes for a user, breaking changes first.
+3. Build and run ``make check`` (:doc:`guide/09_reproducibility`); compare the examples with the previous version with
+   ``tests/regression/run_examples.py --compare-to``.
+4. Commit, then create and push the tag:
 
-Create a branch for the release following the ``release-x.y.z`` naming scheme and `semantic versionning <http://semver.org/>`__ rules :
+   .. code-block:: sh
 
-.. code-block:: sh
+      git tag -a vx.y.z -m "ASYNCH x.y.z"
+      git push origin vx.y.z
 
-  git branch release-x.y.z
+The workflow ``.github/workflows/release.yml`` then checks that the tag matches ``configure.ac``, builds ASYNCH, runs
+``make check``, and publishes the GitHub release. Its description is the summary of the version from
+``CHANGELOG.md`` with the title of every change. Three files are attached:
 
-Edit
-~~~~
-
-Edit the release notes (``doc/release_notes.rst``).
-
-Edit ``configure.ac`` to bump the version number:
-
-.. code::
-
-  AC_INIT([asynch], [x.y.z], [samuel-debionne@uiowa.edu])
-
-Commit your changes.
-
-.. code-block:: sh
-
-  git add configure.ac doc/release_notes.rst
-  git commit -m "Bump version number to x.y.z"
-  git push
-
-Generate the tarball
-~~~~~~~~~~~~~~~~~~~~
-
-In a new empty folder, run the following commands to clone the repository, generate the configure script and the tarball.
-
-.. code-block:: sh
-
-  git clone https://github.com/Iowa-Flood-Center/asynch.git
-  git checkout release-x.y.z
-  autoreconf -i
-  mkdir build && cd build
-  export TAR_OPTIONS="--owner=0 --group=0 --numeric-owner"
-  ../configure
-  make dist
-
-That should generate a ``release-x.y.z.tar.gz`` that needs to be tested.
-
-Test the tarball
-~~~~~~~~~~~~~~~~
-
-In a new empty folder, follow  the instructions in :doc:`guide/01_setup`:
-
-.. code-block:: sh
-
-  tar xf release-x.y.z.tar.gz
-  cd release-x.y.z
-  mkdir build && cd build
-  ../configure CFLAGS="-O2 -DNDEBUG"
-  make
-  make check
-  make install
-
-Adjust the release branch if there is any problem with the build (e.g. missing header file).
-
-Release on Github
-~~~~~~~~~~~~~~~~~
-
-Merge the release branch ``release-x.y.z`` to ``master``. The easiest way is to submit a new Pull Request. The *base* branch should be ``Iowa-Flood-Center/asynch`` / ``master`` and the *compare* branch ``Iowa-Flood-Center/asynch`` / ``release-x.y.z``.
-
-
-Review your Pull Request, or better let someone else do the review. If everything looks good, and the GitHub Actions checks (tests and documentation, ``.github/workflows``) pass, do a *"Merge and Squash"*.
-
-You can safely delete the release branch at this point.
-
-Click on *"Draft a new release"* in `Releases <https://github.com/Iowa-Flood-Center/asynch/releases>`_:
-
-=============== ===============
-Field           Value
-=============== ===============
-Tag version     vx.y.z (v1.5.0)
-Release title   Pick a city in Iowa
-Description     A short version of the release notes
-=============== ===============
-
-Attach the tarball that was generated in the previous step. This is usefull because the tarball does not require the target computer to have autotools installed.
-
-Ready? *"Publish Release"*! Every followers of the repo get notified of the new version. Good job!
+* ``asynch-x.y.z.tar.gz``, made by ``make dist``: the sources with a ready ``configure`` script, which build without
+  autotools (``./configure && make && make check``);
+* the Python package as a wheel (it uses the ``libasynch.so`` built from the sources);
+* the documentation website as a zip file, to read offline.

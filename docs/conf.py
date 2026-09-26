@@ -17,6 +17,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, "python"))     # autodoc imports asynch (the C library is not loaded)
+sys.path.insert(0, os.path.join(HERE, "_ext"))
 
 # -- Project --------------------------------------------------------------------------------------------------------
 
@@ -40,6 +41,7 @@ extensions = [
     "sphinx_copybutton",           # a copy button on every code block
     "sphinx_design",               # cards and grids on the home page
     "sphinx.ext.autosectionlabel", # the reference manual links to sections by their title
+    "asynch_docs",                 # _ext/asynch_docs.py: diagrams drawn inline, following the light/dark theme
 ]
 autosectionlabel_maxdepth = 3
 
@@ -56,7 +58,7 @@ if HAVE_DOXYGEN:
 
 source_suffix = {".rst": "restructuredtext", ".md": "markdown"}
 root_doc = "index"
-exclude_patterns = ["_build", ".doxygen", "Thumbs.db", ".DS_Store", "guide/README.md"]
+exclude_patterns = ["_build", ".doxygen", "_ext", "Thumbs.db", ".DS_Store", "guide/README.md"]
 
 myst_enable_extensions = ["colon_fence", "deflist", "dollarmath", "tasklist", "attrs_inline"]
 myst_heading_anchors = 3           # links such as 01_setup.md#option-a-... work as on GitHub
@@ -76,7 +78,10 @@ suppress_warnings = ["myst.header", "autosectionlabel.*", "ref.citation"]
 html_theme = "furo"
 html_title = "ASYNCH %s" % release
 html_static_path = ["_static"]
-html_css_files = ["custom.css"]
+html_css_files = [
+    "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap",
+    "custom.css",
+]
 html_logo = "_static/logo.svg"
 html_favicon = "_static/logo.svg"
 html_show_sourcelink = False
@@ -84,7 +89,11 @@ html_theme_options = {
     "source_repository": repository,
     "source_branch": branch,
     "source_directory": "docs/",
-    "light_css_variables": {"color-brand-primary": "#1f5fae", "color-brand-content": "#1f5fae"},
+    "light_css_variables": {
+        "color-brand-primary": "#1f5fae", "color-brand-content": "#1f5fae",
+        "font-stack": "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif",
+        "font-stack--monospace": "'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace",
+    },
     "dark_css_variables": {"color-brand-primary": "#6ea8ec", "color-brand-content": "#6ea8ec"},
     "footer_icons": [{
         "name": "GitHub", "url": repository, "class": "",

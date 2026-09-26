@@ -1,6 +1,9 @@
 Built-in Models
 ===============
-3
+
+Every model has a number, its *model type*, given on the first line of the global file. The table lists the
+built-in models and their states; the sections below describe some of them in detail.
+
 +------------+---------------------------------------+-------------------------------------------------------------------------------------------------------------------------+
 | Model Type | Description                           | States                                                                                                                  |
 +============+=======================================+=========================================================================================================================+
@@ -33,7 +36,7 @@ Built-in Models
 | 259        | IFC toplayer with offline, interflow  | :math:`q`, :math:`s_p`, :math:`s_t`, :math:`s_s`, :math:`s_{precip}`, :math:`s_{evap}`, :math:`s_{runoff}`, :math:`q_b` |
 +------------+---------------------------------------+-------------------------------------------------------------------------------------------------------------------------+
 
-In this section, a description of a few different models is presented to demonstrate the features described in Section [sec: model descriptions]. These models are already fully implemented in ``problems.c`` and ``definetype.c``, and may be used for simulations.
+In this section, a description of a few different models is presented to demonstrate the features described in :doc:`custom_models`. These models are implemented in ``src/models/definitions.c`` and ``src/models/equations.c``, and may be used for simulations.
 
 Main models
 -----------

@@ -6,7 +6,7 @@ Through a global file, many options are selected, including which model to use, 
 Built-In Output Time Series
 ---------------------------
 
-Figure [fig: built-in output time series] contains the names and a description of built-in output time series. These outputs are defined in the source file *outputs.c*. Up to seven states can be outputted with the built-in output time series. In addition to these, users can create their own time series outputs. See Section :ref:`Custom Outputs`.
+The table below contains the names and a description of built-in output time series. These outputs are defined in the source file *outputs.c*. Up to seven states can be outputted with the built-in output time series. In addition to these, users can create their own time series outputs. See Section :ref:`Custom Outputs`.
 
 .. table:: Built-in output time series
 
@@ -29,7 +29,7 @@ Figure [fig: built-in output time series] contains the names and a description o
 Built-In Peakflow Functions
 ---------------------------
 
-Two built-in peakflow functions exist: *Classic* and *Forecast*. The two are described in Figure [fig: built-in peakflow functions]. The peak discharges are the largest values obtained in the state with index 0 in the state vectors. The time to peak for the *Classic* function is given in simulation time. For *Forecast*, the time to peak is measured in unix time. The time period output is a parameter that can be altered by user programs to provide additional output information.
+Two built-in peakflow functions exist: *Classic* and *Forecast*. The two are described in the table below. The peak discharges are the largest values obtained in the state with index 0 in the state vectors. The time to peak for the *Classic* function is given in simulation time. For *Forecast*, the time to peak is measured in unix time. The time period output is a parameter that can be altered by user programs to provide additional output information.
 
 .. table:: Built-in peakflow functions
 
@@ -65,7 +65,7 @@ The ASYNCH solver is based upon using Runge-Kutta methods at the link level. The
 Index 3 (RadauII 3A, an implicit method) cannot be selected: its solver is not part of the build,
 and ASYNCH stops with an error message if a global file or a .rkd file asks for it.
 
-The application of these methods is done through the *RKSolver* routine in the *UnivVars* structure. This is set with a call to the *InitRoutines* method. See Section [sec: initroutines]. Several choices exist for the *RKSolver*. They are given in Table  :ref:`rk-solvers`. Some solvers are only appropriate if the model uses ODEs, while others support DAEs. Similarly, some methods support discontinuity states, while others do not. Currently, only one method is equipped to handle stiff ODEs. Certainly, the routine *ExplicitRKIndex1SolverDam* could be used to solve any problem. However, using a more appropriate solver is significantly more efficient.
+The application of these methods is done through the *RKSolver* routine in the *UnivVars* structure. This is set with a call to the *InitRoutines* method. See the section *InitRoutines* of :doc:`custom_models`. Several choices exist for the *RKSolver*. They are given in Table  :ref:`rk-solvers`. Some solvers are only appropriate if the model uses ODEs, while others support DAEs. Similarly, some methods support discontinuity states, while others do not. Currently, only one method is equipped to handle stiff ODEs. Certainly, the routine *ExplicitRKIndex1SolverDam* could be used to solve any problem. However, using a more appropriate solver is significantly more efficient.
 
 .. _rk-solvers:
 

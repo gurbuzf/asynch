@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 360" width="960" height="360">
+<!-- ASYNCH documentation diagram. Colours come from the site theme (docs/_static/custom.css); the second value of each var() is the light-theme fallback used when the file is viewed alone. -->
+<style>
+.d-frame{fill:var(--d-bg,#f7f9fc)}
+.d-card{fill:var(--d-card,#fff);stroke:var(--d-line,#cdd6e1);stroke-width:1.5}
+.d-t{font-family:var(--d-font,Inter,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif);font-size:14px;fill:var(--d-text,#17212f)}
+.d-b{font-weight:700}
+.d-s{font-size:12px;fill:var(--d-muted,#5b6b7f)}
+.d-cap{font-size:11px;font-weight:700;letter-spacing:.08em;fill:var(--d-muted,#5b6b7f)}
+.d-m{font-family:var(--d-mono,'JetBrains Mono',Menlo,Consolas,monospace)}
+.d-ln{stroke:var(--d-line2,#7d8ca0);stroke-width:2;fill:none}
+.d-lnl{stroke:var(--d-line,#cdd6e1);stroke-width:1.5;fill:none}
+.d-dash{stroke-dasharray:6 5}
+.d-acc{fill:var(--d-accent,#1f5fae)}.d-accs{fill:var(--d-accent-soft,#e3eefb)}
+.d-accl{stroke:var(--d-accent,#1f5fae);fill:none;stroke-width:2}
+.d-acct{fill:var(--d-accent,#1f5fae)}
+.d-w{fill:var(--d-water,#2f7fd8)}.d-ws{fill:var(--d-water-soft,#cfe3f8)}
+.d-wl{stroke:var(--d-water,#2f7fd8);fill:none;stroke-linecap:round}
+.d-land{fill:var(--d-land,#dcebd0);stroke:var(--d-land-dark,#6fa35a);stroke-width:1.2}
+.d-landl{stroke:var(--d-land-dark,#6fa35a);fill:none;stroke-width:2}
+.d-landt{fill:var(--d-land-dark,#6fa35a)}
+.d-soil{fill:var(--d-soil,#f1e4d0);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-deep{fill:var(--d-deep,#e4d6c2);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-soilt{fill:var(--d-soil-dark,#b58b58)}
+.d-rainl{stroke:var(--d-rain,#5a9be6);stroke-width:2.2;stroke-linecap:round;fill:none}
+.d-sun{fill:var(--d-sun,#e59a1c)}.d-sunl{stroke:var(--d-sun,#e59a1c);fill:none;stroke-width:2}
+.d-ok{fill:var(--d-ok,#2e8540)}.d-okl{stroke:var(--d-ok,#2e8540);fill:none;stroke-width:2}
+.d-bad{fill:var(--d-bad,#b42318)}
+.d-p0{fill:var(--d-p0,#1f5fae)}.d-p1{fill:var(--d-p1,#0f8a7e)}.d-p2{fill:var(--d-p2,#c4461a)}.d-p3{fill:var(--d-p3,#8a4fbf)}
+.d-p0l{stroke:var(--d-p0,#1f5fae)}.d-p1l{stroke:var(--d-p1,#0f8a7e)}.d-p2l{stroke:var(--d-p2,#c4461a)}
+.d-inv{fill:var(--d-card,#fff)}
+</style>
+<rect class="d-frame" x="0" y="0" width="960" height="360" rx="12"/>
+<defs><marker id="mp-w" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="9" orient="auto"><path class="d-w" d="M0 0L10 5L0 10z"/></marker></defs>
+<rect x="62" y="22" width="286" height="168" rx="18" class="d-p0" fill-opacity=".10" stroke="var(--d-p0,#000)" stroke-width="1.5" stroke-dasharray="6 5"/>
+<text text-anchor="end" class="d-t d-b" x="336" y="44" font-size="13" fill="var(--d-p0,#000)" style="fill:var(--d-p0)">process 0</text>
+<rect x="62" y="200" width="286" height="150" rx="18" class="d-p1" fill-opacity=".10" stroke="var(--d-p1,#000)" stroke-width="1.5" stroke-dasharray="6 5"/>
+<text text-anchor="end" class="d-t d-b" x="336" y="222" font-size="13" fill="var(--d-p1,#000)" style="fill:var(--d-p1)">process 1</text>
+<rect x="410" y="118" width="320" height="214" rx="18" class="d-p2" fill-opacity=".10" stroke="var(--d-p2,#000)" stroke-width="1.5" stroke-dasharray="6 5"/>
+<text text-anchor="end" class="d-t d-b" x="718" y="140" font-size="13" fill="var(--d-p2,#000)" style="fill:var(--d-p2)">process 2</text>
+<path class="d-wl" stroke-width="3" d="M111 53L192 75" marker-end="url(#mp-w)"/>
+<path class="d-wl" stroke-width="3" d="M111 102L192 81" marker-end="url(#mp-w)"/>
+<path class="d-wl" stroke-width="3" d="M215 82L298 115" marker-end="url(#mp-w)"/>
+<path class="d-wl" stroke-width="3" d="M111 158L297 122" marker-end="url(#mp-w)"/>
+<path class="d-wl" stroke-width="3" d="M111 233L192 255" marker-end="url(#mp-w)"/>
+<path class="d-wl" stroke-width="3" d="M111 282L192 261" marker-end="url(#mp-w)"/>
+<path class="d-wl" stroke-width="3" d="M216 261L298 286" marker-end="url(#mp-w)"/>
+<path class="d-wl" stroke-width="3" d="M216 319L298 294" marker-end="url(#mp-w)"/>
+<path class="d-wl" stroke-width="3" d="M321 122L437 147" marker-end="url(#mp-w)"/>
+<path class="d-wl" stroke-width="3" d="M321 288L437 265" marker-end="url(#mp-w)"/>
+<path class="d-wl" stroke-width="3" d="M460 154L568 200" marker-end="url(#mp-w)"/>
+<path class="d-wl" stroke-width="3" d="M460 258L568 210" marker-end="url(#mp-w)"/>
+<path class="d-wl" stroke-width="3" d="M562 289L577 218" marker-end="url(#mp-w)"/>
+<path class="d-wl" stroke-width="3" d="M591 205L677 205" marker-end="url(#mp-w)"/>
+<circle cx="100" cy="50" r="9" class="d-p0" stroke="var(--d-card,#fff)" stroke-width="2.5"/>
+<circle cx="100" cy="105" r="9" class="d-p0" stroke="var(--d-card,#fff)" stroke-width="2.5"/>
+<circle cx="100" cy="160" r="9" class="d-p0" stroke="var(--d-card,#fff)" stroke-width="2.5"/>
+<circle cx="205" cy="78" r="9" class="d-p0" stroke="var(--d-card,#fff)" stroke-width="2.5"/>
+<circle cx="310" cy="120" r="9" class="d-p0" stroke="var(--d-card,#fff)" stroke-width="2.5"/>
+<circle cx="100" cy="230" r="9" class="d-p1" stroke="var(--d-card,#fff)" stroke-width="2.5"/>
+<circle cx="100" cy="285" r="9" class="d-p1" stroke="var(--d-card,#fff)" stroke-width="2.5"/>
+<circle cx="205" cy="322" r="9" class="d-p1" stroke="var(--d-card,#fff)" stroke-width="2.5"/>
+<circle cx="205" cy="258" r="9" class="d-p1" stroke="var(--d-card,#fff)" stroke-width="2.5"/>
+<circle cx="310" cy="290" r="9" class="d-p1" stroke="var(--d-card,#fff)" stroke-width="2.5"/>
+<circle cx="450" cy="150" r="9" class="d-p2" stroke="var(--d-card,#fff)" stroke-width="2.5"/>
+<circle cx="450" cy="262" r="9" class="d-p2" stroke="var(--d-card,#fff)" stroke-width="2.5"/>
+<circle cx="560" cy="300" r="9" class="d-p2" stroke="var(--d-card,#fff)" stroke-width="2.5"/>
+<circle cx="580" cy="205" r="9" class="d-p2" stroke="var(--d-card,#fff)" stroke-width="2.5"/>
+<circle cx="690" cy="205" r="9" class="d-p2" stroke="var(--d-card,#fff)" stroke-width="2.5"/>
+<g transform="translate(380 117)"><rect x="-14" y="-10" width="28" height="20" rx="4" class="d-card" stroke="var(--d-text,#17212f)" stroke-width="1.6"/><path d="M-12 -7l12 9 12-9" fill="none" stroke="var(--d-text,#17212f)" stroke-width="1.6" stroke-linejoin="round"/></g>
+<g transform="translate(380 258)"><rect x="-14" y="-10" width="28" height="20" rx="4" class="d-card" stroke="var(--d-text,#17212f)" stroke-width="1.6"/><path d="M-12 -7l12 9 12-9" fill="none" stroke="var(--d-text,#17212f)" stroke-width="1.6" stroke-linejoin="round"/></g>
+<path class="d-wl" stroke-width="3" d="M701 205H760" marker-end="url(#mp-w)"/><text class="d-t d-s" x="740" y="230" text-anchor="middle">outlet</text>
+<g transform="translate(812 58)"><rect x="-14" y="-10" width="28" height="20" rx="4" class="d-card" stroke="var(--d-text,#17212f)" stroke-width="1.6"/><path d="M-12 -7l12 9 12-9" fill="none" stroke="var(--d-text,#17212f)" stroke-width="1.6" stroke-linejoin="round"/></g>
+<text class="d-t d-b" x="834" y="56" font-size="13">message</text><text class="d-t d-s" x="800" y="90">a parent on another</text><text class="d-t d-s" x="800" y="105">process sends its steps</text>
+<text class="d-t d-s" x="800" y="282">Each process owns</text><text class="d-t d-s" x="800" y="298">whole sub-basins, so</text><text class="d-t d-s" x="800" y="314">few links need messages.</text>
+</svg>

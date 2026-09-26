@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 350" width="780" height="350">
+<!-- ASYNCH documentation diagram. Colours come from the site theme (docs/_static/custom.css); the second value of each var() is the light-theme fallback used when the file is viewed alone. -->
+<style>
+.d-frame{fill:var(--d-bg,#f7f9fc)}
+.d-card{fill:var(--d-card,#fff);stroke:var(--d-line,#cdd6e1);stroke-width:1.5}
+.d-t{font-family:var(--d-font,Inter,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif);font-size:14px;fill:var(--d-text,#17212f)}
+.d-b{font-weight:700}
+.d-s{font-size:12px;fill:var(--d-muted,#5b6b7f)}
+.d-cap{font-size:11px;font-weight:700;letter-spacing:.08em;fill:var(--d-muted,#5b6b7f)}
+.d-m{font-family:var(--d-mono,'JetBrains Mono',Menlo,Consolas,monospace)}
+.d-ln{stroke:var(--d-line2,#7d8ca0);stroke-width:2;fill:none}
+.d-lnl{stroke:var(--d-line,#cdd6e1);stroke-width:1.5;fill:none}
+.d-dash{stroke-dasharray:6 5}
+.d-acc{fill:var(--d-accent,#1f5fae)}.d-accs{fill:var(--d-accent-soft,#e3eefb)}
+.d-accl{stroke:var(--d-accent,#1f5fae);fill:none;stroke-width:2}
+.d-acct{fill:var(--d-accent,#1f5fae)}
+.d-w{fill:var(--d-water,#2f7fd8)}.d-ws{fill:var(--d-water-soft,#cfe3f8)}
+.d-wl{stroke:var(--d-water,#2f7fd8);fill:none;stroke-linecap:round}
+.d-land{fill:var(--d-land,#dcebd0);stroke:var(--d-land-dark,#6fa35a);stroke-width:1.2}
+.d-landl{stroke:var(--d-land-dark,#6fa35a);fill:none;stroke-width:2}
+.d-landt{fill:var(--d-land-dark,#6fa35a)}
+.d-soil{fill:var(--d-soil,#f1e4d0);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-deep{fill:var(--d-deep,#e4d6c2);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-soilt{fill:var(--d-soil-dark,#b58b58)}
+.d-rainl{stroke:var(--d-rain,#5a9be6);stroke-width:2.2;stroke-linecap:round;fill:none}
+.d-sun{fill:var(--d-sun,#e59a1c)}.d-sunl{stroke:var(--d-sun,#e59a1c);fill:none;stroke-width:2}
+.d-ok{fill:var(--d-ok,#2e8540)}.d-okl{stroke:var(--d-ok,#2e8540);fill:none;stroke-width:2}
+.d-bad{fill:var(--d-bad,#b42318)}
+.d-p0{fill:var(--d-p0,#1f5fae)}.d-p1{fill:var(--d-p1,#0f8a7e)}.d-p2{fill:var(--d-p2,#c4461a)}.d-p3{fill:var(--d-p3,#8a4fbf)}
+.d-p0l{stroke:var(--d-p0,#1f5fae)}.d-p1l{stroke:var(--d-p1,#0f8a7e)}.d-p2l{stroke:var(--d-p2,#c4461a)}
+.d-inv{fill:var(--d-card,#fff)}
+</style>
+<rect class="d-frame" x="0" y="0" width="780" height="350" rx="12"/>
+<defs>
+  <marker id="hl-w" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path class="d-w" d="M0 0L10 5L0 10z"/></marker>
+  <marker id="hl-l" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path class="d-landt" d="M0 0L10 5L0 10z"/></marker>
+</defs>
+<!-- rain -->
+<g class="d-rainl">
+  <path d="M120 22l-5 13M160 30l-5 13M200 20l-5 13M240 28l-5 13M280 18l-5 13M320 30l-5 13M370 22l-5 13M410 32l-5 13M450 20l-5 13M490 30l-5 13M530 22l-5 13"/>
+</g>
+<text class="d-t d-s" x="548" y="34">rain on every hillslope</text>
+<!-- hillslopes -->
+<ellipse class="d-land" cx="240" cy="122" rx="122" ry="46" transform="rotate(29 240 122)"/>
+<ellipse class="d-land" cx="240" cy="242" rx="122" ry="46" transform="rotate(-29 240 242)"/>
+<ellipse class="d-land" cx="460" cy="182" rx="128" ry="50"/>
+<!-- runoff from hillslopes into the channels -->
+<g class="d-landl">
+  <path d="M400 144v20" marker-end="url(#hl-l)"/><path d="M400 220v-20" marker-end="url(#hl-l)"/>
+  <path d="M470 140v24" marker-end="url(#hl-l)"/><path d="M470 224v-24" marker-end="url(#hl-l)"/>
+  <path d="M241 77L228 101" marker-end="url(#hl-l)"/><path d="M203 147L216 123" marker-end="url(#hl-l)"/>
+  <path d="M203 217L216 241" marker-end="url(#hl-l)"/><path d="M241 287L228 263" marker-end="url(#hl-l)"/>
+</g>
+<!-- channels -->
+<path class="d-wl" stroke-width="5" d="M150 72L326 170" marker-end="url(#hl-w)"/>
+<path class="d-wl" stroke-width="5" d="M150 292L326 194" marker-end="url(#hl-w)"/>
+<path class="d-wl" stroke-width="8" d="M338 182H568" marker-end="url(#hl-w)"/>
+<circle class="d-w" cx="336" cy="182" r="7"/>
+<!-- labels -->
+<text class="d-t d-b" x="118" y="66">link A</text>
+<text class="d-t d-b" x="118" y="312">link B</text>
+<text class="d-t d-b" x="500" y="172">link C</text>
+<text class="d-t d-s" x="336" y="210" text-anchor="middle">junction</text>
+<text class="d-t d-s" x="572" y="212" text-anchor="end">to the outlet</text>
+<text class="d-t d-s" x="460" y="256" text-anchor="middle">hillslope of link C</text>
+<rect class="d-card" x="176" y="316" width="330" height="26" rx="13"/>
+<text class="d-t" x="341" y="334" text-anchor="middle" font-size="13">A and B are the <tspan class="d-b">parents</tspan> of C · C is their <tspan class="d-b">child</tspan></text>
+<!-- legend -->
+<rect class="d-card" x="626" y="66" width="140" height="210" rx="10"/>
+<path class="d-wl" stroke-width="6" d="M642 96h30"/>
+<text class="d-t d-b" x="642" y="120" font-size="13">channel</text>
+<text class="d-t d-s" x="642" y="136">carries discharge q</text>
+<rect class="d-land" x="642" y="152" width="30" height="16" rx="8"/>
+<text class="d-t d-b" x="642" y="186" font-size="13">hillslope</text>
+<text class="d-t d-s" x="642" y="202">land draining into it</text>
+<path class="d-landl" d="M642 224h26" marker-end="url(#hl-l)"/>
+<text class="d-t d-b" x="642" y="248" font-size="13">runoff</text>
+<text class="d-t d-s" x="642" y="264">hillslope → channel</text>
+</svg>

@@ -1,8 +1,19 @@
 # 7. What was fixed, and why it matters
 
-*Written for readers who do not program. Each item also has a short "C lesson" for those who
-are learning the code; the full technical record is chapter 8 (`08_known_issues.md`), and every
-change is in `CHANGELOG.md`.*
+<div class="meta-row"><span class="audience">For everyone</span><span>No programming needed</span><span>15 minutes</span></div>
+
+<p class="lead">Every problem found in ASYNCH during 2026, how serious it was for someone using the model, and what
+changed. Each item also has a short "C lesson" for readers learning the code.</p>
+
+The full technical record is [chapter 8](08_known_issues.md), and every change is in the
+[changelog](../../CHANGELOG.md).
+
+<div class="stats">
+<div><p>2</p><p>critical issues fixed</p></div>
+<div><p>10</p><p>high-severity issues fixed</p></div>
+<div><p>0</p><p>reference files modified</p></div>
+<div><p>93</p><p>automatic tests (C + Python)</p></div>
+</div>
 
 ## 7.1 How every change was checked
 
@@ -37,32 +48,36 @@ A "silent" error is always worse than a crash: a crash is noticed, a wrong numbe
 
 | Area | Issue | Class | Status |
 |---|---|---|---|
-| Numerical solver | B-13: solver methods 0 and 1 computed with random numbers | **Critical** | fixed |
-| Memory / outputs | B-01: the main example overwrote memory; crashed on one processor | **Critical** | fixed |
-| Model equations | S-02: model 254 baseflow forced to 0 by a line added in 2021 | **High** | fixed (original equation restored) |
-| Inputs | B-12: missing initial values were taken from random memory | **High** | fixed |
-| Numerical solver | B-14: per-link solver settings (`.rkd`) never worked | **High** | fixed |
-| Outputs | B-15: a missing output folder lost all results, yet the run "succeeded" | **High** | fixed |
-| Network | B-16: a junction with more than 8 upstream streams crashed the run | **High** | fixed |
-| Model equations | B-23: models 263, 601, 602, 603 read parameters from outside their memory | **High** | fixed |
-| Inputs | B-25: rain from binary (radar) files: the last file almost ignored, crashes, memory overflow | **High** | fixed |
-| Library / Python | B-20: user-defined outputs of some states were written as 0 | **High** | fixed |
-| Python | A-01: the Python interface did not work at all | **High** | replaced (chapter 10) |
-| Models | B-24: 7 model numbers without equations crashed; solvers of one program shared tables | Medium | fixed |
-| Library | B-17: library functions that crashed with built-in models, or were missing | Medium | fixed |
-| Inputs | B-18: dam models could start in the wrong regime when read from an `.ini` file | Medium | fixed |
-| Library | B-06: programs using ASYNCH as a library got a wrong link count above 65 535 links | Medium | fixed |
-| Numerical solver | B-04: an invalid solver number crashed the program | Medium | fixed |
-| Outputs | B-02: snapshots depended slightly on the number of processors | Medium | fixed |
-| Program end | B-03: debug versions crashed at the very end | Medium | fixed |
-| Examples | two examples pointed to a computer at the University of Iowa | Medium | fixed |
-| Memory | B-05, B-07, B-08: freeing the wrong memory, a leak, misaligned reads | Low | fixed |
-| Messages | B-09, B-10: debug text printed at every step; compiler warnings | Low | fixed |
-| Code | B-19, B-21, B-22: an unused out-of-range read, a filter applied to the wrong model, a typo multiplied by 0 | Low | fixed |
+| Numerical solver | B-13: solver methods 0 and 1 computed with random numbers | <span class="sev critical">Critical</span> | <span class="st fixed">fixed</span> |
+| Memory / outputs | B-01: the main example overwrote memory; crashed on one processor | <span class="sev critical">Critical</span> | <span class="st fixed">fixed</span> |
+| Model equations | S-02: model 254 baseflow forced to 0 by a line added in 2021 | <span class="sev high">High</span> | <span class="st fixed">fixed</span> (original equation restored) |
+| Inputs | B-12: missing initial values were taken from random memory | <span class="sev high">High</span> | <span class="st fixed">fixed</span> |
+| Numerical solver | B-14: per-link solver settings (`.rkd`) never worked | <span class="sev high">High</span> | <span class="st fixed">fixed</span> |
+| Outputs | B-15: a missing output folder lost all results, yet the run "succeeded" | <span class="sev high">High</span> | <span class="st fixed">fixed</span> |
+| Network | B-16: a junction with more than 8 upstream streams crashed the run | <span class="sev high">High</span> | <span class="st fixed">fixed</span> |
+| Model equations | B-23: models 263, 601, 602, 603 read parameters from outside their memory | <span class="sev high">High</span> | <span class="st fixed">fixed</span> |
+| Inputs | B-25: rain from binary (radar) files: the last file almost ignored, crashes, memory overflow | <span class="sev high">High</span> | <span class="st fixed">fixed</span> |
+| Library / Python | B-20: user-defined outputs of some states were written as 0 | <span class="sev high">High</span> | <span class="st fixed">fixed</span> |
+| Model equations | B-26: models 105 and 263 took some of their values from leftover memory | <span class="sev high">High</span> | <span class="st fixed">fixed</span> |
+| Python | A-01: the Python interface did not work at all | <span class="sev high">High</span> | <span class="st fixed">replaced</span> (chapter 10) |
+| Models | B-24: 7 model numbers without equations crashed; solvers of one program shared tables | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> |
+| Library | B-17: library functions that crashed with built-in models, or were missing | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> |
+| Inputs | B-18: dam models could start in the wrong regime when read from an `.ini` file | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> |
+| Library | B-06: programs using ASYNCH as a library got a wrong link count above 65 535 links | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> |
+| Numerical solver | B-04: an invalid solver number crashed the program | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> |
+| Outputs | B-02: snapshots depended slightly on the number of processors | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> |
+| Program end | B-03: debug versions crashed at the very end | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> |
+| Examples | two examples pointed to a computer at the University of Iowa | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> |
+| Memory | B-05, B-07, B-08: freeing the wrong memory, a leak, misaligned reads | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> |
+| Messages | B-09, B-10: debug text printed at every step; compiler warnings | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> |
+| Code | B-19, B-21, B-22: an unused out-of-range read, a filter applied to the wrong model, a typo multiplied by 0 | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> |
+| Memory | B-27: a check read memory that was never written (no effect on results) | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> |
 
 ## 7.4 The critical issues
 
-### B-13: solver methods 0 and 1 computed with random numbers — Critical
+### B-13: solver methods 0 and 1 computed with random numbers
+
+<span class="sev critical">Critical</span> <span class="st fixed">fixed</span>
 
 **What happened.** ASYNCH offers three numerical methods (the `%Numerical solver index` in the `.gbl`):
 0 = RK 3(2), 1 = RK 4(3), 2 = Dormand–Prince 5(4). Each method is defined by a small table of fixed
@@ -73,16 +88,24 @@ released as soon as the setup is finished. Every time step then read whatever ha
 the run either computed with meaningless coefficients, or never finished (the `test` example ran forever
 in most attempts). Method 2, which all examples use, stores its table correctly and was never affected.
 
-**Now.** The three methods run and agree with each other as they should (figure below: the curves overlap;
+:::{admonition} Now
+:class: expect
+The three methods run and agree with each other as they should (figure below: the curves overlap;
 the lower panel shows that the differences stay below 0.00085 m³/s, which is 0.15 % of the peak).
+:::
 
 ![The three methods agree](figures/solver_methods_agree.png)
 
-*C lesson* ([6.6](06_c_primer.md#66-memory-malloc--free)): a variable declared inside a function lives only
+:::{admonition} C lesson
+:class: lesson
+A variable declared inside a function lives only
 while the function runs. Keeping its address afterwards is a "dangling pointer". The fix was one word, `static`,
-which makes the table live for the whole program.
+which makes the table live for the whole program. (see [6.6](06_c_primer.md#66-memory-malloc--free))
+:::
 
-### B-01: the main example overwrote memory — Critical
+### B-01: the main example overwrote memory
+
+<span class="sev critical">Critical</span> <span class="st fixed">fixed</span>
 
 **What happened.** When writing a snapshot, model 254 used a filter written for model 256, which has
 one more state. For each link it touched one number more than exists, writing into the neighbouring link's data,
@@ -92,13 +115,23 @@ and for the last link past the end of the memory reserved for the file. The caus
 **Why it matters.** The flagship example `clearcreek.gbl` **crashed** on one processor. On several processors it
 seemed to work, but memory was being overwritten, which can corrupt results in ways that cannot be predicted.
 
-**Now.** Runs on any number of processors. The fix itself changed no result: on two processors, all 27 output
-files were identical to the original's. (Model 254 results changed later, on purpose, with S-02 below.) *C lesson* ([6.7](06_c_primer.md#67-switch-falls-through)): in C, a `switch` keeps
-running into the next case until it meets `break`.
+:::{admonition} Now
+:class: expect
+Runs on any number of processors. The fix itself changed no result: on two processors, all 27 output
+files were identical to the original's. (Model 254 results changed later, on purpose, with S-02 below.)
+:::
+
+:::{admonition} C lesson
+:class: lesson
+In C, a `switch` keeps
+running into the next case until it meets `break`. (see [6.7](06_c_primer.md#67-switch-falls-through))
+:::
 
 ## 7.5 The high-severity issues
 
-### S-02: model 254 baseflow forced to zero — High
+### S-02: model 254 baseflow forced to zero
+
+<span class="sev high">High</span> <span class="st fixed">fixed</span>
 
 **What happened.** Model 254 tracks, besides the total discharge, the part of it that comes from
 groundwater (baseflow, state `q_b`). In January 2021 one line of the model was changed, inside a code change titled
@@ -112,12 +145,17 @@ unaffected (at most 0.0003 m³/s), because in this model the baseflow state is b
 of the flow is baseflow, and does not feed back into the total. Anyone using the baseflow output of model 254
 since 2021 was affected.
 
-**Now.** The original equation is restored (decision of the model owner). The reference results shipped with
+:::{admonition} Now
+:class: expect
+The original equation is restored (decision of the model owner). The reference results shipped with
 ASYNCH are reproduced within the accuracy of the solver.
+:::
 
 ![Clear Creek outlet: total discharge and baseflow, before and after](figures/clearcreek_outlet_before_after.png)
 
-### B-12: missing initial values taken from random memory — High
+### B-12: missing initial values taken from random memory
+
+<span class="sev high">High</span> <span class="st fixed">fixed</span>
 
 **What happened.** The initial-state file (`.uini`) gives one starting value per state. If it gave fewer values
 than the model needs, ASYNCH did not notice, and the missing states started from whatever was in memory.
@@ -125,32 +163,56 @@ than the model needs, ASYNCH did not notice, and the missing states started from
 **Why it matters.** It happened in the shipped examples: models 258 and 259 need 4 values, but their file gives 3,
 so the subsurface storage started from random memory. By luck that memory was 0; on another computer it may not be.
 
-**Now.** Missing values are 0, a warning says so, and a mismatch between the model number in the file and in the
-`.gbl` is reported. *C lesson* ([6.8](06_c_primer.md#68-reading-files-always-check-the-return-value)):
-reading functions report end-of-file with a special value, which must be checked.
+:::{admonition} Now
+:class: expect
+Missing values are 0, a warning says so, and a mismatch between the model number in the file and in the
+`.gbl` is reported.
+:::
 
-### B-14: per-link solver settings never worked — High
+:::{admonition} C lesson
+:class: lesson
+Reading functions report end-of-file with a special value, which must be checked. (see [6.8](06_c_primer.md#68-reading-files-always-check-the-return-value))
+:::
+
+### B-14: per-link solver settings never worked
+
+<span class="sev high">High</span> <span class="st fixed">fixed</span>
 
 **What happened.** The `.rkd` option (a file giving tolerances and method for each link) is part of the documented
 input format. Reading it contained five separate mistakes, the first being an endless loop: the program never got past
 "Reading dam and reservoir data...".
 
-**Now.** Rewritten and tested: a file that repeats the global settings for every link gives results identical to the
+:::{admonition} Now
+:class: expect
+Rewritten and tested: a file that repeats the global settings for every link gives results identical to the
 normal run, and a faulty file stops with a clear message. The format is now documented and has an example (`examples/test.rkd`).
+:::
 
-### B-15: results silently lost when an output folder was missing — High
+### B-15: results silently lost when an output folder was missing
+
+<span class="sev high">High</span> <span class="st fixed">fixed</span>
 
 **What happened.** If a folder named in the `.gbl` for the outputs did not exist, ASYNCH computed the whole
 simulation, printed `Error: could not open ...` lines while writing, and then **reported success** (exit code 0)
 without having written any results. Scripts and operational chains that run ASYNCH check that exit code, so the
 missing results went unnoticed. It was found while testing the exercise of chapter 2.
 
-**Now.** Every output folder is checked before the computation starts, and a missing or read-only folder stops
+:::{admonition} Now
+:class: expect
+Every output folder is checked before the computation starts, and a missing or read-only folder stops
 the run at once with a message naming it. If writing still fails at the end (a full disk, for example), `asynch`
-ends with an error code. *C lesson*: a program tells whoever started it whether it succeeded through its **exit
-code** (the value returned by `main`, 0 = success). Printing an error is not enough.
+ends with an error code.
+:::
 
-### B-23: four models read parameters from outside their memory — High
+:::{admonition} C lesson
+:class: lesson
+A program tells whoever started it whether it succeeded through its **exit
+code** (the value returned by `main`, 0 = success). Printing an error is not enough.
+:::
+
+### B-23: four models read parameters from outside their memory
+
+<span class="sev high">High</span> <span class="st fixed">fixed</span>
 
 **What happened.** Each link keeps its parameters in a small table. For models 263, 601, 602 and 603 the table was
 declared one or two places shorter than the number of values the model reads from its parameter file. The last
@@ -161,10 +223,15 @@ it back from there (model 263 even read two values that were never stored: `v_B`
 right by luck, change from one computer to another, or crash. Nothing warned. None of the shipped examples uses these
 models, which is why it went unnoticed; a new unit test that checks the sizes of every model found it.
 
-**Now.** The tables have room for every value. Model 263 needs **16 values per link** in its parameter file (it used
+:::{admonition} Now
+:class: expect
+The tables have room for every value. Model 263 needs **16 values per link** in its parameter file (it used
 16 in its equations all along).
+:::
 
-### B-25: rain from binary files — High
+### B-25: rain from binary files
+
+<span class="sev high">High</span> <span class="st fixed">fixed</span>
 
 **What happened.** Operational runs often read rain from a series of binary files, one per time step (e.g. radar
 rainfall every 5 minutes); the global file says which files to use, from number `first` to number `last`. The reader
@@ -172,16 +239,40 @@ asked for one file more than that range. If the folder held exactly the declared
 compressed files, stopped). If it held one more, the run went on, but the rain of the file `last` was applied for
 0.0001 minutes instead of a full time step. In some configurations it also wrote past the end of its memory.
 
-**Now.** Exactly the declared files are read, the last one applies for its full time step and then the rain is 0,
+:::{admonition} Now
+:class: expect
+Exactly the declared files are read, the last one applies for its full time step and then the rain is 0,
 as the documentation says. A missing file stops the run with its name. Tested: the same rain given as a text file and in
 the three binary formats gives identical results.
+:::
 
-### B-20: user-defined outputs could be written as 0 — High
+### B-20: user-defined outputs could be written as 0
+
+<span class="sev high">High</span> <span class="st fixed">fixed</span>
 
 A program (or now a Python script) can add its own outputs, computed from the states of a link. The solver must be
 told which states such an output uses, so that it computes them at the output times. The code did the opposite of what
 it meant: it added the states that were already computed, and skipped the others, which were then written as 0.
 Tested: an output of the surface storage of model 190 was 0 at every time, instead of values around 0.001 m.
+
+### B-26: two models took values from leftover memory
+
+<span class="sev high">High</span> <span class="st fixed">fixed</span>
+
+**What happened.** A model tells the solver how fast each of its states changes. Models 105 and 263 did not do it for
+all their states (model 105 for its storage, model 263 for four of its eight states), so the solver used whatever
+numbers were left in its working memory from an earlier computation.
+
+**Why it matters.** The results of these two models were not defined: they could differ from one computer or one run
+to the next, and a run could become extremely slow. This is how it was found: one run of the tests did not finish, in
+the middle of the loop over all models. No example uses these models.
+
+:::{admonition} Now
+:class: expect
+The states without an equation keep their starting values, so every run gives the same numbers. What the authors meant
+these states to do is an open question for a hydrologist (S-07, chapter 8). A new check in the unit tests makes sure
+that every model sets every state; it found exactly these two models.
+:::
 
 ## 7.6 Medium and low issues, in brief
 
@@ -209,6 +300,8 @@ Tested: an output of the surface storage of model 190 was 0 at every time, inste
 * **B-19, B-21, B-22** (Low): model 190 read a third forcing that does not exist, into a variable it never used;
   custom models received the snapshot filter of the built-in model with the same number; a wrong constant in a formula
   that is only ever evaluated where it is multiplied by 0.
+* **B-27** (Low): when a link used the values of its upstream links, a safety check also looked at values that had
+  never been computed. Those values were never used, so results did not change; the working memory now starts at 0.
 * **B-05, B-07, B-08** (Low): memory handling errors that did not change results: freeing the wrong address, a
   buffer never released, numbers read from misaligned memory addresses.
 * **B-09, B-10** (Low): models 402 and 403 printed a debug line at every step; compiler warnings about
@@ -229,7 +322,7 @@ How we know the package is right: the files it writes are identical to those of 
 models 190 and 191 rewritten through it give exactly the numbers of the built-in models; and simple models with a known
 exact solution (a chain of linear reservoirs) are reproduced to better than 1e-8.
 
-`make check` now runs three sets of tests (chapter 9): 23 C unit tests, 68 tests of the Python package, and all the
+`make check` now runs three sets of tests (chapter 9): 23 C unit tests, 70 tests of the Python package, and all the
 examples against their reference results. The C unit tests check, among other things, the coefficient tables of the
 three numerical methods against the textbook conditions (a check that would have caught B-13) and the setup and equations
 of every built-in model; with the Python tests (52 models run a short simulation; rain in four file formats) they

@@ -1,0 +1,76 @@
+# Publishes a GitHub release when a version tag is pushed (git tag v1.5.0 && git push origin v1.5.0).
+# The tag must match the version of configure.ac; ASYNCH is built and tested first; the release notes are the section
+# of CHANGELOG.md for that version. Attached: the source archive made by `make dist` (it builds without autotools:
+# ./configure && make), the Python package as a wheel (it still needs libasynch.so, built from the sources) and the
+# documentation website as a zip file, to read offline.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: The tag matches the version in configure.ac
+        run: |
+          version="$(sed -n 's/^AC_INIT(\[asynch\], \[\([^]]*\)\].*/\1/p' configure.ac)"
+          echo "tag ${GITHUB_REF_NAME}, configure.ac ${version}"
+          test "${GITHUB_REF_NAME}" = "v${version}"
+          echo "VERSION=${version}" >> "$GITHUB_ENV"
+      - name: Install the dependencies (as in docs/guide/01_setup.md)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc gfortran make autoconf automake libtool pkg-config \
+              openmpi-bin libopenmpi-dev libhdf5-dev hdf5-tools libpq-dev zlib1g-dev check doxygen \
+              python3 python3-numpy python3-h5py
+      - name: Build
+        run: |
+          autoreconf --install
+          mkdir -p build && cd build
+          ../configure CFLAGS="-O3 -DNDEBUG -Wno-format-security"
+          make -j"$(nproc)"
+      - name: make check
+        env:
+          OMPI_MCA_rmaps_base_oversubscribe: "1"
+        run: cd build && make check
+      - name: Source archive (make dist)
+        env:
+          TAR_OPTIONS: "--owner=0 --group=0 --numeric-owner"
+        run: |
+          cd build && make dist
+          mkdir -p ../dist && mv "asynch-${VERSION}.tar.gz" ../dist/
+      # after make check, which uses the Python of the system (with NumPy from apt)
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Python wheel
+        run: python -m pip wheel --no-deps ./python -w dist
+      - name: Documentation website (zip)
+        run: |
+          pip install -r docs/requirements.txt
+          sphinx-build -b html docs docs/_build/html
+          (cd docs/_build && mv html "asynch-${VERSION}-docs" && zip -qr "../../dist/asynch-${VERSION}-docs.zip" "asynch-${VERSION}-docs")
+      - name: Release notes from CHANGELOG.md
+        run: |
+          # the summary of the version, then the title of each change; the details stay in CHANGELOG.md
+          awk -v v="## [${VERSION}]" '
+            index($0, v) == 1 {on = 1; next}
+            on && /^## \[/ {exit}
+            on && /^### / {if (!listed) {print "\n### Changes in this release\n"; listed = 1}; sub(/^### /, "- "); print; next}
+            on && !listed {print}' CHANGELOG.md > notes.md
+          test -s notes.md
+          printf '\nEvery change, with its effect on numerical results: [CHANGELOG.md](%s/blob/%s/CHANGELOG.md)\n' \
+              "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" "${GITHUB_REF_NAME}" >> notes.md
+          printf 'What changes for a user: [release notes](https://gurbuzf.github.io/asynch/release_notes.html) · Documentation: https://gurbuzf.github.io/asynch/\n' >> notes.md
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/* \
+              --title "ASYNCH ${VERSION}" --notes-file notes.md

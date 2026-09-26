@@ -6,12 +6,12 @@ In this section, we define terminology and conventions used throughout this docu
 Ordinary differential equation
 ------------------------------
 
-By ordinary differential equation (ODE), we mean a system of differential equations with all unknowns dependent upon time. These independent variables are referred to as *states*. The ASYNCH solvers can only be used for ODEs with the time derivatives of the states isolated. See Section [sec: example models] for examples. Partial differential equations (PDEs) have states that depend upon multiple independent variables, and cannot be outright solved with the ASYNCH solvers.
+By ordinary differential equation (ODE), we mean a system of differential equations with all unknowns dependent upon time. These independent variables are referred to as *states*. The ASYNCH solvers can only be used for ODEs with the time derivatives of the states isolated. See :ref:`Main models` for examples. Partial differential equations (PDEs) have states that depend upon multiple independent variables, and cannot be outright solved with the ASYNCH solvers.
 
 Algebraic equations
 -------------------
 
-Algebraic equations are equations which do not possess derivatives or integrals of states with respect to independent variables. If a system of equations consists of a mixed collection of ODEs and algebraic equations, then the system is referred to as a system of *differential-algebraic equations (DAEs)*. See Section [sec: linear reservoir hydrological model] for an example.
+Algebraic equations are equations which do not possess derivatives or integrals of states with respect to independent variables. If a system of equations consists of a mixed collection of ODEs and algebraic equations, then the system is referred to as a system of *differential-algebraic equations (DAEs)*. See :ref:`Linear Reservoir Hydrological Model` for an example.
 
 Systems of ODEs
 ---------------
@@ -67,7 +67,7 @@ State vector
 
 Each model has a number of states that are to be determined at each link. At a specific time, these states are stored in a vector, known as a **state vector**. Similarly, the value of the differential and algebraic equations at a particular time and state are stored in an **equation-value vector**. There is a correspondence between state and equation-value vectors at each link. For example, if the underlying model is a system of differential equations, then the derivative of the first state in a state vector is stored in the first entry of the equation-value vectors, the derivative of the second state in a state vector is stored in the second entry of the equation-value vectors, etc.
 
-As an example, a state vector for equations ([eq: explicit example]) will look like
+As an example, a state vector for the example equations above will look like
 
 .. math::
 

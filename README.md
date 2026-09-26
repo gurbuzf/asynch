@@ -1,5 +1,8 @@
 # ASYNCH
 
+**Version 1.5.0** · [release notes](https://gurbuzf.github.io/asynch/release_notes.html) ·
+[download](https://github.com/gurbuzf/asynch/releases) · [documentation](https://gurbuzf.github.io/asynch/)
+
 ASYNCH solves large systems of ordinary differential equations that have the shape of a tree, such as a
 river network cut into thousands of links (hillslope-link models). Each link is integrated with its own
 adaptive time step (an *asynchronous* Runge-Kutta method), and the network can be split between many
@@ -120,7 +123,7 @@ More in the [Python chapter](docs/guide/10_python.md), the
 
 * 23 C unit tests (`tests/check_asynch.c`): the coefficient tables of the numerical methods, the setup and equations of
   every built-in model, sorting and lookups, argument checks;
-* 68 tests of the Python package (`tests/python`): runs identical to the `asynch` program byte for byte, models written
+* 70 tests of the Python package (`tests/python`): runs identical to the `asynch` program byte for byte, models written
   in Python identical to the built-in ones, exact solutions, 52 built-in models integrating a short simulation, rain in
   four file formats, 70 000-link networks, MPI;
 * every example, compared with the reference results shipped with ASYNCH (`tests/regression/run_examples.py`).
@@ -136,6 +139,7 @@ compare a change with the original code: [chapter 9](docs/guide/09_reproducibili
 | [docs/guide/](docs/guide/README.md) | the guide: concepts, installation, running, equations, solver, C primer, Python, fixes, reproducibility |
 | [docs/*.rst](docs/) | the reference manual: every file format, every built-in model, the C API |
 | [CHANGELOG.md](CHANGELOG.md) | every change, and whether it changes numerical results |
+| [Releases](https://github.com/gurbuzf/asynch/releases) | each version with a source archive that builds without autotools (`./configure && make`) |
 
 To build the website locally: `pip install -r docs/requirements.txt` (and `sudo apt-get install doxygen` for the C API
 pages), then `sphinx-build -b html docs docs/_build/html` and open `docs/_build/html/index.html`.

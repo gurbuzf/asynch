@@ -8,6 +8,62 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.5.0] - 2026-09-26
+
+The first release of this branch. In short: a working Python library (`asynch`: run and change simulations, new
+models in C, Numba or Python, MPI), 2 critical and 10 high-severity bugs fixed, networks above 65 535 links, `make check`
+with 93 tests against the reference results, GitHub Actions, and a documentation website. The entries below list every
+change and whether it changes numerical results; only the results of model 254 (S-02, on purpose) and of models 105 and 263 (B-26: they were undefined) change. The release notes
+(`docs/release_notes.rst`) summarise what changes for a user.
+
+### Fix B-26 and B-27: derivatives left unset (models 105, 263); uninitialised reads in the steppers
+
+*Results:* models 105 and 263 change (they depended on leftover memory). All examples: bit-identical to the previous
+commit with 1 process; within tolerance with 2 and 4 processes. No AddressSanitizer or valgrind report.
+
+#### Fixed
+- B-26 (`src/models/equations.c`): model 105 (`river_rainfall_summary`) did not set the derivative of its storage;
+  model 263 added to `ans[4]` without setting it and did not set `ans[5]` to `ans[7]`. The solver's work array then
+  supplied leftover values, and a run of `make check` did not finish once. States without an equation now keep their
+  initial values; the intended equations are open question S-07.
+- B-27 (`src/system.c`): the steppers apply the consistency check to the whole interpolated state vector of each
+  parent, of which only the dense states are computed; the others were read uninitialised (no effect on results). The
+  work arrays are now allocated with `calloc`.
+
+#### Added
+- `tests/check_asynch.c`: the equations of every model are also evaluated with the output array filled with NaN; a
+  derivative left unset fails the test (it found B-26).
+
+### Documentation redesigned: diagrams, visual layout; version 1.5.0
+
+*Results:* unchanged (the program is bit-identical to the previous commit, apart from its version string).
+
+#### Added
+- Diagrams drawn as SVG files (`docs/guide/diagrams/`) replace the drawings made of text characters: a river network cut
+  into links, a model run from inputs to outputs, links advancing with their own time steps, the scheduler loop, one
+  Runge-Kutta step, the storages of model 254, how C becomes a program, an array read past its end, the network shared
+  between MPI processes, the regression tests, the Python package over the C library, and the run time of the four
+  ways to write a model. On the website they are placed inline and follow the light or dark theme
+  (`docs/_ext/asynch_docs.py`); on GitHub they show as images.
+- Visual components (`docs/_static/custom.css`): a home page with the main entry points, "You should see" boxes after
+  each installation step, numbered step lists, severity and status badges, cards, tabs for the different systems,
+  figures in tiles; equations of chapters 4, 5 and 9 typeset with MathJax.
+- `docs/release_notes.rst`: notes for version 1.5.
+- `.github/workflows/release.yml`: pushing a tag `v*` builds and tests ASYNCH, and publishes a GitHub release with
+  the summary of the version from this file, the source archive (`make dist`), the Python package as a wheel and the
+  documentation website as a zip file. `docs/contribute.rst` describes the procedure.
+
+#### Changed
+- Version 1.5.0 (`configure.ac`, the Python package).
+- `docs/builtin_models.rst`: the table of models was shown as raw text (a stray line before it); leftover references
+  from the old LaTeX manual (`Section [sec: ...]`, `Figure [fig: ...]`) are real links now.
+- `docs/guide/08_known_issues.md`: the summary table had the fix status in the "Severity" column; it now has separate
+  severity, status and evidence columns. M-03 (no CI) is fixed.
+- `make dist` (`Makefile.am`): the source archive now contains `python/`, `docs/`, `CHANGELOG.md` and the `Dockerfile`,
+  without caches or built files. Without the package, `make check` failed from the archive (Python tests).
+
 ### Documentation website (Sphinx, GitHub Pages); CI with GitHub Actions
 
 *Results:* unchanged (the program is bit-identical to the previous commit).
@@ -46,7 +102,7 @@ Every entry says **whether numerical results change**. Results are checked with
 - `tests/python/test_simulation.py`: ASYNCH and mpi4py in the same program (3 processes).
 
 #### Changed
-- Python model functions without Numba are 3.6 times faster (17.7 s -> 4.9 s on the benchmark above): the callbacks
+- Python model functions without Numba are 3.6 times faster (17.7 s → 4.9 s on the benchmark above): the callbacks
   receive plain addresses and reuse cached NumPy views of the C arrays instead of building new ones at every call
   (the building cost 17 of the 21 microseconds of a call).
 

@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 270" width="900" height="270">
+<!-- ASYNCH documentation diagram. Colours come from the site theme (docs/_static/custom.css); the second value of each var() is the light-theme fallback used when the file is viewed alone. -->
+<style>
+.d-frame{fill:var(--d-bg,#f7f9fc)}
+.d-card{fill:var(--d-card,#fff);stroke:var(--d-line,#cdd6e1);stroke-width:1.5}
+.d-t{font-family:var(--d-font,Inter,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif);font-size:14px;fill:var(--d-text,#17212f)}
+.d-b{font-weight:700}
+.d-s{font-size:12px;fill:var(--d-muted,#5b6b7f)}
+.d-cap{font-size:11px;font-weight:700;letter-spacing:.08em;fill:var(--d-muted,#5b6b7f)}
+.d-m{font-family:var(--d-mono,'JetBrains Mono',Menlo,Consolas,monospace)}
+.d-ln{stroke:var(--d-line2,#7d8ca0);stroke-width:2;fill:none}
+.d-lnl{stroke:var(--d-line,#cdd6e1);stroke-width:1.5;fill:none}
+.d-dash{stroke-dasharray:6 5}
+.d-acc{fill:var(--d-accent,#1f5fae)}.d-accs{fill:var(--d-accent-soft,#e3eefb)}
+.d-accl{stroke:var(--d-accent,#1f5fae);fill:none;stroke-width:2}
+.d-acct{fill:var(--d-accent,#1f5fae)}
+.d-w{fill:var(--d-water,#2f7fd8)}.d-ws{fill:var(--d-water-soft,#cfe3f8)}
+.d-wl{stroke:var(--d-water,#2f7fd8);fill:none;stroke-linecap:round}
+.d-land{fill:var(--d-land,#dcebd0);stroke:var(--d-land-dark,#6fa35a);stroke-width:1.2}
+.d-landl{stroke:var(--d-land-dark,#6fa35a);fill:none;stroke-width:2}
+.d-landt{fill:var(--d-land-dark,#6fa35a)}
+.d-soil{fill:var(--d-soil,#f1e4d0);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-deep{fill:var(--d-deep,#e4d6c2);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-soilt{fill:var(--d-soil-dark,#b58b58)}
+.d-rainl{stroke:var(--d-rain,#5a9be6);stroke-width:2.2;stroke-linecap:round;fill:none}
+.d-sun{fill:var(--d-sun,#e59a1c)}.d-sunl{stroke:var(--d-sun,#e59a1c);fill:none;stroke-width:2}
+.d-ok{fill:var(--d-ok,#2e8540)}.d-okl{stroke:var(--d-ok,#2e8540);fill:none;stroke-width:2}
+.d-bad{fill:var(--d-bad,#b42318)}
+.d-p0{fill:var(--d-p0,#1f5fae)}.d-p1{fill:var(--d-p1,#0f8a7e)}.d-p2{fill:var(--d-p2,#c4461a)}.d-p3{fill:var(--d-p3,#8a4fbf)}
+.d-p0l{stroke:var(--d-p0,#1f5fae)}.d-p1l{stroke:var(--d-p1,#0f8a7e)}.d-p2l{stroke:var(--d-p2,#c4461a)}
+.d-inv{fill:var(--d-card,#fff)}
+</style>
+<rect class="d-frame" x="0" y="0" width="900" height="270" rx="12"/>
+<defs>
+  <marker id="rg-a" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path fill="var(--d-line2,#7d8ca0)" d="M0 0L10 5L0 10z"/></marker>
+</defs>
+<rect class="d-card" x="16" y="100" width="150" height="70" rx="12"/>
+<text class="d-t d-b" x="91" y="130" text-anchor="middle">Your build</text>
+<text class="d-t d-s" x="91" y="150" text-anchor="middle">after any change</text>
+<path class="d-ln" d="M166 135h26" marker-end="url(#rg-a)"/>
+<rect class="d-card" x="196" y="84" width="210" height="102" rx="12" stroke="var(--d-accent,#1f5fae)" stroke-width="2"/>
+<text class="d-t d-b" x="301" y="112" text-anchor="middle">Run every example</text>
+<text class="d-t d-s" x="301" y="132" text-anchor="middle">on 1 and on 2 processes</text>
+<text class="d-t d-m d-s" x="301" y="160" text-anchor="middle" font-size="11">run_examples.py</text>
+<path class="d-ln" d="M406 120C430 120 430 64 454 64" marker-end="url(#rg-a)"/>
+<path class="d-ln" d="M406 150C430 150 430 206 454 206" marker-end="url(#rg-a)"/>
+<rect class="d-card" x="458" y="28" width="234" height="72" rx="12"/>
+<text class="d-t d-b" x="474" y="54" font-size="13">compare with the references</text>
+<text class="d-t d-s" x="474" y="72">results shipped with ASYNCH in</text>
+<text class="d-t d-s" x="474" y="87">2015 · never modified</text>
+<rect class="d-card" x="458" y="170" width="234" height="72" rx="12"/>
+<text class="d-t d-b" x="474" y="196" font-size="13">compare with the original code</text>
+<text class="d-t d-s" x="474" y="214">same inputs, same flags</text>
+<text class="d-t d-s" x="474" y="229">(option --compare-to)</text>
+<path class="d-ln" d="M692 64C712 64 712 135 732 135"/>
+<path class="d-ln" d="M692 206C712 206 712 135 732 135"/>
+<path class="d-ln" d="M732 135h4"/>
+<g>
+  <path class="d-ln" d="M736 135C748 135 746 70 758 70" marker-end="url(#rg-a)"/>
+  <path class="d-ln" d="M736 135H758" marker-end="url(#rg-a)"/>
+  <path class="d-ln" d="M736 135C748 135 746 200 758 200" marker-end="url(#rg-a)"/>
+  <rect x="762" y="50" width="130" height="42" rx="21" fill="var(--a-green-soft,#e6f4e8)" stroke="var(--d-ok,#2e8540)" stroke-width="1.5"/>
+  <text class="d-t d-b d-ok" x="827" y="68" text-anchor="middle" font-size="13" style="fill:var(--d-ok,#2e8540)">PASS</text>
+  <text class="d-t d-s" x="827" y="83" text-anchor="middle" font-size="11">within tolerance</text>
+  <rect x="762" y="114" width="130" height="42" rx="21" fill="var(--a-amber-soft,#fdf1dc)" stroke="var(--a-amber,#b26a00)" stroke-width="1.5"/>
+  <text class="d-t d-b" x="827" y="132" text-anchor="middle" font-size="13" style="fill:var(--a-amber,#b26a00)">XFAIL</text>
+  <text class="d-t d-s" x="827" y="147" text-anchor="middle" font-size="11">known, explained</text>
+  <rect x="762" y="178" width="130" height="42" rx="21" fill="var(--a-red-soft,#fde8e6)" stroke="var(--d-bad,#b42318)" stroke-width="1.5"/>
+  <text class="d-t d-b" x="827" y="196" text-anchor="middle" font-size="13" style="fill:var(--d-bad,#b42318)">FAIL</text>
+  <text class="d-t d-s" x="827" y="211" text-anchor="middle" font-size="11">stop and investigate</text>
+</g>
+</svg>

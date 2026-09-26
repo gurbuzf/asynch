@@ -2,6 +2,25 @@
 
 Newest first.
 
+## 2026-09-26: documentation redesign and release 1.5.0 (owner request)
+
+- Pages deployment verified (run 36223745641, attempt 2, deploy job succeeded after Pages was enabled).
+- Owner: docs hard to follow, text drawings and symbols unreadable; make it modern, then release with a tag.
+- 13 SVG diagrams in `docs/guide/diagrams/` (built from scratch-pad generator scripts, checked in light and dark by
+  screenshots); `_ext/asynch_docs.py` inlines them so they follow the theme. CSS components: meta row, lead, steps,
+  timeline, "You should see", C lesson, badges, stat tiles, cards, hero. Maths typeset (verified with a local MathJax 4,
+  the CDN is blocked in the sandbox).
+- Found and fixed while reviewing: the built-in models table rendered as raw text; LaTeX leftovers
+  (`[sec: ...]`); chapter 8 table had status in the Severity column; stale counts (68 -> 70 Python tests; 22 -> 23 C
+  tests; 43 000 -> 36 000 lines); `make dist` omitted `python/` (Python tests failed from the tarball).
+- While testing the release archive, one `make check` run (-O2 build) never finished in the all-models loop. Valgrind:
+  B-26 (models 105, 263 leave derivatives unset; values from the work array) and B-27 (consistency check reads
+  non-dense parent states uninitialised). Fixed; unit test now fills `ans` with NaN and flags unset derivatives (finds
+  exactly 105 and 263). Open question S-07 (intended equations). np=1 bit-identical; ASan clean; valgrind clean.
+- Release 1.5.0: version bump, CHANGELOG section, release notes, `.github/workflows/release.yml` (tag -> build, test,
+  tarball + wheel + docs zip, GitHub release). np=1 bit-identical to the previous build; make check passes; the
+  tarball builds and passes make check on its own.
+
 ## 2026-09-26: Python speed, MPI, library packaging, cleanup, documentation website (owner request)
 
 - Profiled Python models: 21 us/call, of which ~17 us building NumPy views (ctypes); user code 3 us. Cached views by

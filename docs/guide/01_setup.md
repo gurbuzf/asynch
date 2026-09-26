@@ -1,16 +1,49 @@
 # 1. Setting up: install ASYNCH and run a first simulation
 
-This chapter takes you from an empty computer to a finished model run. Choose **one** option:
+<div class="meta-row"><span class="audience">For everyone</span><span>15 minutes</span><span>Tested on a fresh Ubuntu 24.04 and in Docker</span></div>
 
-| Option | Your computer | Effort | Tested |
-|---|---|---|---|
-| **A. Native install** | Ubuntu 24.04 (or Windows with WSL2 running Ubuntu 24.04) | 15 minutes | yes, command by command on a fresh Ubuntu 24.04 |
-| **B. Docker** | any: Windows, macOS, Linux | 10 minutes + download | yes: image built, all examples and tests run inside |
-| C. Other systems | Fedora, macOS without Docker | varies | no; notes only, prefer B |
+<p class="lead">From an empty computer to a finished model run. Choose one of the three paths below and follow it
+from top to bottom.</p>
 
-Commands are shown in grey boxes. Type them (or copy them) in a **terminal**, the text window of
-your system: "Terminal" on Ubuntu and macOS, "Ubuntu" (WSL) or PowerShell on Windows. Lines starting with `#` are
-comments; you do not need to type them. After each step, "you should see" tells you what success looks like.
+::::{grid} 1 1 3 3
+:gutter: 3
+
+:::{grid-item-card} {octicon}`terminal` A. Ubuntu or WSL
+:link: "#option-a-native-install-on-ubuntu-2404"
+:link-type: url
+
+Ubuntu 24.04, or Windows with WSL2. The best choice for regular work.
++++
+<span class="st fixed">tested</span> about 15 minutes
+:::
+
+:::{grid-item-card} {octicon}`container` B. Docker
+:link: "#option-b-docker-windows-macos-linux"
+:link-type: url
+
+Any system: Windows, macOS, Linux. Everything ready-made in a container.
++++
+<span class="st fixed">tested</span> 10 minutes + download
+:::
+
+:::{grid-item-card} {octicon}`question` C. Other systems
+:link: "#option-c-other-systems-not-tested"
+:link-type: url
+
+Fedora, macOS with Homebrew. Notes only: if anything fails, use B.
++++
+<span class="st open">not tested</span>
+:::
+::::
+
+Commands are shown in boxes like the one below; the {octicon}`copy` button at their top right copies them. Type or
+paste them in a **terminal**, the text window of your system: "Terminal" on Ubuntu and macOS, "Ubuntu" (WSL) or
+PowerShell on Windows. Lines starting with `#` are comments. After each step, a green **You should see** box tells
+you what success looks like.
+
+```bash
+echo "this is a command"      # a comment
+```
 
 ---
 
@@ -20,7 +53,7 @@ comments; you do not need to type them. After each step, "you should see" tells 
 
 WSL2 runs a real Ubuntu inside Windows 10/11. Open **PowerShell as administrator** and type:
 
-```
+```powershell
 wsl --install -d Ubuntu-24.04
 ```
 
@@ -37,8 +70,9 @@ sudo apt-get install -y git ca-certificates gcc gfortran make autoconf automake 
     python3 python3-numpy python3-h5py python3-matplotlib
 ```
 
-`sudo` asks for your password: this installs system software. What each package is for:
+`sudo` asks for your password: this installs system software.
 
+:::{dropdown} What each package is for
 | Packages | Why ASYNCH needs them |
 |---|---|
 | `gcc`, `gfortran`, `make` | the C compiler, a Fortran compiler (the build configuration tests for it) and the build tool |
@@ -50,8 +84,12 @@ sudo apt-get install -y git ca-certificates gcc gfortran make autoconf automake 
 | `check` | the C unit-test framework |
 | `git`, `ca-certificates` | downloading the code (ca-certificates lets git check the identity of github.com) |
 | `python3-numpy`, `python3-h5py`, `python3-matplotlib` | reading and plotting results, and the regression tests |
+:::
 
-*You should see* the installation end without `E:` (error) lines.
+:::{admonition} You should see
+:class: expect
+The installation end without lines starting with `E:` (error).
+:::
 
 ### A.2 Download the code
 
@@ -62,7 +100,11 @@ cd asynch
 git checkout modernization
 ```
 
-*You should see* `Switched to branch 'modernization'` (or `Already on 'modernization'`).
+:::{admonition} You should see
+:class: expect
+`Switched to branch 'modernization'` (or `Already on 'modernization'`).
+:::
+
 The folder `~/asynch` now holds the code; all commands below are run from inside it.
 
 ### A.3 Build (compile) ASYNCH
@@ -77,11 +119,15 @@ mkdir -p build && cd build
 make -j4
 ```
 
-* `autoreconf --install` prepares the build scripts (run it once after downloading).
-* `../configure` checks that everything from A.1 is installed. *You should see* it end with
-  `config.status: creating config.h`. If it stops with an `error:`, see [Troubleshooting](#troubleshooting).
-* `make -j4` compiles, using 4 processors. It prints many lines, including some `warning:`
-  lines; those are normal. *You should see* it end without an `Error` line.
+<div class="steps">
+
+1. `autoreconf --install` prepares the build scripts (run it once after downloading).
+2. `../configure` checks that everything from A.1 is installed. It ends with `config.status: creating config.h`.
+   If it stops with an `error:`, see [Troubleshooting](#troubleshooting).
+3. `make -j4` compiles, using 4 processors. It prints many lines, including some `warning:` lines; those are
+   normal. It ends without an `Error` line.
+
+</div>
 
 The program is now `~/asynch/build/src/asynch`. Check it:
 
@@ -89,7 +135,10 @@ The program is now `~/asynch/build/src/asynch`. Check it:
 ./src/asynch --version
 ```
 
-*You should see* `This is asynch 1.4.3`.
+:::{admonition} You should see
+:class: expect
+`This is asynch 1.5.0`
+:::
 
 ### A.4 Check that the results are right
 
@@ -99,13 +148,19 @@ make check
 
 This runs three sets of tests (chapter 9) and takes about a minute:
 
-* `check_asynch`: 23 C unit tests (the solver's coefficient tables, every built-in model's setup, ...);
-* `run_python_tests.sh`: 68 tests of the Python package (chapter 10), with the library just built;
-* `run_regression.sh`: every example, compared with the reference results shipped with the original ASYNCH.
+| Test suite | What it checks |
+|---|---|
+| `check_asynch` | 23 C unit tests: the solver's coefficient tables, the setup and equations of every built-in model, ... |
+| `run_python_tests.sh` | 70 tests of the Python package (chapter 10), with the library just built |
+| `run_regression.sh` | every example, compared with the reference results shipped with the original ASYNCH |
 
-*You should see* `# PASS:  3` and `# FAIL:  0` at the end. The details are in `tests/*.log`; for example
-`tests/run_regression.sh.log` lists the examples as `PASS` or `XFAIL` (a known, documented difference) and ends with
-`0 unexpected failure(s)`.
+:::{admonition} You should see
+:class: expect
+`# PASS:  3` and `# FAIL:  0` at the end.
+
+The details are in `tests/*.log`: for example `tests/run_regression.sh.log` lists the examples as `PASS` or `XFAIL`
+(a known, documented difference) and ends with `0 unexpected failure(s)`.
+:::
 
 ### A.5 Run your first simulation
 
@@ -114,9 +169,11 @@ cd ../examples
 mpirun -n 2 ../build/src/asynch test.gbl
 ```
 
-`mpirun -n 2` starts ASYNCH on 2 processors. *You should see*:
+`mpirun -n 2` starts ASYNCH on 2 processors.
 
-```
+:::{admonition} You should see
+:class: expect
+```text
 Beginning initialization...
 ...
 Model type is 190.
@@ -128,6 +185,7 @@ Computations complete. Total time for calculations: 0.01...
 Results written to file outputs.h5.
 Peakflows written to file test.pea.
 ```
+:::
 
 Then the larger example: the Clear Creek basin in Iowa, 6 359 links, model 254:
 
@@ -135,7 +193,10 @@ Then the larger example: the Clear Creek basin in Iowa, 6 359 links, model 254:
 mpirun -n 2 ../build/src/asynch clearcreek.gbl
 ```
 
-You have run the model. Chapter 2 explains what went in, what came out, and how to change it.
+:::{tip}
+You have run the model. [Chapter 2](02_running_the_model.md) explains what went in, what came out, and how to
+change it.
+:::
 
 **Optional: make `asynch` available everywhere.** `sudo make install && sudo ldconfig` (run in `~/asynch/build`)
 copies the program to `/usr/local/bin` and the library `libasynch.so` to `/usr/local/lib`, after which you can type
@@ -143,15 +204,24 @@ copies the program to `/usr/local/bin` and the library `libasynch.so` to `/usr/l
 
 ### A.6 (optional) Use ASYNCH from Python
 
+The Python package is installed into a *virtual environment* (Ubuntu 24.04 lets pip install only there). After
+`sudo make install` above:
+
 ```bash
-export PYTHONPATH=~/asynch/python          # add this line to ~/.bashrc to keep it
+sudo apt-get install -y python3-venv python3-setuptools python3-wheel
+python3 -m venv --system-site-packages ~/asynch-venv
+cd ~/asynch/build && make install-python PYTHON_FOR_ASYNCH=~/asynch-venv/bin/python
+source ~/asynch-venv/bin/activate          # in every new terminal (or add it to ~/.bashrc)
 cd ~/asynch/examples
 python3 python/run_example.py
 ```
 
-*You should see* `test_2015.gbl: model 190, 11 links, 300 minutes` followed by the five largest peak flows. The package
-uses the library of the build folder, or the installed one after `sudo make install`. Chapter 10 explains the
-package, another way to install it, and how to write new models with it.
+:::{admonition} You should see
+:class: expect
+`test_2015.gbl: model 190, 11 links, 300 minutes`, followed by the five largest peak flows.
+:::
+
+[Chapter 10](10_python.md) explains the package and how to write new models with it.
 
 ---
 
@@ -162,11 +232,24 @@ Docker runs a small, ready-made Linux system (a **container**) on your computer.
 
 ### B.1 Install Docker
 
-* Windows and macOS: install **Docker Desktop** from <https://www.docker.com/products/docker-desktop/> and start it.
-* Linux: install Docker Engine (<https://docs.docker.com/engine/install/>), then allow your user to use it:
-  `sudo usermod -aG docker $USER`, and log out and in again.
+::::{tab-set}
+:::{tab-item} Windows and macOS
+Install **Docker Desktop** from <https://www.docker.com/products/docker-desktop/> and start it.
+:::
+:::{tab-item} Linux
+Install Docker Engine (<https://docs.docker.com/engine/install/>), then allow your user to use it, and log out and
+in again:
 
-*You should see* a version number when you type `docker --version`.
+```bash
+sudo usermod -aG docker $USER
+```
+:::
+::::
+
+:::{admonition} You should see
+:class: expect
+A version number when you type `docker --version`.
+:::
 
 ### B.2 Download the code and build the image
 
@@ -178,8 +261,12 @@ docker build -t asynch .
 ```
 
 (Without git, download the ZIP of the `modernization` branch from GitHub instead, and open a terminal in the unpacked folder.)
-The build takes 5–10 minutes the first time. *You should see* it end with `naming to docker.io/library/asynch`.
-During the build, the C unit test runs; its lines `PASS: check_asynch` and `# ERROR: 0` show it passed.
+The build takes 5 to 10 minutes the first time. During the build, the C unit test runs.
+
+:::{admonition} You should see
+:class: expect
+`PASS: check_asynch` and `# ERROR: 0` during the build, and at the end `naming to docker.io/library/asynch`.
+:::
 
 ### B.3 Run the examples inside the container
 
@@ -196,8 +283,12 @@ python3 python/run_example.py              # the Python package (chapter 10) is 
 exit
 ```
 
-`exit` leaves the container. `--rm` means the container is deleted when you leave, so **anything written
-inside it is lost**, unless it was written to a shared folder (next step).
+`exit` leaves the container.
+
+:::{warning}
+`--rm` means the container is deleted when you leave, so **anything written inside it is lost**, unless it was
+written to a shared folder (next step).
+:::
 
 ### B.4 Work with your own files (a shared folder)
 
@@ -219,21 +310,37 @@ exit
 
 You will find `mywork/examples/clearcreek.h5` and `clearcreek.pea` on your computer.
 
+:::{note}
 * On Windows PowerShell write `${PWD}` instead of `$PWD`.
 * On Linux, if your user id is not 1000 (check with `id -u`) and you get `Permission denied` in `/work`,
   add `--user "$(id -u):$(id -g)"` after `docker run`.
+:::
 
 ---
 
 ## Option C: other systems (not tested)
 
+:::{caution}
 These were **not tested** for this guide. If anything fails, use Option B.
+:::
 
-* **Fedora / RHEL / Rocky**: `sudo dnf install git gcc gcc-gfortran make autoconf automake libtool pkgconf
-  openmpi-devel hdf5-devel libpq-devel zlib-devel check-devel python3-numpy python3-h5py python3-matplotlib`,
-  then `module load mpi/openmpi-x86_64` (or add `/usr/lib64/openmpi/bin` to your `PATH`), then steps A.2–A.5.
-* **macOS with Homebrew**: `brew install gcc autoconf automake libtool pkg-config open-mpi hdf5 libpq check`
-  (the Fortran compiler comes with `gcc`). The build may need to be told where Homebrew keeps HDF5 and libpq.
+::::{tab-set}
+:::{tab-item} Fedora, RHEL, Rocky
+```bash
+sudo dnf install git gcc gcc-gfortran make autoconf automake libtool pkgconf openmpi-devel hdf5-devel \
+    libpq-devel zlib-devel check-devel python3-numpy python3-h5py python3-matplotlib
+module load mpi/openmpi-x86_64        # or add /usr/lib64/openmpi/bin to your PATH
+```
+Then steps A.2 to A.5.
+:::
+:::{tab-item} macOS with Homebrew
+```bash
+brew install gcc autoconf automake libtool pkg-config open-mpi hdf5 libpq check
+```
+The Fortran compiler comes with `gcc`. The build may need to be told where Homebrew keeps HDF5 and libpq. Then steps
+A.2 to A.5.
+:::
+::::
 
 ---
 

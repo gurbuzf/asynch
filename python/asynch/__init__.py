@@ -22,7 +22,7 @@ from .solver import Simulation, AsynchError
 from . import io
 from ._lib import find_library
 
-__version__ = "1.4.3"          # same as the C library (configure.ac)
+__version__ = "1.5.0"          # same as the C library (configure.ac)
 
 __all__ = ["Simulation", "AsynchError", "Model", "ModelError", "GlobalConfig", "Forcing", "Output", "PeakOutput",
            "Snapshot", "Selection", "FileRef", "io", "find_library", "library_path"]

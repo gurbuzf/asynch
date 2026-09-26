@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" width="900" height="400">
+<!-- ASYNCH documentation diagram. Colours come from the site theme (docs/_static/custom.css); the second value of each var() is the light-theme fallback used when the file is viewed alone. -->
+<style>
+.d-frame{fill:var(--d-bg,#f7f9fc)}
+.d-card{fill:var(--d-card,#fff);stroke:var(--d-line,#cdd6e1);stroke-width:1.5}
+.d-t{font-family:var(--d-font,Inter,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif);font-size:14px;fill:var(--d-text,#17212f)}
+.d-b{font-weight:700}
+.d-s{font-size:12px;fill:var(--d-muted,#5b6b7f)}
+.d-cap{font-size:11px;font-weight:700;letter-spacing:.08em;fill:var(--d-muted,#5b6b7f)}
+.d-m{font-family:var(--d-mono,'JetBrains Mono',Menlo,Consolas,monospace)}
+.d-ln{stroke:var(--d-line2,#7d8ca0);stroke-width:2;fill:none}
+.d-lnl{stroke:var(--d-line,#cdd6e1);stroke-width:1.5;fill:none}
+.d-dash{stroke-dasharray:6 5}
+.d-acc{fill:var(--d-accent,#1f5fae)}.d-accs{fill:var(--d-accent-soft,#e3eefb)}
+.d-accl{stroke:var(--d-accent,#1f5fae);fill:none;stroke-width:2}
+.d-acct{fill:var(--d-accent,#1f5fae)}
+.d-w{fill:var(--d-water,#2f7fd8)}.d-ws{fill:var(--d-water-soft,#cfe3f8)}
+.d-wl{stroke:var(--d-water,#2f7fd8);fill:none;stroke-linecap:round}
+.d-land{fill:var(--d-land,#dcebd0);stroke:var(--d-land-dark,#6fa35a);stroke-width:1.2}
+.d-landl{stroke:var(--d-land-dark,#6fa35a);fill:none;stroke-width:2}
+.d-landt{fill:var(--d-land-dark,#6fa35a)}
+.d-soil{fill:var(--d-soil,#f1e4d0);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-deep{fill:var(--d-deep,#e4d6c2);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-soilt{fill:var(--d-soil-dark,#b58b58)}
+.d-rainl{stroke:var(--d-rain,#5a9be6);stroke-width:2.2;stroke-linecap:round;fill:none}
+.d-sun{fill:var(--d-sun,#e59a1c)}.d-sunl{stroke:var(--d-sun,#e59a1c);fill:none;stroke-width:2}
+.d-ok{fill:var(--d-ok,#2e8540)}.d-okl{stroke:var(--d-ok,#2e8540);fill:none;stroke-width:2}
+.d-bad{fill:var(--d-bad,#b42318)}
+.d-p0{fill:var(--d-p0,#1f5fae)}.d-p1{fill:var(--d-p1,#0f8a7e)}.d-p2{fill:var(--d-p2,#c4461a)}.d-p3{fill:var(--d-p3,#8a4fbf)}
+.d-p0l{stroke:var(--d-p0,#1f5fae)}.d-p1l{stroke:var(--d-p1,#0f8a7e)}.d-p2l{stroke:var(--d-p2,#c4461a)}
+.d-inv{fill:var(--d-card,#fff)}
+</style>
+<rect class="d-frame" x="0" y="0" width="900" height="400" rx="12"/>
+<defs>
+  <marker id="pl-a" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path fill="var(--d-line2,#7d8ca0)" d="M0 0L10 5L0 10z"/></marker>
+  <marker id="pl-b" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path class="d-acc" d="M0 0L10 5L0 10z"/></marker>
+</defs>
+<!-- your script -->
+<rect class="d-card" x="20" y="20" width="560" height="60" rx="12"/>
+<text class="d-t d-b" x="38" y="46">Your script or notebook</text>
+<text class="d-t d-s" x="38" y="66">runs, inspects and changes simulations</text>
+<rect class="d-accs" x="310" y="34" width="256" height="32" rx="6"/>
+<text class="d-t d-m d-acct" x="438" y="55" text-anchor="middle" font-size="12">asynch.Simulation("basin.gbl")</text>
+<path class="d-ln" d="M300 80v22" marker-end="url(#pl-a)"/>
+<!-- package -->
+<rect class="d-card" x="20" y="106" width="560" height="100" rx="12" stroke="var(--d-accent,#1f5fae)" stroke-width="2"/>
+<text class="d-t d-b" x="38" y="130">asynch</text><text class="d-t d-s" x="100" y="130">the Python package (pure Python + NumPy)</text>
+<g>
+  <rect class="d-accs" x="38" y="142" width="124" height="50" rx="8"/><text class="d-t d-b" x="100" y="163" text-anchor="middle" font-size="13">Simulation</text><text class="d-t d-s" x="100" y="180" text-anchor="middle" font-size="11">run, states, params</text>
+  <rect class="d-accs" x="172" y="142" width="124" height="50" rx="8"/><text class="d-t d-b" x="234" y="163" text-anchor="middle" font-size="13">Model</text><text class="d-t d-s" x="234" y="180" text-anchor="middle" font-size="11">new models</text>
+  <rect class="d-accs" x="306" y="142" width="124" height="50" rx="8"/><text class="d-t d-b" x="368" y="163" text-anchor="middle" font-size="13">GlobalConfig</text><text class="d-t d-s" x="368" y="180" text-anchor="middle" font-size="11">.gbl files</text>
+  <rect class="d-accs" x="440" y="142" width="124" height="50" rx="8"/><text class="d-t d-b" x="502" y="163" text-anchor="middle" font-size="13">io</text><text class="d-t d-s" x="502" y="180" text-anchor="middle" font-size="11">read, write files</text>
+</g>
+<path class="d-ln" d="M300 206v34" marker-end="url(#pl-a)"/>
+<text class="d-t d-s" x="312" y="228"><tspan class="d-b">ctypes</tspan>: direct calls, nothing is copied</text>
+<!-- C library -->
+<rect class="d-acc" x="20" y="244" width="560" height="100" rx="12"/>
+<text class="d-t d-b d-inv" x="38" y="268">libasynch.so</text><text class="d-t d-inv" x="140" y="268" font-size="12" opacity=".85">the C library: all the computing happens here</text>
+<g>
+  <rect x="38" y="280" width="166" height="50" rx="8" fill="var(--d-card,#fff)" opacity=".95"/><text class="d-t d-b d-m" x="121" y="301" text-anchor="middle" font-size="12">asynch_interface.h</text><text class="d-t d-s" x="121" y="318" text-anchor="middle" font-size="11">the classic C API</text>
+  <rect x="214" y="280" width="166" height="50" rx="8" fill="var(--d-card,#fff)" opacity=".95"/><text class="d-t d-b d-m" x="297" y="301" text-anchor="middle" font-size="12">asynch_api.h</text><text class="d-t d-s" x="297" y="318" text-anchor="middle" font-size="11">arrays, custom models</text>
+  <rect x="390" y="280" width="174" height="50" rx="8" fill="var(--d-card,#fff)" opacity=".95"/><text class="d-t d-b" x="477" y="301" text-anchor="middle" font-size="13">the solver</text><text class="d-t d-s" x="477" y="318" text-anchor="middle" font-size="11">asynchronous RK, MPI</text>
+</g>
+<!-- model backends -->
+<text class="d-t d-cap" x="630" y="40">YOUR MODEL EQUATIONS</text>
+<g>
+  <rect class="d-card" x="630" y="52" width="250" height="58" rx="10"/><text class="d-t d-b" x="646" y="76" font-size="13">C code</text><text class="d-t d-s" x="646" y="95">compiled once and cached · fastest</text>
+  <rect class="d-card" x="630" y="120" width="250" height="58" rx="10"/><text class="d-t d-b" x="646" y="144" font-size="13">Numba</text><text class="d-t d-s" x="646" y="163">Python compiled to machine code</text>
+  <rect class="d-card" x="630" y="188" width="250" height="58" rx="10"/><text class="d-t d-b" x="646" y="212" font-size="13">plain Python</text><text class="d-t d-s" x="646" y="231">no compiler needed · slowest</text>
+</g>
+<path class="d-ln d-dash" d="M580 168C600 168 604 150 624 150" marker-end="url(#pl-a)"/>
+<text class="d-t d-s" x="755" y="264" text-anchor="middle">Model(...) builds one of these</text>
+<path class="d-accl" d="M755 272V305H568" marker-end="url(#pl-b)"/>
+<text class="d-t d-s d-b" x="745" y="284" text-anchor="end">called by the solver</text>
+<text class="d-t d-s" x="745" y="298" text-anchor="end">through function pointers</text>
+<text class="d-t d-s" x="450" y="380" text-anchor="middle">With <tspan class="d-m">mpirun -n 4 python3 script.py</tspan>, each of the 4 processes runs this whole stack for its share of the links.</text>
+</svg>

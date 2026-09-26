@@ -1,8 +1,15 @@
 # 2. Running the model
 
-This chapter assumes ASYNCH is installed (chapter 1). Commands are run from the `examples` folder;
-`asynch` stands for the program, which is `../build/src/asynch` if you did not run `make install`, and
-simply `asynch` inside Docker.
+<div class="meta-row"><span class="audience">Model users</span><span>No programming needed</span><span>20 minutes, with the exercise</span></div>
+
+<p class="lead">The command, the examples, what each input file says, a first experiment, and how to read the
+results.</p>
+
+:::{note}
+This chapter assumes ASYNCH is installed ([chapter 1](01_setup.md)). Commands are run from the `examples` folder.
+`asynch` stands for the program: `../build/src/asynch` if you did not run `make install`, simply `asynch` inside
+Docker.
+:::
 
 ## 2.1 The command
 
@@ -10,7 +17,7 @@ simply `asynch` inside Docker.
 mpirun -n 4 asynch myrun.gbl
 ```
 
-| Part | Meaning |
+| Part of the command | Meaning |
 |---|---|
 | `mpirun -n 4` | run on 4 processors (MPI processes). 1 is fine for small basins. More than your computer's cores needs `--oversubscribe` and is slower. |
 | `asynch` | the program |
@@ -19,8 +26,10 @@ mpirun -n 4 asynch myrun.gbl
 Options, placed before the `.gbl`: `-m` (or `--more`) prints how long each initialisation step took;
 `-v` prints the version; `-h` prints the help; `-d` waits for a key press at start, so a debugger can be attached.
 
-With several processes the results can differ in the last digits from one run to the next (the
-asynchronous scheduling, chapter 4). With one process a run is exactly repeatable.
+:::{important}
+With several processes the results can differ in the last digits from one run to the next (the asynchronous
+scheduling, [chapter 4](04_how_the_solver_works.md)). With one process a run is exactly repeatable.
+:::
 
 ## 2.2 The examples
 
@@ -68,42 +77,102 @@ The complete reference is `docs/input_output.rst` (section *Global File Structur
 
 ## 2.4 The other input files
 
-The small files of the `test` example can be read by eye:
+The small files of the `test` example can be read by eye. Each starts with the number of links, then one block
+per link, starting with its id:
 
+::::{grid} 1 1 3 3
+:gutter: 2
+:class-container: anatomy
+
+:::{grid-item-card}
+`test.rvr` · the network
+^^^
+```text
+11
+1
+3 2 8 3
+9
+0
 ```
-test.rvr (network)           test.prm (link parameters)                test.str (rain)
-11          <- number of links 11                                        11          <- number of links
++++
+- `11` links in the file
+- link `1` has `3` parents: links 2, 8 and 3
+- link `9` has `0` parents: a headwater
+:::
 
-1           <- link id         1                                         1           <- link id
-3 2 8 3     <- 3 parents:      0.42674164 0.26215310 0.04694315          3           <- 3 values follow
-               links 2, 8, 3   ^upstream  ^channel   ^hillslope          0    40     <- from minute 0: 40 mm/h
-9                               area km²   length km  area km²           100  20     <- from minute 100: 20 mm/h
-0           <- no parents                                                200   0     <- from minute 200: dry
+:::{grid-item-card}
+`test.prm` · link parameters
+^^^
+```text
+11
+1
+0.4267 0.2622 0.0469
+9
+0.0896 0.4318 0.0896
 ```
++++
+- for link `1` (digits shortened here):
+- upstream area [km²]
+- channel length [km]
+- hillslope area [km²]
+:::
 
-* `evap.mon`: 12 values, the potential evaporation of each month [mm/month].
-* `test.sav`: the list of link ids for which hydrographs are written.
-* The initial state file (`.uini`) gives one value per state, used for every link:
-
+:::{grid-item-card}
+`test.str` · rain
+^^^
+```text
+11
+1
+3
+0    40
+100  20
+200   0
 ```
-clearcreek.uini
-254                               <- model number (ASYNCH warns if it differs from the .gbl)
-0.000000                          <- initial time [min]
++++
+- link `1`: `3` values follow
+- from minute 0: 40 mm/h
+- from minute 100: 20 mm/h
+- from minute 200: dry
+:::
+::::
 
-1e-6 0.0 0.0 0.0 0.0 0.0 1e-6     <- q, s_p, s_t, s_s, s_precip, V_r, q_b: the 7 states of model 254
+The other files of the example:
+
+| File | Content |
+|---|---|
+| `evap.mon` | 12 values: the potential evaporation of each month [mm/month] |
+| `test.sav` | the link ids for which hydrographs are written |
+| `.rkd` (optional) | tolerances and method per link; format in {doc}`../input_output` (*RK Data Files*) |
+| `.uini` | the initial state: one value per state, used for every link (below) |
+
+:::{card}
+:class-card: anatomy
+
+`clearcreek.uini` · the initial state
+^^^
+```text
+254
+0.000000
+
+1e-6 0.0 0.0 0.0 0.0 0.0 1e-6
 ```
++++
+- `254`: the model number (ASYNCH warns if it differs from the `.gbl`)
+- `0.000000`: the initial time [min]
+- then one value per state, used for every link. For model 254: q, s_p, s_t, s_s, s_precip, V_r, q_b
+:::
 
-  If it gives fewer values than the model has states, ASYNCH warns and sets the missing ones to 0. For model 254, the last
-  three are always recomputed anyway (chapter 5).
-* `.rkd` (optional): tolerances and method per link, format in `docs/input_output.rst` (*RK Data Files*).
+If the file gives fewer values than the model has states, ASYNCH warns and sets the missing ones
+to 0. For model 254, the last three are always recomputed anyway ([chapter 5](05_model_254_explained.md)).
 
 ## 2.5 Exercise: change a parameter and compare
 
 The best way to learn the model is to change one thing and look at the effect. Here: the runoff
 coefficient RC of model 190 (the fraction of rain that runs off; 4th global parameter), from 0.33 to 0.50.
 
-1. Copy the global file, and create a folder for the new results. **ASYNCH does not create folders**: if one is
-   missing, it stops at once with `Error: cannot write the hydrographs: the folder "run_rc05" does not exist` (§2.7).
+<div class="steps">
+
+1. **Copy the global file, and create a folder for the new results.**
 
    ```bash
    cd examples
@@ -111,16 +180,24 @@ coefficient RC of model 190 (the fraction of rain that runs off; 4th global para
    mkdir -p run_rc05
    ```
 
-2. Open `test_rc05.gbl` in a text editor (`nano test_rc05.gbl`, or any editor) and change:
+   ASYNCH does not create folders: if one is missing, it stops at once with
+   `Error: cannot write the hydrographs: the folder "run_rc05" does not exist` (§2.7).
 
-   ```
-   6  0.33  0.20      -0.1     0.33  0.1  2.2917e-5     ->   6  0.33  0.20      -0.1     0.50  0.1  2.2917e-5
-   5 5.0 outputs.h5                                      ->   5 5.0 run_rc05/outputs.h5
-   1 test.pea                                            ->   1 run_rc05/test.pea
-   4 60 test.h5                                          ->   4 60 run_rc05/test.h5
+2. **Edit the copy.** Open `test_rc05.gbl` in a text editor (`nano test_rc05.gbl`, or any editor) and change four
+   lines: the runoff coefficient, and the three output files, which go to the new folder (red: before, green: after).
+
+   ```diff
+   - 6  0.33  0.20      -0.1     0.33  0.1  2.2917e-5
+   + 6  0.33  0.20      -0.1     0.50  0.1  2.2917e-5
+   - 5 5.0 outputs.h5
+   + 5 5.0 run_rc05/outputs.h5
+   - 1 test.pea
+   + 1 run_rc05/test.pea
+   - 4 60 test.h5
+   + 4 60 run_rc05/test.h5
    ```
 
-3. Run both, and plot the outlet (link 80):
+3. **Run both, and plot the outlet (link 80).**
 
    ```bash
    mpirun -n 2 asynch test.gbl
@@ -129,12 +206,17 @@ coefficient RC of model 190 (the fraction of rain that runs off; 4th global para
            --labels "RC = 0.33" "RC = 0.50" --out rc_compare.png
    ```
 
-   The script prints the peak of each run, and writes `rc_compare.png`:
+   :::{admonition} You should see
+   :class: expect
+   The peak of each run, and a new file `rc_compare.png` (below):
 
-   ```
+   ```text
    RC = 0.33: link 80, maximum 1.93612 at 2.00 h
    RC = 0.50: link 80, maximum 2.98869 at 1.92 h
    ```
+   :::
+
+</div>
 
 ![Outlet hydrograph with two runoff coefficients](figures/exercise_runoff_coefficient.png)
 
@@ -153,10 +235,13 @@ The same recipe works for any change: rain in the `.str` file, dates, tolerances
 | `.h5` (flag 6) | hydrographs as arrays: `link_id`, `time` (unix time), `outputs[link, time, output]` |
 | `.rec` / snapshot `.h5` | all states of all links at one time; can be the initial state of a next run (flags 2 and 4 of the initial-state block) |
 
-**Without programming**: `.pea`, `.dat` and `.csv` are text files, and open in any editor or spreadsheet.
-`h5dump -H file.h5` shows the structure of an `.h5` file.
-
-**With Python**, `tools/python/asynch_io.py` reads every format into dictionaries `{link id: array}`:
+::::{tab-set}
+:::{tab-item} Without programming
+`.pea`, `.dat` and `.csv` are text files, and open in any editor or spreadsheet. `h5dump -H file.h5` shows the
+structure of an `.h5` file.
+:::
+:::{tab-item} With Python
+`tools/python/asynch_io.py` reads every format into dictionaries `{link id: array}`:
 
 ```python
 import sys; sys.path.insert(0, "../tools/python")
@@ -169,7 +254,10 @@ peaks = asynch_io.read_pea("test.pea")              # {link: (area, time of peak
 print(peaks[80])
 ```
 
-and `tools/python/plot_hydrographs.py` plots one link from up to three files (§2.5).
+and `tools/python/plot_hydrographs.py` plots one link from up to three files (§2.5). The `asynch` Python package
+reads them too (`asynch.io`, [chapter 10](10_python.md)).
+:::
+::::
 
 ## 2.7 Messages you may see
 

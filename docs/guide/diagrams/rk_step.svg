@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 232" width="900" height="232">
+<!-- ASYNCH documentation diagram. Colours come from the site theme (docs/_static/custom.css); the second value of each var() is the light-theme fallback used when the file is viewed alone. -->
+<style>
+.d-frame{fill:var(--d-bg,#f7f9fc)}
+.d-card{fill:var(--d-card,#fff);stroke:var(--d-line,#cdd6e1);stroke-width:1.5}
+.d-t{font-family:var(--d-font,Inter,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif);font-size:14px;fill:var(--d-text,#17212f)}
+.d-b{font-weight:700}
+.d-s{font-size:12px;fill:var(--d-muted,#5b6b7f)}
+.d-cap{font-size:11px;font-weight:700;letter-spacing:.08em;fill:var(--d-muted,#5b6b7f)}
+.d-m{font-family:var(--d-mono,'JetBrains Mono',Menlo,Consolas,monospace)}
+.d-ln{stroke:var(--d-line2,#7d8ca0);stroke-width:2;fill:none}
+.d-lnl{stroke:var(--d-line,#cdd6e1);stroke-width:1.5;fill:none}
+.d-dash{stroke-dasharray:6 5}
+.d-acc{fill:var(--d-accent,#1f5fae)}.d-accs{fill:var(--d-accent-soft,#e3eefb)}
+.d-accl{stroke:var(--d-accent,#1f5fae);fill:none;stroke-width:2}
+.d-acct{fill:var(--d-accent,#1f5fae)}
+.d-w{fill:var(--d-water,#2f7fd8)}.d-ws{fill:var(--d-water-soft,#cfe3f8)}
+.d-wl{stroke:var(--d-water,#2f7fd8);fill:none;stroke-linecap:round}
+.d-land{fill:var(--d-land,#dcebd0);stroke:var(--d-land-dark,#6fa35a);stroke-width:1.2}
+.d-landl{stroke:var(--d-land-dark,#6fa35a);fill:none;stroke-width:2}
+.d-landt{fill:var(--d-land-dark,#6fa35a)}
+.d-soil{fill:var(--d-soil,#f1e4d0);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-deep{fill:var(--d-deep,#e4d6c2);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-soilt{fill:var(--d-soil-dark,#b58b58)}
+.d-rainl{stroke:var(--d-rain,#5a9be6);stroke-width:2.2;stroke-linecap:round;fill:none}
+.d-sun{fill:var(--d-sun,#e59a1c)}.d-sunl{stroke:var(--d-sun,#e59a1c);fill:none;stroke-width:2}
+.d-ok{fill:var(--d-ok,#2e8540)}.d-okl{stroke:var(--d-ok,#2e8540);fill:none;stroke-width:2}
+.d-bad{fill:var(--d-bad,#b42318)}
+.d-p0{fill:var(--d-p0,#1f5fae)}.d-p1{fill:var(--d-p1,#0f8a7e)}.d-p2{fill:var(--d-p2,#c4461a)}.d-p3{fill:var(--d-p3,#8a4fbf)}
+.d-p0l{stroke:var(--d-p0,#1f5fae)}.d-p1l{stroke:var(--d-p1,#0f8a7e)}.d-p2l{stroke:var(--d-p2,#c4461a)}
+.d-inv{fill:var(--d-card,#fff)}
+</style>
+<rect class="d-frame" x="0" y="0" width="900" height="232" rx="12"/>
+<defs><marker id="rk-a" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path fill="var(--d-line2,#7d8ca0)" d="M0 0L10 5L0 10z"/></marker></defs>
+<rect class="d-card" x="12" y="60" width="150" height="70" rx="10"/>
+<circle class="d-acc" cx="30" cy="60" r="11"/><text class="d-t d-b d-inv" x="30" y="64.5" text-anchor="middle" font-size="12">1</text>
+<text class="d-t d-b" x="87" y="88" text-anchor="middle" font-size="13">Parents' values</text>
+<text class="d-t d-s" x="87" y="106" text-anchor="middle">at every stage time,</text><text class="d-t d-s" x="87" y="121" text-anchor="middle">from their dense output</text>
+<path class="d-ln" d="M162 95H180" marker-end="url(#rk-a)"/>
+<rect class="d-card" x="182" y="60" width="150" height="70" rx="10"/>
+<circle class="d-acc" cx="200" cy="60" r="11"/><text class="d-t d-b d-inv" x="200" y="64.5" text-anchor="middle" font-size="12">2</text>
+<text class="d-t d-b" x="257" y="88" text-anchor="middle" font-size="13">Stages k₁ … kₛ</text>
+<text class="d-t d-s" x="257" y="106" text-anchor="middle">the model's dy/dt,</text><text class="d-t d-s" x="257" y="121" text-anchor="middle">evaluated s times</text>
+<path class="d-ln" d="M332 95H350" marker-end="url(#rk-a)"/>
+<rect class="d-card" x="352" y="60" width="150" height="70" rx="10"/>
+<circle class="d-acc" cx="370" cy="60" r="11"/><text class="d-t d-b d-inv" x="370" y="64.5" text-anchor="middle" font-size="12">3</text>
+<text class="d-t d-b" x="427" y="88" text-anchor="middle" font-size="13">New state y₁</text>
+<text class="d-t d-s" x="427" y="106" text-anchor="middle">y₀ + h Σ bⱼ kⱼ,</text><text class="d-t d-s" x="427" y="121" text-anchor="middle">then clamped if needed</text>
+<path class="d-ln" d="M502 95H520" marker-end="url(#rk-a)"/>
+<rect class="d-card" x="522" y="60" width="150" height="70" rx="10"/>
+<circle class="d-acc" cx="540" cy="60" r="11"/><text class="d-t d-b d-inv" x="540" y="64.5" text-anchor="middle" font-size="12">4</text>
+<text class="d-t d-b" x="597" y="88" text-anchor="middle" font-size="13">Error estimates</text>
+<text class="d-t d-s" x="597" y="106" text-anchor="middle">of the step and of</text><text class="d-t d-s" x="597" y="121" text-anchor="middle">its dense output</text>
+<path class="d-ln" d="M672 95H690" marker-end="url(#rk-a)"/>
+<polygon class="d-card" points="772,61 852,95 772,129 692,95"/>
+<text class="d-t d-b" x="772" y="92" text-anchor="middle" font-size="13">both errors</text><text class="d-t d-b" x="772" y="108" text-anchor="middle" font-size="13">small?</text>
+<path class="d-ln" d="M772 61V30H87V46" marker-end="url(#rk-a)"/>
+<text class="d-t d-s d-b" x="429" y="22" text-anchor="middle">no: reject, try again with a smaller h</text>
+<path class="d-ln" d="M772 129V156" marker-end="url(#rk-a)"/>
+<text class="d-t d-s d-b" x="782" y="148">yes</text>
+<rect class="d-card" x="582" y="160" width="300" height="60" rx="12" stroke="var(--d-ok,#2e8540)" stroke-width="2"/>
+<text class="d-t d-b" x="732" y="184" text-anchor="middle">Accept the step</text>
+<text class="d-t d-s" x="732" y="204" text-anchor="middle">store it, write outputs, choose the next h</text>
+</svg>

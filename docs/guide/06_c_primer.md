@@ -1,5 +1,7 @@
 # 6. Just enough C to read ASYNCH
 
+<div class="meta-row"><span class="audience">Code readers</span><span>Python helps</span><span>30 minutes</span></div>
+
 This page teaches the C you need for this codebase, using **real code from ASYNCH**, and
 the real bugs listed in [Known issues](08_known_issues.md) as examples of what goes wrong. If you know Python,
 the comparisons in *italics* will help.
@@ -7,6 +9,8 @@ the comparisons in *italics* will help.
 ## 6.1 How a C program is built
 
 *Python reads your `.py` files at run time. C is translated to machine code beforehand.*
+
+![How C becomes a program: preprocessor, compiler, linker](diagrams/c_build.svg)
 
 1. **Preprocessor.** Lines starting with `#` are text substitutions done before compiling:
    * `#include <structs.h>` pastes the content of that header file here.
@@ -48,7 +52,10 @@ double q   = y_0[0];                             // first element (discharge)
 double s_p = y_0[1];                             // second element
 ```
 `y[i]` means "the double located `i` positions after the address `y`". **C never checks
-that `i` is inside the array.** Reading `y[7]` from a 7-element array reads whatever
+that `i` is inside the array.**
+
+![An array of 7 states in memory: y[7] is past its end, in memory that belongs to something else](diagrams/array_bounds.svg)
+ Reading `y[7]` from a 7-element array reads whatever
 happens to be next in memory, and writing there corrupts it. This is exactly issue **B-01**:
 
 ```c
@@ -188,7 +195,7 @@ void model254(
     double t,                           // current time [min]
     const double * const y_i,           // state of this link, y_i[0..dim-1]
     unsigned int dim,                   // number of states (7)
-    const double * const y_p,           // states of the parents, flattened (see 7.3)
+    const double * const y_p,           // states of the parents, flattened (see 6.3)
     unsigned short num_parents,
     unsigned int max_dim,
     const double * const global_params, // from the .gbl

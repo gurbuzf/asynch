@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 690" width="820" height="690">
+<!-- ASYNCH documentation diagram. Colours come from the site theme (docs/_static/custom.css); the second value of each var() is the light-theme fallback used when the file is viewed alone. -->
+<style>
+.d-frame{fill:var(--d-bg,#f7f9fc)}
+.d-card{fill:var(--d-card,#fff);stroke:var(--d-line,#cdd6e1);stroke-width:1.5}
+.d-t{font-family:var(--d-font,Inter,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif);font-size:14px;fill:var(--d-text,#17212f)}
+.d-b{font-weight:700}
+.d-s{font-size:12px;fill:var(--d-muted,#5b6b7f)}
+.d-cap{font-size:11px;font-weight:700;letter-spacing:.08em;fill:var(--d-muted,#5b6b7f)}
+.d-m{font-family:var(--d-mono,'JetBrains Mono',Menlo,Consolas,monospace)}
+.d-ln{stroke:var(--d-line2,#7d8ca0);stroke-width:2;fill:none}
+.d-lnl{stroke:var(--d-line,#cdd6e1);stroke-width:1.5;fill:none}
+.d-dash{stroke-dasharray:6 5}
+.d-acc{fill:var(--d-accent,#1f5fae)}.d-accs{fill:var(--d-accent-soft,#e3eefb)}
+.d-accl{stroke:var(--d-accent,#1f5fae);fill:none;stroke-width:2}
+.d-acct{fill:var(--d-accent,#1f5fae)}
+.d-w{fill:var(--d-water,#2f7fd8)}.d-ws{fill:var(--d-water-soft,#cfe3f8)}
+.d-wl{stroke:var(--d-water,#2f7fd8);fill:none;stroke-linecap:round}
+.d-land{fill:var(--d-land,#dcebd0);stroke:var(--d-land-dark,#6fa35a);stroke-width:1.2}
+.d-landl{stroke:var(--d-land-dark,#6fa35a);fill:none;stroke-width:2}
+.d-landt{fill:var(--d-land-dark,#6fa35a)}
+.d-soil{fill:var(--d-soil,#f1e4d0);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-deep{fill:var(--d-deep,#e4d6c2);stroke:var(--d-soil-dark,#b58b58);stroke-width:1.2}
+.d-soilt{fill:var(--d-soil-dark,#b58b58)}
+.d-rainl{stroke:var(--d-rain,#5a9be6);stroke-width:2.2;stroke-linecap:round;fill:none}
+.d-sun{fill:var(--d-sun,#e59a1c)}.d-sunl{stroke:var(--d-sun,#e59a1c);fill:none;stroke-width:2}
+.d-ok{fill:var(--d-ok,#2e8540)}.d-okl{stroke:var(--d-ok,#2e8540);fill:none;stroke-width:2}
+.d-bad{fill:var(--d-bad,#b42318)}
+.d-p0{fill:var(--d-p0,#1f5fae)}.d-p1{fill:var(--d-p1,#0f8a7e)}.d-p2{fill:var(--d-p2,#c4461a)}.d-p3{fill:var(--d-p3,#8a4fbf)}
+.d-p0l{stroke:var(--d-p0,#1f5fae)}.d-p1l{stroke:var(--d-p1,#0f8a7e)}.d-p2l{stroke:var(--d-p2,#c4461a)}
+.d-inv{fill:var(--d-card,#fff)}
+</style>
+<rect class="d-frame" x="0" y="0" width="820" height="690" rx="12"/>
+<defs>
+  <marker id="sc-a" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path fill="var(--d-line2,#7d8ca0)" d="M0 0L10 5L0 10z"/></marker>
+</defs>
+<!-- boxes -->
+<g>
+  <rect class="d-card" x="110" y="30" width="300" height="52" rx="10"/>
+  <text class="d-t d-b" x="260" y="52" text-anchor="middle">Load the next block of forcings</text>
+  <text class="d-t d-s" x="260" y="70" text-anchor="middle">rain, evaporation, … sets the end of this pass</text>
+
+  <rect class="d-card" x="110" y="112" width="300" height="52" rx="10" stroke="var(--d-accent,#1f5fae)" stroke-width="2"/>
+  <text class="d-t d-b" x="260" y="134" text-anchor="middle">Pick the next link that is ready</text>
+  <text class="d-t d-s" x="260" y="152" text-anchor="middle">scan the links, upstream ones first</text>
+
+  <polygon class="d-card" points="260,190 370,220 260,250 150,220"/>
+  <text class="d-t d-b" x="260" y="225" text-anchor="middle" font-size="13">a link is ready?</text>
+
+  <rect class="d-card" x="500" y="194" width="290" height="52" rx="10"/>
+  <text class="d-t d-b" x="645" y="216" text-anchor="middle">Wait for data from other processes</text>
+  <text class="d-t d-s" x="645" y="234" text-anchor="middle">parents computed elsewhere (MPI)</text>
+
+  <rect class="d-card" x="110" y="278" width="300" height="68" rx="10" stroke="var(--d-accent,#1f5fae)" stroke-width="2"/>
+  <text class="d-t d-b" x="260" y="300" text-anchor="middle">Step this link forward</text>
+  <text class="d-t d-s" x="260" y="318" text-anchor="middle">as long as its parents are ahead of it;</text>
+  <text class="d-t d-s" x="260" y="334" text-anchor="middle">never across a change of the rain</text>
+
+  <rect class="d-card" x="110" y="374" width="300" height="52" rx="10"/>
+  <text class="d-t d-b" x="260" y="396" text-anchor="middle">Tell its child it may be ready</text>
+  <text class="d-t d-s" x="260" y="414" text-anchor="middle">and free parent data nobody needs</text>
+
+  <polygon class="d-card" points="260,454 390,486 260,518 130,486"/>
+  <text class="d-t d-b" x="260" y="484" text-anchor="middle" font-size="13">all my links at the</text>
+  <text class="d-t d-b" x="260" y="500" text-anchor="middle" font-size="13">end of this pass?</text>
+
+  <rect class="d-card" x="110" y="548" width="300" height="52" rx="10"/>
+  <text class="d-t d-b" x="260" y="570" text-anchor="middle">Synchronise all processes</text>
+  <text class="d-t d-s" x="260" y="588" text-anchor="middle">write a snapshot if one is due</text>
+
+  <polygon class="d-card" points="645,542 755,574 645,606 535,574"/>
+  <text class="d-t d-b" x="645" y="579" text-anchor="middle" font-size="13">end of simulation?</text>
+
+  <rect class="d-card" x="520" y="626" width="250" height="44" rx="22" stroke="var(--d-ok,#2e8540)" stroke-width="2"/>
+  <text class="d-t d-b" x="645" y="653" text-anchor="middle">Write the outputs · done</text>
+</g>
+<!-- arrows -->
+<g class="d-ln">
+  <path d="M260 82v26" marker-end="url(#sc-a)"/>
+  <path d="M260 164v22" marker-end="url(#sc-a)"/>
+  <path d="M260 250v24" marker-end="url(#sc-a)"/>
+  <path d="M370 220h126" marker-end="url(#sc-a)"/>
+  <path d="M645 194V138H414" marker-end="url(#sc-a)"/>
+  <path d="M260 346v24" marker-end="url(#sc-a)"/>
+  <path d="M260 426v24" marker-end="url(#sc-a)"/>
+  <path d="M130 486H70V138h36" marker-end="url(#sc-a)"/>
+  <path d="M260 518v26" marker-end="url(#sc-a)"/>
+  <path d="M410 574h121" marker-end="url(#sc-a)"/>
+  <path d="M755 574h40V56H414" marker-end="url(#sc-a)"/>
+  <path d="M645 606v16" marker-end="url(#sc-a)"/>
+</g>
+<!-- branch labels -->
+<g>
+  <text class="d-t d-s d-b" x="380" y="212">no</text>
+  <text class="d-t d-s d-b" x="270" y="266">yes</text>
+  <text class="d-t d-s d-b" x="96" y="478" text-anchor="end">no</text>
+  <text class="d-t d-s" x="62" y="320" text-anchor="end" transform="rotate(-90 62 320)">next link</text>
+  <text class="d-t d-s d-b" x="270" y="536">yes</text>
+  <text class="d-t d-s d-b" x="766" y="566">no</text>
+  <text class="d-t d-s" x="806" y="320" transform="rotate(90 806 320)" text-anchor="middle">next pass</text>
+  <text class="d-t d-s d-b" x="655" y="620">yes</text>
+</g>
+</svg>

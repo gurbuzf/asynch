@@ -1,12 +1,28 @@
 # 9. Reproducibility and regression testing
 
-> **Rule for every change to the C code:** run `make check` and the regression harness (with `--compare-to` the
-> previous build) before and after the change. If a result moves by more than the tolerance, the change is
-> *scientific* and must be explained in the `CHANGELOG.md`.
->
-> **The benchmark is the set of example results shipped with the original ASYNCH repository**
-> (`examples/results/` and `examples/more/*/results_benchmark/`). These files are never
-> modified or regenerated. Every result is measured against them.
+<div class="meta-row"><span class="audience">Developers, reviewers</span><span>One command</span><span>10 minutes</span></div>
+
+<p class="lead">How every result of ASYNCH is checked against the reference results, and how to repeat all the checks
+yourself with one command.</p>
+
+<div class="stats">
+<div><p>23</p><p>C unit tests</p></div>
+<div><p>70</p><p>Python tests</p></div>
+<div><p>66.5 %</p><p>of the C lines run by the tests</p></div>
+<div><p>0</p><p>reference files ever modified</p></div>
+</div>
+
+:::{important}
+**Rule for every change to the C code:** run `make check` and the regression harness (with `--compare-to` the
+previous build) before and after the change. If a result moves by more than the tolerance, the change is
+*scientific* and must be explained in the `CHANGELOG.md`.
+
+**The benchmark is the set of example results shipped with the original ASYNCH repository**
+(`examples/results/` and `examples/more/*/results_benchmark/`). These files are never modified or regenerated. Every
+result is measured against them.
+:::
+
+![The regression harness: every example is run and compared with the 2015 references and with the original code](diagrams/regression.svg)
 
 ## 9.0 All the tests: `make check`
 
@@ -14,8 +30,8 @@ Run in the build folder, `make check` runs three sets of tests, in about a minut
 
 | Test | File | What it checks |
 |---|---|---|
-| `check_asynch` | `tests/check_asynch.c` | 23 C unit tests: the Runge-Kutta tables satisfy the order conditions (sum of b = 1, rows of A add up to c, ...) and reach their order on y' = y; their dense output is consistent; every built-in model has consistent sizes and all the functions the solver calls, and its equations give finite values; sorting and the id lookup; argument checks of `asynch_api.h` |
-| `run_python_tests.sh` | `tests/python/` | 68 tests of the Python package: runs identical to the `asynch` program, byte for byte; models written in Python identical to the built-in ones; exact solutions of reservoir chains; 52 built-in models integrate one hour (5 more need realistic parameters); rain in 4 file formats gives identical results; 70 000 links; 2 MPI processes; the example scripts |
+| `check_asynch` | `tests/check_asynch.c` | 23 C unit tests: the Runge-Kutta tables satisfy the order conditions (sum of b = 1, rows of A add up to c, ...) and reach their order on y' = y; their dense output is consistent; every built-in model has consistent sizes and all the functions the solver calls, and its equations give finite values and set every derivative; sorting and the id lookup; argument checks of `asynch_api.h` |
+| `run_python_tests.sh` | `tests/python/` | 70 tests of the Python package: runs identical to the `asynch` program, byte for byte; models written in Python identical to the built-in ones; exact solutions of reservoir chains; 52 built-in models integrate one hour (5 more need realistic parameters); rain in 4 file formats gives identical results; 70 000 links; 2 MPI processes; the example scripts |
 | `run_regression.sh` | `tests/regression/run_examples.py` | every example against the reference results (9.1) |
 
 The outcome is at the end (`# PASS: 3`, `# FAIL: 0`); the details are in `tests/*.log` of the build folder. If Python
@@ -65,12 +81,12 @@ python3 tests/regression/run_examples.py --asynch /path/to/other/asynch --keep
 | `test` | 190 (constant runoff) | `test.pea` | `examples/results/test.pea` |
 | `test with .rkd file` | 190, tolerances from `examples/test.rkd` | `test_rkd.pea` | `examples/results/test.pea` (same settings, same result) |
 | `test, 2015 configuration` | 190 | hydrographs `.dat`, peaks `.pea`, final states `.rec` | `examples/results/test.dat`, `.pea`, `.rec` |
-| `clearcreek` | 254 (top layer) | `clearcreek.pea` | `examples/results/clearcreek.pea`, **known mismatch**: the reference comes from the 2015 configuration (next line) |
-| `clearcreek, 2015 configuration` | 254 | `.dat`, `.pea`, `.rec` | `examples/results/clearcreek.dat`, `.pea`, `.rec`, **known mismatch** (R-02: model 254 changed in 2021) |
+| `clearcreek` | 254 (top layer) | `clearcreek.pea` | `examples/results/clearcreek.pea`, <span class="st open">known mismatch</span>: the reference comes from the 2015 configuration (next line) |
+| `clearcreek, 2015 configuration` | 254 | `.dat`, `.pea`, `.rec` | `examples/results/clearcreek.dat`, `.pea`, `.rec`, <span class="st open">known mismatch</span> (R-02: model 254 changed in 2021) |
 | `model_192` | 192 | hydrograph `.csv`, peaks `.pea`, snapshot `.h5` | `examples/more/model_192/results_benchmark/` |
 | `model_196` | 196 | idem | idem |
 | `model_258` | 258 | idem | idem |
-| `model_259` | 259 | idem | idem, **known mismatch** (R-03) |
+| `model_259` | 259 | idem | idem, <span class="st open">known mismatch</span> (R-03) |
 
 A *known mismatch* (`XFAIL`) is reported but does not make the run fail. A **crash is
 always a failure**, even for those cases.
@@ -140,8 +156,11 @@ The solver itself only guarantees accuracy up to its tolerances, which are given
 the `.gbl` file (typically `1e-3`…`1e-6` absolute and `1e-6` relative for discharge). So
 differences below those tolerances carry no information. The harness accepts
 
-    |new − ref| ≤ atol + rtol·|ref|        with  rtol = 1e-4  and
-                                          atol = 1e-5 with 1 process, 1e-3 with several
+$$
+|\text{new} - \text{ref}| \le \text{atol} + \text{rtol}\cdot|\text{ref}|, \qquad
+\text{rtol} = 10^{-4}, \qquad
+\text{atol} = \begin{cases} 10^{-5} & \text{with 1 process} \\ 10^{-3} & \text{with several} \end{cases}
+$$
 
 and **always prints the largest absolute and relative difference**. A real regression (a
 changed equation, a wrong unit, a parameter off by one index) produces differences of
@@ -163,12 +182,12 @@ Release build (`-O3 -DNDEBUG`), Ubuntu 24.04, GCC 13, OpenMPI 4.1, HDF5 1.10:
 
 | Case | np=1 | np=2 | np=4 |
 |---|---|---|---|
-| test (190) | PASS | PASS | PASS |
-| clearcreek (254) | **FAIL: crash (B-01)** | XFAIL (R-02) | XFAIL (R-02) |
-| model_192 | PASS | PASS | PASS |
-| model_196 | PASS (bit-identical) | PASS | PASS |
-| model_258 | PASS (bit-identical) | PASS | PASS |
-| model_259 | XFAIL (R-03) | XFAIL (R-03) | XFAIL (R-03) |
+| test (190) | <span class="st fixed">PASS</span> | <span class="st fixed">PASS</span> | <span class="st fixed">PASS</span> |
+| clearcreek (254) | <span class="sev critical">FAIL</span> crash (B-01) | <span class="st open">XFAIL</span> R-02 | <span class="st open">XFAIL</span> R-02 |
+| model_192 | <span class="st fixed">PASS</span> | <span class="st fixed">PASS</span> | <span class="st fixed">PASS</span> |
+| model_196 | <span class="st fixed">PASS</span> (bit-identical) | <span class="st fixed">PASS</span> | <span class="st fixed">PASS</span> |
+| model_258 | <span class="st fixed">PASS</span> (bit-identical) | <span class="st fixed">PASS</span> | <span class="st fixed">PASS</span> |
+| model_259 | <span class="st open">XFAIL</span> R-03 | <span class="st open">XFAIL</span> R-03 | <span class="st open">XFAIL</span> R-03 |
 
 At that commit, a debug build (no `-DNDEBUG`) additionally failed every case with exit
 code 134, because of the double `fclose` at shutdown (B-03, since fixed).
