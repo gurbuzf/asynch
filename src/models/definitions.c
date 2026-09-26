@@ -3100,7 +3100,7 @@ void Precalculations(
         double L_i = params[1];
         double A_h = params[2];
         int h_order = (int) params[3];
-        assert(h_order < 10);
+        assert(h_order >= 1 && h_order <= 10);  //global_params hold 10 values per group, for orders 1 to 10
 
         double v_0 = global_params[h_order - 1];
         double lambda_1 = global_params[10 + h_order - 1];

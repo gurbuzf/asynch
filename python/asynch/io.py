@@ -260,3 +260,45 @@ def read_prm(path):
             k += 1
         out[link] = np.array(values, dtype=float)
     return out
+
+
+def write_binary_forcing(prefix, frames, compress=False):
+    """Binary forcing files (global file flag 2, or 6 if compress): one file per time step, named prefix + index.
+
+    frames: {index: values}, the values of every link in the order of the topology (.rvr) file; the file with index
+    first + k applies from minute k * (time resolution of the global file). Written as 32-bit floats in big-endian
+    byte order (ASYNCH swaps the bytes when reading). With compress, the files are gzipped (prefix + index + ".gz").
+    Returns the list of files written."""
+    import gzip
+    written = []
+    for index, values in sorted(frames.items()):
+        data = np.asarray(values, dtype=">f4").tobytes()
+        path = "%s%d" % (prefix, index)
+        if compress:
+            path += ".gz"
+            with gzip.open(path, "wb") as f:
+                f.write(data)
+        else:
+            with open(path, "wb") as f:
+                f.write(data)
+        written.append(path)
+    return written
+
+
+def write_irregular_binary_forcing(prefix, frames):
+    """Irregular binary forcing files (global file flag 5): one file per change, named prefix + unix time.
+
+    frames: {unix time: {link id: value}}; links not listed get 0 (the format is meant for sparse fields such as
+    rain). Written in little-endian byte order: number of links (uint32), then link id (uint32) and value (float32)
+    for each link. Returns the list of files written."""
+    written = []
+    for when, values in sorted(frames.items()):
+        path = "%s%d" % (prefix, when)
+        rec = np.zeros(len(values), dtype=[("id", "<u4"), ("value", "<f4")])
+        rec["id"] = list(values.keys())
+        rec["value"] = list(values.values())
+        with open(path, "wb") as f:
+            f.write(np.array([len(values)], dtype="<u4").tobytes())
+            f.write(rec.tobytes())
+        written.append(path)
+    return written

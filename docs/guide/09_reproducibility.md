@@ -14,13 +14,30 @@ Run in the build folder, `make check` runs three sets of tests, in about a minut
 
 | Test | File | What it checks |
 |---|---|---|
-| `check_asynch` | `tests/check_asynch.c` | 22 C unit tests: the Runge-Kutta tables satisfy the order conditions (sum of b = 1, rows of A add up to c, ...) and reach their order on y' = y; their dense output is consistent; every built-in model has consistent sizes and all the functions the solver calls; sorting and the id lookup; argument checks of `asynch_api.h` |
-| `run_python_tests.sh` | `tests/python/` | 62 tests of the Python package: runs identical to the `asynch` program, byte for byte; models written in Python identical to the built-in ones; exact solutions of reservoir chains; 70 000 links; 2 MPI processes; the example scripts |
+| `check_asynch` | `tests/check_asynch.c` | 23 C unit tests: the Runge-Kutta tables satisfy the order conditions (sum of b = 1, rows of A add up to c, ...) and reach their order on y' = y; their dense output is consistent; every built-in model has consistent sizes and all the functions the solver calls, and its equations give finite values; sorting and the id lookup; argument checks of `asynch_api.h` |
+| `run_python_tests.sh` | `tests/python/` | 68 tests of the Python package: runs identical to the `asynch` program, byte for byte; models written in Python identical to the built-in ones; exact solutions of reservoir chains; 52 built-in models integrate one hour (5 more need realistic parameters); rain in 4 file formats gives identical results; 70 000 links; 2 MPI processes; the example scripts |
 | `run_regression.sh` | `tests/regression/run_examples.py` | every example against the reference results (9.1) |
 
 The outcome is at the end (`# PASS: 3`, `# FAIL: 0`); the details are in `tests/*.log` of the build folder. If Python
 or NumPy is missing, the last two are reported as `SKIP`. The unit tests found three bugs (B-22 to B-24, chapter 8)
 when they were first written.
+
+### How much of the code the tests run (coverage)
+
+Measured with `tests/coverage_report.py` (it needs only `gcov`, part of GCC):
+
+```bash
+mkdir build-cov && cd build-cov
+../configure CFLAGS="-O0 -g --coverage" LDFLAGS="--coverage"
+make -j4 && make check
+python3 ../tests/coverage_report.py .
+```
+
+On 2026-09-26, `make check` runs **66.5 %** of the lines of the C library and program (9 019 of 13 553): the solver
+steps and Runge-Kutta tables 98-100 %, the C interface for other languages 89 %, the model setups 91 % and model
+equations 73 %, the time loop 81 %. What stays untested needs inputs that the repository has no example for: PostgreSQL
+databases (`db.c`, database forcings and outputs), grid-cell rain, reservoirs (`steppers/forced.c`), part of the dam
+code, and some command-line options.
 
 ## 9.1 The harness
 

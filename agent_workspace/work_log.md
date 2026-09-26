@@ -18,8 +18,14 @@ Newest first.
   documented in chapter 10 tests. Model 263 now needs 16 disk params per link (was declared 15).
 - Docs: chapter 10 (Python), README rewritten, 01/03/07/08/09 updated, docs/python_api.rst rewritten,
   Dockerfile (ldconfig, PYTHONPATH).
-- Not yet verified: the Docker image build with these changes, and chapter 10 install option (b) (venv) on a
-  fresh machine.
+- Verified: Docker image builds (make check inside passes; Python examples run as user hydro). Chapter 10 option (b)
+  needed python3-setuptools python3-wheel + --no-build-isolation (pip otherwise downloads setuptools; in this sandbox
+  PyPI TLS fails) - docs fixed, tested as normal user in the image.
+- Coverage (tests/coverage_report.py): 35.9 % -> 66.5 % after adding every-model equation unit test (fork per model;
+  exit() not _exit() so gcov flushes), test_all_models.py (52 models; 30/261/601-603 need realistic params) and
+  test_forcings.py (found B-25: binary rain files off-by-one/overflow/crash; fixed).
+- Found by all-models test and ruled out as test artefacts (not bugs): dam algebraic functions need state -1 from
+  check_state; model 257 param 3 is a stream order; model 30 step collapse with generic params.
 
 ## 2026-09-25: owner feedback: clarity for non-programmers, plots, Docker, decision A
 

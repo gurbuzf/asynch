@@ -48,6 +48,7 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [B-22](#b-22) | **fixed** | unit test | Wrong constant in the Dormand-Prince dense-output derivative (no effect: multiplied by 0) |
 | [B-23](#b-23) | **fixed** | unit test | Models 263 and 601-603 wrote/read one or two parameters past the per-link array |
 | [B-24](#b-24) | **fixed** | unit test | 7 model numbers without equations crashed; RK tables shared by all solvers of a program |
+| [B-25](#b-25) | **fixed** | test | Binary rain files: file past the range read, last file lasted 0.0001 min, overflow, crash on a missing file |
 | [R-01](#r-01) | fixed | confirmed | No automated regression tests; only one unit test (`days_in_month`) |
 | [R-02](#r-02) | **resolved** | confirmed | clearcreek references (2015) differ: another configuration, and a 2021 change to model 254 |
 | [R-03](#r-03) | medium | confirmed | Model 259 benchmark cannot be reproduced from the files in the repository |
@@ -371,6 +372,23 @@ confirmed by unit tests.*
   array, and `Destroy_RKMethod` frees what the constructors allocate (it freed nothing; RK 4(3) pointed `b` to a static
   table, so it could not be freed consistently).
 
+### B-25
+**Rain from binary files: a file past the range was read, the last file lasted 0.0001 min, memory overflow, crash on
+a missing file.** *High, confirmed by a test* (the same rain as a `.str` file and as binary files). Binary forcing
+files (global file flags 2 and 6: one file per time step, used for radar rainfall) are read in passes of `chunk size`
+files. In `src/forcings.c` the last file of a pass was capped at `last + 1`, a file outside the declared range, and
+`src/forcings_io.c`:
+* read it (flag 2: from a NULL file pointer if it did not exist, which crashed; flag 6: stopped);
+* gave the value of the last file for 0.0001 min only, then 0 (it was only right when the file after the range existed);
+* allocated `number of files + 1` values per link, but wrote `chunk size + 1`: a last pass with fewer files than the
+  chunk size wrote past the array.
+
+**Fixed** (2026-09-25): files `first` to `last` are read, the last one applies for a full time step, then 0 (as
+documented); the arrays are large enough; a missing file stops the run with its name. Test
+(`tests/python/test_forcings.py`): rain different at every link, written as `.str`, binary, gzipped binary and
+irregular binary files, gives identical results. Runs whose files covered one step more than the declared range differ
+only by the 0.0001 min of that extra file.
+
 ---
 
 ## Reproducibility
@@ -379,8 +397,8 @@ confirmed by unit tests.*
 **No regression testing.** *High.* `make check` runs a single unit test (`days_in_month`).
 Nothing checks that the model still produces the same hydrographs. **Addressed by**
 `tests/regression/run_examples.py` (see [09_reproducibility.md](09_reproducibility.md)). Since 2026-09-25
-`make check` runs 22 C unit tests (`tests/check_asynch.c`), 62 tests of the Python package (`tests/python`) and the
-9 example comparisons; the unit tests found B-22, B-23 and B-24.
+`make check` runs 23 C unit tests (`tests/check_asynch.c`), 68 tests of the Python package (`tests/python`) and the
+9 example comparisons; the tests found B-22 to B-25. Line coverage: 66.5 % (chapter 9).
 
 ### R-02
 **Clearcreek reference is from another configuration, and model 254 changed in 2021.** *Medium, confirmed.*

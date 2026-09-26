@@ -13,7 +13,7 @@ import numpy as np
 from asynch import Simulation
 
 outlet = 80
-print("RC     peak at link %d [m3/s]   time of peak [h]" % outlet)
+lines = ["RC     peak at link %d [m3/s]   time of peak [h]" % outlet]
 for rc in (0.2, 0.33, 0.5, 0.7):
     with Simulation("test_2015.gbl") as sim:
         g = sim.global_params
@@ -22,4 +22,7 @@ for rc in (0.2, 0.33, 0.5, 0.7):
         sim.advance(write=False)                       # no output files
         t, q = sim.peaks
         k = sim.location(outlet)
-        print("%.2f %24.4f %18.2f" % (rc, q[k], t[k] / 60.0))
+        lines.append("%.2f %24.4f %18.2f" % (rc, q[k], t[k] / 60.0))
+        rank = sim.rank
+if rank == 0:                                          # with mpirun, every process runs this script
+    print("\n".join(lines))

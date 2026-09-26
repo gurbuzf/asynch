@@ -45,6 +45,7 @@ A "silent" error is always worse than a crash: a crash is noticed, a wrong numbe
 | Outputs | B-15: a missing output folder lost all results, yet the run "succeeded" | **High** | fixed |
 | Network | B-16: a junction with more than 8 upstream streams crashed the run | **High** | fixed |
 | Model equations | B-23: models 263, 601, 602, 603 read parameters from outside their memory | **High** | fixed |
+| Inputs | B-25: rain from binary (radar) files: the last file almost ignored, crashes, memory overflow | **High** | fixed |
 | Library / Python | B-20: user-defined outputs of some states were written as 0 | **High** | fixed |
 | Python | A-01: the Python interface did not work at all | **High** | replaced (chapter 10) |
 | Models | B-24: 7 model numbers without equations crashed; solvers of one program shared tables | Medium | fixed |
@@ -163,6 +164,18 @@ models, which is why it went unnoticed; a new unit test that checks the sizes of
 **Now.** The tables have room for every value. Model 263 needs **16 values per link** in its parameter file (it used
 16 in its equations all along).
 
+### B-25: rain from binary files — High
+
+**What happened.** Operational runs often read rain from a series of binary files, one per time step (e.g. radar
+rainfall every 5 minutes); the global file says which files to use, from number `first` to number `last`. The reader
+asked for one file more than that range. If the folder held exactly the declared files, the program crashed (or, for
+compressed files, stopped). If it held one more, the run went on, but the rain of the file `last` was applied for
+0.0001 minutes instead of a full time step. In some configurations it also wrote past the end of its memory.
+
+**Now.** Exactly the declared files are read, the last one applies for its full time step and then the rain is 0,
+as the documentation says. A missing file stops the run with its name. Tested: the same rain given as a text file and in
+the three binary formats gives identical results.
+
 ### B-20: user-defined outputs could be written as 0 — High
 
 A program (or now a Python script) can add its own outputs, computed from the states of a link. The solver must be
@@ -216,10 +229,11 @@ How we know the package is right: the files it writes are identical to those of 
 models 190 and 191 rewritten through it give exactly the numbers of the built-in models; and simple models with a known
 exact solution (a chain of linear reservoirs) are reproduced to better than 1e-8.
 
-`make check` now runs three sets of tests (chapter 9): 22 C unit tests, 62 tests of the Python package, and all the
+`make check` now runs three sets of tests (chapter 9): 23 C unit tests, 68 tests of the Python package, and all the
 examples against their reference results. The C unit tests check, among other things, the coefficient tables of the
-three numerical methods against the textbook conditions (a check that would have caught B-13) and the setup of every
-built-in model; they found B-22, B-23 and B-24.
+three numerical methods against the textbook conditions (a check that would have caught B-13) and the setup and equations
+of every built-in model; with the Python tests (52 models run a short simulation; rain in four file formats) they
+found B-22 to B-25. Together they run two thirds of the lines of the C code (chapter 9).
 
 ## 7.8 Tools added along the way
 

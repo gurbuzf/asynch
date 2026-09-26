@@ -29,7 +29,7 @@ and is replaced by this package.
 | `Simulation` | runs a global file like the `asynch` program (the output files are **identical to the last byte**), and lets you advance step by step, read/change states and parameters, and add outputs |
 | `Model` | a new model: its equations written in **C code** (compiled once, as fast as a built-in model) or as **Python functions** (no compiler, about 140 times slower) |
 | `GlobalConfig` | reads, changes and writes global files (`.gbl`), so a setup can be built in a script |
-| `asynch.io` | reads the output files (`.dat`, `.csv`, `.h5`, `.pea`, `.rec`) and writes the input files (`.rvr`, `.prm`, `.uini`, `.str`, `.ustr`, `.mon`, `.sav`) |
+| `asynch.io` | reads the output files (`.dat`, `.csv`, `.h5`, `.pea`, `.rec`) and writes the input files (`.rvr`, `.prm`, `.uini`, `.str`, `.ustr`, `.mon`, `.sav`, binary rain files) |
 | `python3 -m asynch` | `run file.gbl`, `info file.gbl`, `library` from the command line |
 
 Examples that run as they are: `examples/python/` (each is also a test, see 10.11).
@@ -61,11 +61,14 @@ Then make the package visible to Python, in one of two ways:
 export PYTHONPATH=~/asynch/python
 
 # (b) or install it in a virtual environment (Ubuntu 24.04 does not allow pip outside one)
-sudo apt-get install -y python3-venv
+sudo apt-get install -y python3-venv python3-setuptools python3-wheel
 python3 -m venv --system-site-packages ~/asynch-venv      # --system-site-packages: reuse numpy/h5py of apt
-~/asynch-venv/bin/pip install ~/asynch/python
+~/asynch-venv/bin/pip install --no-build-isolation ~/asynch/python
 source ~/asynch-venv/bin/activate                          # every new terminal
 ```
+
+`--no-build-isolation` makes pip use the `setuptools` and `wheel` installed by apt instead of downloading them (so it
+also works offline). Option (b) also installs the command `asynch-py`, the same as `python3 -m asynch`.
 
 Check:
 
@@ -331,13 +334,16 @@ travels down. The 2015 reference results show the same.)
 |---|---|
 | `asynch.model.Model` | see 10.7; `c_source()` shows the generated C, `compile()` compiles it |
 | `asynch.config` | `GlobalConfig.read/parse/write/text`, `Forcing`, `Output`, `PeakOutput`, `Snapshot`, `Selection`, `FileRef` |
-| `asynch.io` | `read_hydrographs`, `read_dat`, `read_csv`, `read_h5_hydrographs`, `read_pea`, `read_snapshot`, `read_rec`, `read_h5_snapshot`, `read_rvr`, `read_prm`; `write_rvr`, `write_prm`, `write_uini`, `write_ini`, `write_rec`, `write_str`, `write_ustr`, `write_mon`, `write_sav` |
+| `asynch.io` | `read_hydrographs`, `read_dat`, `read_csv`, `read_h5_hydrographs`, `read_pea`, `read_snapshot`, `read_rec`, `read_h5_snapshot`, `read_rvr`, `read_prm`; `write_rvr`, `write_prm`, `write_uini`, `write_ini`, `write_rec`, `write_str`, `write_ustr`, `write_mon`, `write_sav`, `write_binary_forcing` (flags 2 and 6), `write_irregular_binary_forcing` (flag 5) |
 | `asynch._lib` | the raw C functions (`asynch._lib.lib().Asynch_...`), for what the classes do not cover |
 
 **Every C function is reachable.** All functions of `src/asynch_interface.h` and `src/asynch_api.h` are declared in
 `asynch/_lib.py`, except those that need C structures, listed with the reason in `asynch._lib.NOT_BOUND`
-(e.g. `Asynch_Custom_Partitioning`, which works on the internal `Link` structure). Custom *time steppers* and dam
-models are only available from C.
+(e.g. `Asynch_Custom_Partitioning`, which works on the internal `Link` structure).
+
+What a `Model` defined in Python cannot do (the built-in models that use these features run normally through
+`Simulation`): dams and reservoirs, algebraic states, discontinuity states, and time steppers other than the
+explicit Runge-Kutta one. Data assimilation is a separate C program (`assim`, built only when PETSc is found).
 
 ## 10.11 How it works, and how it is tested
 

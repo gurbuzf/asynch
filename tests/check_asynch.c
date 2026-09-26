@@ -21,6 +21,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include <check.h>
 #include <mpi.h>
@@ -415,6 +417,80 @@ START_TEST(test_model_without_equations)
 }
 END_TEST
 
+
+// Every usable model evaluated once at a generic point: parameters and global parameters with distinct values
+// (so that no difference of two of them is 0), states = 0.1, two upstream links with states 0.1, forcings = 1. The derivatives must be
+// finite numbers. Each model runs in a child process, so that a crash is reported as a failure of that model.
+static int evaluate_model(unsigned short uid)
+{
+    GlobalVars g;
+    memset(&g, 0, sizeof(g));
+    g.model_uid = uid;
+    g.num_global_params = 64;
+    SetParamSizes(&g, NULL);
+
+    double gp[64], params[128], y[64], yp[2 * 64], forcing[16], ans[64];
+    for (unsigned int i = 0; i < 64; i++) gp[i] = 0.3 + 0.1 * i;      // distinct: differences of parameters are not 0
+    for (unsigned int i = 0; i < 128; i++) params[i] = 0.2 + 0.037 * i;  // distinct, and never 1 (lambda_1 = 1 divides by 0)
+    for (unsigned int i = 0; i < 16; i++) forcing[i] = 1.0;
+
+    Link link;
+    memset(&link, 0, sizeof(link));
+    link.ID = 1;
+    link.num_params = g.num_params;
+    link.params = params;
+    InitRoutines(&link, uid, 0, 0, NULL);
+    if (uid == 257)
+        params[3] = 3.0;                        // model 257: parameter 3 is a stream order, 1 to 10
+    ConvertParams(params, uid, NULL);
+    Precalculations(&link, gp, g.num_global_params, params, g.num_disk_params, g.num_params, 0, uid, NULL);
+
+    unsigned int dim = link.dim;
+    for (unsigned int i = 0; i < dim; i++) y[i] = 0.1;
+    for (unsigned int i = 0; i < 2 * 64; i++) yp[i] = 0.1;
+    // the discontinuity state, as the solver gets it (-1 = no dam for the dam models)
+    int state = ReadInitData(gp, g.num_global_params, params, g.num_params, NULL, 0, y, dim, uid, link.diff_start,
+        link.no_ini_start, NULL, NULL);
+    if (link.check_state)
+        state = link.check_state(y, dim, gp, g.num_global_params, params, g.num_params, NULL, false, NULL);
+    if (link.algebraic)
+        link.algebraic(y, dim, gp, params, NULL, state, NULL, y);
+    for (unsigned int i = 0; i < 64; i++) ans[i] = 0.0;
+    link.differential(0.0, y, dim, yp, 2, dim, gp, params, forcing, NULL, state, NULL, ans);
+    for (unsigned int i = link.diff_start; i < dim; i++)
+        if (!isfinite(ans[i]))
+            return 2;
+    return 0;
+}
+
+START_TEST(test_model_equations_finite)
+{
+    problems[0] = '\0';
+    for (unsigned int k = 0; k < sizeof(model_uids) / sizeof(model_uids[0]); k++)
+    {
+        unsigned short uid = model_uids[k];
+        if (is_unusable(uid))
+            continue;
+        fflush(stdout);
+        pid_t pid = fork();
+        if (pid == 0)
+        {
+            quiet();
+            exit(evaluate_model(uid));          // exit, not _exit: coverage builds write their counters at exit
+        }
+        int status = 0;
+        waitpid(pid, &status, 0);
+        if (WIFSIGNALED(status))
+            problem("crashed (signal %u)%.0u", uid, WTERMSIG(status), 0);
+        else if (WEXITSTATUS(status) == 2)
+            problem("a derivative is not a finite number%.0u%.0u", uid, 0, 0);
+        else if (WEXITSTATUS(status) != 0)
+            problem("exit status %u%.0u", uid, WEXITSTATUS(status), 0);
+    }
+    ck_assert_msg(problems[0] == '\0', "model equations:%s", problems);
+}
+END_TEST
+
 // ---------------------------------------------------------------------------------------------------
 // equations
 // ---------------------------------------------------------------------------------------------------
@@ -548,6 +624,8 @@ Suite *asynch_suite(void)
     tcase_add_test(tc, test_model_sizes);
     tcase_add_test(tc, test_model_routines);
     tcase_add_test(tc, test_model_without_equations);
+    tcase_add_test(tc, test_model_equations_finite);
+    tcase_set_timeout(tc, 120);
     suite_add_tcase(s, tc);
 
     tc = tcase_create("equations");

@@ -68,10 +68,13 @@ int Create_Rain_Data_Par(
     if (my_sys[0]->last_t > ceil_time * 0.1)
         printf("[%i]: Warning: integrator time is extremely large (about %e). Loss of precision may occur.\n", my_rank, my_sys[0]->last_t);
 
+    //Room for the values of the files, the zeros after the last file (up to max_files) and the ceiling term.
+    //Until 2026 only numfiles + 1 points were allocated, and a last pass with fewer files wrote past them (B-25).
+    unsigned int num_points = ((numfiles > max_files) ? numfiles : max_files) + 1;
     for (i = 0; i < my_N; i++)
     {
-        my_sys[i]->my->forcing_data[forcing_idx].data = malloc((numfiles + 1) * sizeof(DataPoint));
-        my_sys[i]->my->forcing_data[forcing_idx].num_points = numfiles + 1;
+        my_sys[i]->my->forcing_data[forcing_idx].data = malloc(num_points * sizeof(DataPoint));
+        my_sys[i]->my->forcing_data[forcing_idx].num_points = num_points;
     }
 
     //Read through the files.
@@ -82,7 +85,14 @@ int Create_Rain_Data_Par(
         //sprintf(filename,"%srain%i",strfilename,first+k);
         //sprintf(filename,"%sfile-%i",strfilename,first+k);
         stormdata = fopen(filename, "r");
-        if (stormdata == NULL)	printf("[%i]: Error opening file %s\n", my_rank, filename);
+        if (stormdata == NULL)
+        {
+            //It used to go on and read from the missing file, which crashed (B-25)
+            printf("[%i]: Error: cannot open the forcing file %s (the global file asks for files %u to %u).\n",
+                my_rank, filename, first, last);
+            fflush(stdout);                 //MPI_Abort does not flush the output
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
 
         for (i = 0; i < N; i++)
         {
@@ -122,7 +132,9 @@ int Create_Rain_Data_Par(
         curr_idx = my_sys[i]->location;
         for (j = numfiles; j < max_files; j++)
         {
-            sys[curr_idx].my->forcing_data[forcing_idx].data[j].time = sys[curr_idx].my->forcing_data[forcing_idx].data[j - 1].time + .0001;
+            //The last file applies for one full time step (increment), then the value is 0 (documented behaviour);
+            //until 2026 it applied for 0.0001 min only, unless the file after the range existed (B-25)
+            sys[curr_idx].my->forcing_data[forcing_idx].data[j].time = sys[curr_idx].my->forcing_data[forcing_idx].data[j - 1].time + ((j == numfiles) ? increment : .0001);
             sys[curr_idx].my->forcing_data[forcing_idx].data[j].value = 0.0;
         }
     }
@@ -471,11 +483,12 @@ int Create_Rain_Data_GZ(
     if (my_sys[0]->last_t > ceil_time*0.1)
         printf("[%i]: Warning: integrator time is extremely large (about %e). Loss of precision may occur.\n", my_rank, my_sys[0]->last_t);
 
-    //Check that space for rain data has been allocated.
+    //As in Create_Rain_Data_Par: room for the files, the zeros after the last file and the ceiling term (B-25)
+    unsigned int num_points = ((numfiles > max_files) ? numfiles : max_files) + 1;
     for (i = 0; i < my_N; i++)
     {
-        my_sys[i]->my->forcing_data[forcing_idx].data = malloc((numfiles + 1) * sizeof(DataPoint));
-        my_sys[i]->my->forcing_data[forcing_idx].num_points = numfiles + 1;
+        my_sys[i]->my->forcing_data[forcing_idx].data = malloc(num_points * sizeof(DataPoint));
+        my_sys[i]->my->forcing_data[forcing_idx].num_points = num_points;
     }
 
     //Read through the files.
@@ -570,7 +583,9 @@ int Create_Rain_Data_GZ(
         curr_idx = my_sys[i]->location;
         for (j = numfiles; j < max_files; j++)
         {
-            sys[curr_idx].my->forcing_data[forcing_idx].data[j].time = sys[curr_idx].my->forcing_data[forcing_idx].data[j - 1].time + .0001;
+            //The last file applies for one full time step (increment), then the value is 0 (documented behaviour);
+            //until 2026 it applied for 0.0001 min only, unless the file after the range existed (B-25)
+            sys[curr_idx].my->forcing_data[forcing_idx].data[j].time = sys[curr_idx].my->forcing_data[forcing_idx].data[j - 1].time + ((j == numfiles) ? increment : .0001);
             sys[curr_idx].my->forcing_data[forcing_idx].data[j].value = 0.0;
         }
     }

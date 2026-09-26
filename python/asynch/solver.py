@@ -159,6 +159,14 @@ class Simulation:
         for i, f in enumerate(c.forcings):
             if f.flag in (1, 4, 7) and not os.path.isfile(f.path):
                 missing.append("forcing %d file %s" % (i, f.path))
+            elif f.flag in (2, 6) and f.first is not None and f.last is not None:
+                # one file per index, first to last (C stops every process if one is missing)
+                ext = ".gz" if f.flag == 6 else ""
+                absent = [n for n in range(int(f.first), int(f.last) + 1)
+                          if not os.path.isfile("%s%d%s" % (f.path, n, ext))]
+                if absent:
+                    missing.append("forcing %d files %s<index>%s for index %s" % (
+                        i, f.path, ext, ", ".join(map(str, absent[:5])) + (", ..." if len(absent) > 5 else "")))
         for sel, what in ((c.hydrograph_links, "hydrograph links"), (c.peak_links, "peak links")):
             if sel.flag == 1 and not os.path.isfile(sel.path):
                 missing.append("%s file %s" % (what, sel.path))

@@ -103,13 +103,15 @@ its model built entirely from Python.
 
 `make check` (in the build folder) runs:
 
-* 22 C unit tests (`tests/check_asynch.c`): the coefficient tables of the numerical methods, the setup of every
-  built-in model, sorting and lookups, argument checks;
-* 62 tests of the Python package (`tests/python`): runs identical to the `asynch` program byte for byte, models written
-  in Python identical to the built-in ones, exact solutions, 70 000-link networks, MPI;
+* 23 C unit tests (`tests/check_asynch.c`): the coefficient tables of the numerical methods, the setup and equations of
+  every built-in model, sorting and lookups, argument checks;
+* 68 tests of the Python package (`tests/python`): runs identical to the `asynch` program byte for byte, models written
+  in Python identical to the built-in ones, exact solutions, 52 built-in models integrating a short simulation, rain in
+  four file formats, 70 000-link networks, MPI;
 * every example, compared with the reference results shipped with ASYNCH (`tests/regression/run_examples.py`).
 
-How results are compared, and how to compare a change with the original code: [chapter 9](docs/guide/09_reproducibility.md).
+Together they run 66.5 % of the lines of the C code (`tests/coverage_report.py`). How results are compared, and how to
+compare a change with the original code: [chapter 9](docs/guide/09_reproducibility.md).
 
 ## Documentation
 

@@ -99,8 +99,8 @@ make check
 
 This runs three sets of tests (chapter 9) and takes about a minute:
 
-* `check_asynch`: 22 C unit tests (the solver's coefficient tables, every built-in model's setup, ...);
-* `run_python_tests.sh`: 62 tests of the Python package (chapter 10), with the library just built;
+* `check_asynch`: 23 C unit tests (the solver's coefficient tables, every built-in model's setup, ...);
+* `run_python_tests.sh`: 68 tests of the Python package (chapter 10), with the library just built;
 * `run_regression.sh`: every example, compared with the reference results shipped with the original ASYNCH.
 
 *You should see* `# PASS:  3` and `# FAIL:  0` at the end. The details are in `tests/*.log`; for example

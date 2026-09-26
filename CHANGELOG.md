@@ -8,6 +8,32 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Tests for every model and every rain file format; fix B-25 (binary rain files)
+
+*Results:* unchanged for every example (bit-identical to the previous commit with 1 process; 1 and 2 processes pass;
+sanitizer build clean). Runs with binary rain files (flags 2 and 6) change: see B-25.
+
+#### Added
+- `tests/check_asynch.c`: every built-in model's equations evaluated once, each in a child process (a crash is reported
+  as that model's failure) - 23 unit tests.
+- `tests/python/test_all_models.py`: 52 built-in models integrate one hour on a 3-link network (5 more need realistic
+  parameters, listed with the reason). Also clean with AddressSanitizer and UBSan.
+- `tests/python/test_forcings.py`: the same rain as `.str`, binary, gzipped binary and irregular binary files gives
+  identical results; a missing binary file is reported by the Python package.
+- `asynch.io.write_binary_forcing`, `write_irregular_binary_forcing`; the Python package checks that the binary rain
+  files of the declared range exist.
+- `tests/coverage_report.py`: line coverage from a `--coverage` build (66.5 % with `make check`).
+
+#### Fixed
+- **B-25** (`src/forcings.c`, `src/forcings_io.c`): binary rain files (flags 2 and 6) - a file past the declared range
+  was read (a crash if absent), the last file applied for 0.0001 min instead of one time step, a last pass with fewer
+  files than the chunk size wrote past its array, and a missing file was read through a NULL pointer. Now files
+  `first` to `last` are read, the last applies for a full time step, then 0, and a missing file stops with its name.
+- `src/models/definitions.c`: the check on the stream order of model 257 accepts 1 to 10 (was: below 10, and 0 passed).
+- `examples/python/sensitivity.py`, `run_example.py`: print once with MPI.
+- `docs/guide/10_python.md`: the virtual environment instructions work offline (`python3-setuptools python3-wheel`,
+  `--no-build-isolation`); tested in the Docker image as a normal user.
+
 ### Tests: C unit tests, Python tests and examples in `make check`; fixes B-22 to B-24
 
 *Results:* unchanged for every example (bit-identical to the previous commit with 1 process; 1 and 2 processes

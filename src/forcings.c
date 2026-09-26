@@ -150,7 +150,9 @@ double NextForcingBinaryFiles(Link* sys, unsigned int N, Link **my_sys, unsigned
     else
         maxtime = min(globals->maxtime, (iteration + 1)*forcing->file_time*forcing->increment);
     
-    int maxfileindex = (int)min((double)forcing->first_file + (iteration + 1)*forcing->increment, (double)(forcing->last_file + 1));
+    //Index of the last file read in this pass (inclusive): the first file of the next pass, which gives the value at
+    //the end of this pass, or at most last_file. Until 2026 the cap was last_file + 1, a file past the range (B-25).
+    int maxfileindex = (int)min((double)forcing->first_file + (iteration + 1)*forcing->increment, (double)forcing->last_file);
 
     Create_Rain_Data_Par(sys, N, my_sys, my_N, globals, assignments, forcing->filename, forcing->first_file + iteration*forcing->increment, maxfileindex, iteration*forcing->file_time*forcing->increment, forcing->file_time, forcing, id_to_loc, forcing->increment + 1, forcing_idx);
 
@@ -189,7 +191,8 @@ double NextForcingGZBinaryFiles(Link* sys, unsigned int N, Link **my_sys, unsign
         maxtime = globals->maxtime;
     else
         maxtime = min(globals->maxtime, (iteration + 1)*forcing->file_time*forcing->increment);
-    int maxfileindex = (int)min((double)forcing->first_file + (iteration + 1)*forcing->increment, (double)(forcing->last_file + 1));
+    //As for flag 2: inclusive, at most last_file (B-25)
+    int maxfileindex = (int)min((double)forcing->first_file + (iteration + 1)*forcing->increment, (double)forcing->last_file);
 
     Create_Rain_Data_GZ(sys, N, my_sys, my_N, globals, assignments, forcing->filename, forcing->first_file + iteration*forcing->increment, maxfileindex, iteration*forcing->file_time*forcing->increment, forcing->file_time, forcing, id_to_loc, forcing->increment + 1, forcing_idx);
 
