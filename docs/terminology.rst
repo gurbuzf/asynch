@@ -45,6 +45,8 @@ The dependency of these clusters is one way in the sense that the equations for 
   :alt: The clusters for the example equations viewed graphically.
   :align: center
 
+  The clusters of the example equations, viewed as a tree.
+
 Links
 -----
 
@@ -58,7 +60,7 @@ The term **peakflow** is used frequently with ASYNCH. This is a hydrological ter
 Model
 -----
 
-The term **model** is used frequently in technical disciplines to refer to a (usually mathematical) procedure or computer program for obtaining a description for how a natural process works. In this documentation, a model refers to the collection of equations, **but not their solution**. The entire purpose of ASYNCH is to solve ODEs efficiently, thus producing their solution. No model created for ASYNCH should ever contain time steps. The equations (:ref:`_explicit-example`) are an example of a model.
+The term **model** is used frequently in technical disciplines to refer to a (usually mathematical) procedure or computer program for obtaining a description for how a natural process works. In this documentation, a model refers to the collection of equations, **but not their solution**. The entire purpose of ASYNCH is to solve ODEs efficiently, thus producing their solution. No model created for ASYNCH should ever contain time steps. The equations (:ref:`explicit-example`) are an example of a model.
 
 State vector
 ------------

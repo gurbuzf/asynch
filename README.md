@@ -14,7 +14,8 @@ What you can do with it:
   ([Python guide](docs/guide/10_python.md)).
 * **Use it from C** as a library (`libasynch.so`, `asynch_interface.h`, `asynch_api.h`).
 
-> **New here? Start with the [ASYNCH guide](docs/guide/README.md).** It explains in plain words what the model
+> **New here? Start with the [documentation website](https://gurbuzf.github.io/asynch/)** (or the same
+> [guide on GitHub](docs/guide/README.md)). It explains in plain words what the model
 > computes ([chapter 0](docs/guide/00_what_is_asynch.md)), how to install it and run a first simulation
 > ([chapter 1](docs/guide/01_setup.md)), how to run and change simulations ([chapter 2](docs/guide/02_running_the_model.md)),
 > then the equations, the solver, the C code, and the Python package ([chapter 10](docs/guide/10_python.md)).
@@ -62,10 +63,17 @@ mpirun -n 2 asynch test.gbl              # 11 links, model 190
 mpirun -n 4 asynch clearcreek.gbl        # Clear Creek, Iowa: 6 359 links, model 254
 ```
 
-## ASYNCH from Python
+## ASYNCH as a Python library
+
+`asynch` is a regular Python package (`import asynch`): a thin layer over the C library `libasynch.so`, which does
+all the computation, the way h5py sits on top of HDF5. Install it into a virtual environment after `make install`:
 
 ```bash
-export PYTHONPATH=~/asynch/python        # or: pip install ./python in a virtual environment
+sudo apt-get install -y python3-venv python3-setuptools python3-wheel
+python3 -m venv --system-site-packages ~/asynch-venv && source ~/asynch-venv/bin/activate
+cd build && make install-python PYTHON_FOR_ASYNCH=~/asynch-venv/bin/python    # = pip install ../python
+pip install numba mpi4py                   # optional: models in Python at C speed; MPI from your own code
+python3 -m asynch library                  # which libasynch.so the package uses
 ```
 
 ```python
@@ -80,24 +88,31 @@ with Simulation("test_2015.gbl") as sim:         # in examples/
     peak_time, peak_q = sim.peaks                # for every link, in the order of sim.link_ids
 ```
 
-A new model, written in C and compiled on the fly (or as plain Python functions, without a compiler):
+**A new model** in plain Python, compiled by Numba so that it runs at the speed of C (or write the equations as C
+code; or leave out `jit` to run without any compiler):
 
 ```python
 from asynch import Model, Simulation
 
+def equations(t, y, upstream, gp, p, forcing):   # dq/dt of one link; upstream: states of the parent links
+    inflow = upstream[:, 0].sum() + forcing[0] * p[0] * (0.001 / 3600.0)     # mm/h on m2 -> m3/s
+    return (inflow - y[0]) / gp[0],
+
 model = Model(states=["q"], global_params=["k"], params=["A_h"], forcings=["rain"],
-              param_factors={"A_h": 1e6})        # km2 -> m2 when reading the parameter file
-model.equations = """
-    double inflow = upstream_q + rain * A_h * (0.001 / 3600.0);    /* mm/h on m2 -> m3/s */
-    d_q = (inflow - q) / k;                                        /* per minute */
-"""
+              param_factors={"A_h": 1e6}, jit="numba")
+model.equations = equations
 with Simulation("my_network.gbl", model=model) as sim:
     sim.run()
 ```
 
-More in [chapter 10](docs/guide/10_python.md) and in [`examples/python/`](examples/python): a sensitivity loop, a
-custom model with its own outputs (it reproduces the built-in model 191 exactly), and a network, its input files and
-its model built entirely from Python.
+Measured on 5 000 links (model 190 rewritten each way, identical results): built-in C 0.10 s, C code 0.10 s,
+Python + Numba 0.13 s, plain Python 4.1 s.
+
+**MPI**: `mpirun -n 4 python3 my_script.py`; every process runs the script and ASYNCH shares the links (Clear Creek,
+6 359 links: 8.0 s on 1 process, 2.75 s on 4). mpi4py is optional (`Simulation(..., comm=MPI.COMM_WORLD)`).
+
+More in the [Python chapter](docs/guide/10_python.md), the
+[Python API reference](https://gurbuzf.github.io/asynch/python_api.html) and [`examples/python/`](examples/python).
 
 ## Tests
 
@@ -117,17 +132,13 @@ compare a change with the original code: [chapter 9](docs/guide/09_reproducibili
 
 | | |
 |---|---|
+| **[Documentation website](https://gurbuzf.github.io/asynch/)** | everything below in one searchable site (built from `docs/` by GitHub Actions) |
 | [docs/guide/](docs/guide/README.md) | the guide: concepts, installation, running, equations, solver, C primer, Python, fixes, reproducibility |
-| [docs/*.rst](docs/) | the reference manual: every file format, every built-in model, the C API ([online](http://asynch.readthedocs.io/), older version) |
+| [docs/*.rst](docs/) | the reference manual: every file format, every built-in model, the C API |
 | [CHANGELOG.md](CHANGELOG.md) | every change, and whether it changes numerical results |
 
-To build the reference manual locally (Doxygen and Sphinx):
-
-```bash
-pip install --user sphinx sphinx-autobuild sphinx_rtd_theme breathe recommonmark
-sudo apt-get install doxygen
-cd docs && doxygen api.dox && doxygen devel.dox && make html     # result in docs/.build/html
-```
+To build the website locally: `pip install -r docs/requirements.txt` (and `sudo apt-get install doxygen` for the C API
+pages), then `sphinx-build -b html docs docs/_build/html` and open `docs/_build/html/index.html`.
 
 ## Repository layout
 

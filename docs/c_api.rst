@@ -85,7 +85,7 @@ Once the calculations are complete, any necessary outputs are created (snapshot,
 
 Lastly, clean up routines are called. The temporary files are deleted. The asynchsolver object is also deleted from memory with a call to . Note that this routine does not need to be called if using the interface functions from a language that supports automatic garbage collection.
 
-Of course, outputting more information might be useful (timing results, command line parameter checking, results printed to screen, etc), and additional features may be needed (outputting data to multiple sources, creating peakflow data over intervals of time, etc). However, this is the basic structure needed to perform simulations. The source files *asynchdist.c* and *asynchdist.py* are essentially duplicates of the above program, but with information printed to screen.
+Of course, outputting more information might be useful (timing results, command line parameter checking, results printed to screen, etc), and additional features may be needed (outputting data to multiple sources, creating peakflow data over intervals of time, etc). However, this is the basic structure needed to perform simulations. The program ``src/asynch_cli.c`` (the ``asynch`` command) is essentially the above program, with command-line options and information printed to screen; ``Simulation.run`` of the Python package does the same calls.
 
 User Interface Routines
 -----------------------
@@ -226,3 +226,16 @@ The routines for setting custom outputs are described below.
 
 .. doxygenfunction:: Asynch_Set_Output_Int
 .. doxygenfunction:: Asynch_Set_Output_Double
+
+
+Interface for other languages (asynch_api.h)
+--------------------------------------------
+
+``asynch_api.h`` complements the routines above for programs in other languages (the Python package uses it) and for
+tests. It exchanges only numbers, arrays and opaque pointers, never the layout of an internal structure, and designates a
+link by its *location* (0 to N-1). It also describes custom models without C structures: a model specification
+(``AsynchModelSpec``) gathers the sizes, the equation functions and the options, and ``Asynch_Install_Model`` gives it to a
+solver before the global file is read.
+
+.. doxygenfile:: asynch_api.h
+   :project: api

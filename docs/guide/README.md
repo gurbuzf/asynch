@@ -1,6 +1,7 @@
 # ASYNCH guide: learn, run, understand
 
-This guide is for people who know hydrology but not necessarily programming. It takes you from
+This guide is also part of the documentation website, <https://gurbuzf.github.io/asynch/>, with search and the
+reference manual. It is for people who know hydrology but not necessarily programming. It takes you from
 "what is this model?" to installing it, running it, reading its equations and its C code. It
 complements the original reference manual in `docs/*.rst` (every file format, every model).
 
@@ -13,7 +14,7 @@ complements the original reference manual in `docs/*.rst` (every file format, ev
 | 0 | [What ASYNCH is](00_what_is_asynch.md) | explain what the model computes, what a run is, and the vocabulary |
 | 1 | [Setting up](01_setup.md) | install everything on Ubuntu/WSL or with Docker, and run a first simulation |
 | 2 | [Running the model](02_running_the_model.md) | understand every input, run the examples, change a parameter, read and plot results |
-| 10 | [Using ASYNCH from Python](10_python.md) | run and control simulations from Python, write global files, **create new models** |
+| 10 | [Using ASYNCH from Python](10_python.md) | run and control simulations from Python, write global files, **create new models** (at C speed with Numba), use MPI |
 
 **Understand the science and the code**
 

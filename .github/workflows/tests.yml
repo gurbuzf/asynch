@@ -1,0 +1,36 @@
+# Builds ASYNCH and runs all its tests (C unit tests, Python package tests, examples against the reference results).
+name: Tests
+
+on:
+  push:
+    branches: [modernization]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the dependencies (as in docs/guide/01_setup.md)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc gfortran make autoconf automake libtool pkg-config \
+              openmpi-bin libopenmpi-dev libhdf5-dev hdf5-tools libpq-dev zlib1g-dev check \
+              python3 python3-numpy python3-h5py
+      - name: Build
+        run: |
+          autoreconf --install
+          mkdir -p build && cd build
+          ../configure CFLAGS="-O3 -DNDEBUG -Wno-format-security"
+          make -j"$(nproc)"
+      - name: make check
+        env:
+          OMPI_MCA_rmaps_base_oversubscribe: "1"
+        run: cd build && make check
+      - name: Test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: build/tests/*.log

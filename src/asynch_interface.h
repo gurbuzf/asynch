@@ -29,7 +29,7 @@
 /// \param y The current state vector at time *t* for the link.
 /// \param num_dof: Number of degree of freedom.
 /// \return Returns the data to be written as output.
-typedef int (OutputIntCallback)(unsigned int id, double t, double *y, unsigned int num_dof);
+typedef int OutputIntCallback(unsigned int id, double t, double *y, unsigned int num_dof);
 
 /// 
 ///
@@ -38,7 +38,7 @@ typedef int (OutputIntCallback)(unsigned int id, double t, double *y, unsigned i
 /// \param y The current state vector at time *t* for the link.
 /// \param num_dof: Number of degree of freedom.
 /// \return Returns the data to be written as output.
-typedef double (OutputDoubleCallback)(unsigned int id, double t, double *y, unsigned int num_dof);
+typedef double OutputDoubleCallback(unsigned int id, double t, double *y, unsigned int num_dof);
 
 /// 
 ///
@@ -47,7 +47,7 @@ typedef double (OutputDoubleCallback)(unsigned int id, double t, double *y, unsi
 /// \param y The current state vector at time *t* for the link.
 /// \param num_dof: Number of degree of freedom.
 /// \return Returns the data to be written as output.
-typedef float (OutputFloatCallback)(unsigned int id, double t, double *y, unsigned int num_dof);
+typedef float OutputFloatCallback(unsigned int id, double t, double *y, unsigned int num_dof);
 
 
 /// Output formating callback 
@@ -58,7 +58,7 @@ typedef union OutputCallback {
 } OutputCallback;
 
 
-typedef void (PeakflowOutputCallback)(unsigned int ID, double peak_time, double *peak_value, double *params, double *global_params, double conversion, unsigned int area_idx, void* user, char* buffer);
+typedef void PeakflowOutputCallback(unsigned int ID, double peak_time, double *peak_value, double *params, double *global_params, double conversion, unsigned int area_idx, void* user, char* buffer);
 
 //Constructor / Destructor related routings
 

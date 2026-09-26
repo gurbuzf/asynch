@@ -439,12 +439,12 @@ struct Link
 };
 
 
-typedef unsigned int (ForcingGetPassesCallback)(
+typedef unsigned int ForcingGetPassesCallback(
     Forcing*,
     double maxtime,
     ConnData* db_connections);
 
-typedef double (ForcingGetNextCallback)(
+typedef double ForcingGetNextCallback(
     Link *sys, unsigned int N,
     Link **my_sys, unsigned int my_N,
     int* assignments,

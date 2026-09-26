@@ -24,95 +24,38 @@ When contributing code, then please follow the standard Contribution Guidelines 
 Keeping the documentation updated
 ---------------------------------
 
-Whenever an update in the code adds, changes or removes elements that affect the user experience (i.e.: changes in input forcing formats, existing hlm models, global file format, etc ), it is expected from the developer to perform the respective updates in the *Read the Docs* documentation.
-
-Here are some tips and explanations regarding the documentation process.
+When a change affects users (input formats, models, global file options, the Python package, ...), update the
+documentation in the same commit, and record the change in ``CHANGELOG.md``.
 
 Documentation structure
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-The documentation publicly available at ``http://asynch.readthedocs.io`` is hosted by `Read the Docs <https://readthedocs.org/>`__ in a project that is maintained by the same maintainers of Asynch.
+The documentation lives in ``docs/`` and is built with `Sphinx <https://www.sphinx-doc.org>`__:
 
-This documentation is written in ``reStructuredText`` formatting language (*.rst files) and uses Sphinx with Read the Docs libraries for compilation purposes. All the files are relevant for the documentation are located in the ``doc/`` folder.
+* ``docs/guide/*.md``: the guide (Markdown, read by MyST; it also reads well on GitHub);
+* ``docs/*.rst``: the reference manual (reStructuredText);
+* the Python API pages are generated from the docstrings of ``python/asynch`` (autodoc), and the C API pages from the
+  comments of ``src/asynch_interface.h``, ``src/asynch_api.h`` and ``src/models/model.h`` (Doxygen and breathe);
+* ``docs/conf.py`` is the configuration; ``docs/index.md`` the home page and table of contents.
 
 Working locally
 ~~~~~~~~~~~~~~~
 
-A desktop environment can be set up to compile the documentation locally. This approach is good for debugging the result before publishing it publicly.
-
-For setting up the environment, you will have to install Read the Docs on your machine in a separated virtual Python environment.
-
-Ensure **git 1.5** or higher, **Python 3.6** or higher, and both Python **virtualenv** and **virtualenvwrapper** are installed. If using Windows, ensure Python **virtualenvwrapper-win** and `cmder <http://cmder.net/>`__ are also installed (use **cmder** to perform the following command operations).
-
-Create a virtual environment for compiling Read the Docs documentations:
-  
 .. code-block:: sh
 
-   mkvirtualenv readthedocs
+   python3 -m venv ~/docs-venv
+   ~/docs-venv/bin/pip install -r docs/requirements.txt
+   sudo apt-get install doxygen                 # optional: without it the C API pages show a note
+   ~/docs-venv/bin/sphinx-build -b html docs docs/_build/html
 
-If your command session does not activate the newly created virtual environment automatically, activate it:
+Open ``docs/_build/html/index.html`` in a browser.
 
-.. code-block:: sh
-
-   workon readthedocs
-   
-Navigate to this virtualenv directory:
-
-.. code-block:: sh
-
-   cd [USER_HOME]\Env\readthedocs\
-
-Checkout Read the Docs into a new folder and enter there:
-
-.. code-block:: sh
-
-   mkdir checkouts
-   cd checkouts
-   git clone https://github.com/rtfd/readthedocs.org.git
-   cd readthedocs.org\
-
-Install all requirements for Read The Docs:
-  
-.. code-block:: sh
-
-   pip install -r requirements.txt
-  
-or:
-
-.. code-block:: sh
-
-   python -m pip install -r requirements.txt
-   
-Navigate to the ``docs`` directory of the local clone of Asynch repository:
-
-.. code-block:: sh
-
-   cd [ASYNCH]\docs\
-   
-Perform the changes you want in the ``.srt`` files within this folder. After that, compile using the command:
-
-.. code-block:: sh
-
-   make html
-   
-.. note::
-
-   1-) When compiling, ensure you are still working on the readthedocs virtual Python environment;
-   
-   2-) When compiling, some Python packages may be required. Be prepared to perform pip installs;
-   
-   3-) The command 'make' also works on Windows when runned within cmder.
-   
-Access the results opening the file ``[ASYNCH]/docs/.build/html/index.html`` with a web browser.
-
-This mini tutorial was adapted from `here <http://docs.readthedocs.io/en/latest/install.html>`__.
-     
 Publishing
 ~~~~~~~~~~
 
-Everytime a git ``push`` or ``pull request`` is performed into the ``master`` or ``develop`` branches in the Git Hub repository, or on a branch that creates a new ``tag``, the Read the Docs server reads, compiles and publishes the documentation online.
+The GitHub Actions workflow ``.github/workflows/docs.yml`` builds the documentation on every push and publishes it
+with GitHub Pages. It needs, once, *Settings > Pages > Source: GitHub Actions* in the repository.
 
-This connection between Git Hub and Read the Docs is established through the so called *webhooks*. The official Asynch Git Hub account has a webhook that triggers the compiling steps from the Read the Docs server.
 
 Managing releases
 -----------------
@@ -167,7 +110,7 @@ That should generate a ``release-x.y.z.tar.gz`` that needs to be tested.
 Test the tarball
 ~~~~~~~~~~~~~~~~
 
-In a new empty folder, follow  the instructions in :ref:`Installing the package`:
+In a new empty folder, follow  the instructions in :doc:`guide/01_setup`:
 
 .. code-block:: sh
 

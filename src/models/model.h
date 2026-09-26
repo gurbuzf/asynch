@@ -33,7 +33,7 @@
 /// \param state The current discontinuity state of the states.
 /// \param user A pointer to user specified data.
 /// \param ans The vector of function evaluations. Each entry of ans from diff_start (and including diff_start) should be set by this routine.
-typedef void (DifferentialFunc) (
+typedef void DifferentialFunc(
     double t,
     const double * const y_i, unsigned int num_dof,
     const double * const y_p, unsigned short num_parents, unsigned int max_num_dof,
@@ -54,7 +54,7 @@ typedef void (DifferentialFunc) (
 /// \param state The current discontinuity state of the states.
 /// \param user A pointer to user specified data.
 /// \param ans The vector of function evaluations.Each entry of *ans* from 0 to *diff\_start* (exclusive)should be set by this routine.
-typedef void (AlgebraicFunc)(
+typedef void AlgebraicFunc(
     const double * const y_i, unsigned int num_dof,
     const double * const global_params,
     const double * const params,
@@ -64,7 +64,7 @@ typedef void (AlgebraicFunc)(
     double *ans);
 
 /// Jacobian of right-hand side function
-typedef void (JacobianFunc)(
+typedef void JacobianFunc(
     double t,
     const double * const y_i, unsigned int num_dof,
     const double * const y_p, unsigned short num_parents, unsigned int max_num_dof,
@@ -74,7 +74,7 @@ typedef void (JacobianFunc)(
     double *ans);
 
 /// RK solver
-typedef int (RKSolverFunc)(
+typedef int RKSolverFunc(
     Link* link,
     GlobalVars* globals,
     int* assignments,
@@ -91,7 +91,7 @@ typedef int (RKSolverFunc)(
 /// \param params The vector of parameters for this link.
 /// \param qvs The table of discharge vs storage relationships.This is only available if a dam is present at this link, and only if *dam\_flag* is 2.
 /// \param dam The dam flag for this link.If 1, a dam is present at this link.If 0, no dam is present.
-typedef int (CheckStateFunc)(
+typedef int CheckStateFunc(
     double *y, unsigned int dim,
     const double * const global_params, unsigned int num_global_params,
     const double * const params, unsigned int num_params,    
@@ -104,20 +104,20 @@ typedef int (CheckStateFunc)(
 /// \param y The vector of current states.Only the states with index greater than or equal to *diff\_start* are available for use.
 /// \param params The vector of parameters for this link.
 /// \param global_params The vector of parameters constant in both space and time.
-typedef void (CheckConsistencyFunc)(
+typedef void CheckConsistencyFunc(
     double *y, unsigned int dim,
     const double * const global_params, unsigned int num_global_params,
     const double * const params, unsigned int num_params,    
     void *user);
 
 // Models function signatures
-typedef void (SetParamSizesFunc)(GlobalVars* globals, void* user);
-typedef void (ConvertFunc)(double *params, unsigned int type, void* user);
-typedef void (RoutinesFunc)(Link*, unsigned int, unsigned int, unsigned short has_dam, void *user);
+typedef void SetParamSizesFunc(GlobalVars* globals, void* user);
+typedef void ConvertFunc(double *params, unsigned int type, void* user);
+typedef void RoutinesFunc(Link*, unsigned int, unsigned int, unsigned short has_dam, void *user);
 //typedef void (PrecalculationsFunc)(Link* link_i, double *global_params, double *params, unsigned int disk_params, unsigned int params_size, unsigned short int dam, unsigned int type, void *user);
-typedef void (PrecalculationsFunc)(Link* link_i, const double * const gparams, double * const lparams, unsigned short has_dam, void *user);
+typedef void PrecalculationsFunc(Link* link_i, const double * const gparams, double * const lparams, unsigned short has_dam, void *user);
 
-typedef int (InitializeEqsFunc)(
+typedef int InitializeEqsFunc(
     const double * const global_params, unsigned int num_global_params,
     const double * const params, unsigned int num_params,
     double *y, unsigned int dim,

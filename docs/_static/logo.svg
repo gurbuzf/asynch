@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ASYNCH">
+  <title>ASYNCH</title>
+  <g fill="none" stroke="#2a78d6" stroke-linecap="round" stroke-width="4">
+    <path d="M32 58 V36"/>
+    <path d="M32 36 L16 22 L10 8"/>
+    <path d="M16 22 L24 8"/>
+    <path d="M32 36 L46 24 L40 8"/>
+    <path d="M46 24 L56 12"/>
+  </g>
+  <g fill="#1baf7a"><circle cx="32" cy="58" r="4"/></g>
+</svg>

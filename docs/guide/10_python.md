@@ -27,7 +27,7 @@ and is replaced by this package.
 | Python | What it does |
 |---|---|
 | `Simulation` | runs a global file like the `asynch` program (the output files are **identical to the last byte**), and lets you advance step by step, read/change states and parameters, and add outputs |
-| `Model` | a new model: its equations written in **C code** (compiled once, as fast as a built-in model) or as **Python functions** (no compiler, about 140 times slower) |
+| `Model` | a new model: its equations written in **C code** (compiled once, as fast as a built-in model), as **Python functions compiled by Numba** (as fast), or as plain **Python functions** (no compiler, about 40 times slower) |
 | `GlobalConfig` | reads, changes and writes global files (`.gbl`), so a setup can be built in a script |
 | `asynch.io` | reads the output files (`.dat`, `.csv`, `.h5`, `.pea`, `.rec`) and writes the input files (`.rvr`, `.prm`, `.uini`, `.str`, `.ustr`, `.mon`, `.sav`, binary rain files) |
 | `python3 -m asynch` | `run file.gbl`, `info file.gbl`, `library` from the command line |
@@ -36,9 +36,26 @@ Examples that run as they are: `examples/python/` (each is also a test, see 10.1
 
 ## 10.2 Installation
 
-The package needs the **shared library** `libasynch.so`, which the normal build makes (chapter 1). Python 3.8 or
-newer and NumPy are required; h5py to read `.h5` files; a C compiler to write models in C (it is already installed
-if you built ASYNCH).
+### Is it a library?
+
+Yes: `asynch` is an ordinary Python package (a folder with `__init__.py` and a `pyproject.toml`), installed with pip
+and used with `import asynch`, like NumPy or h5py. It has two parts, as h5py has (h5py is the Python face of the C
+library HDF5):
+
+| Part | What it is | Installed by |
+|---|---|---|
+| the C library `libasynch.so` | the solver, the models, the file readers: all the computation | `make install` (with the rest of ASYNCH) |
+| the Python package `asynch` | a thin layer that calls the library (with `ctypes`, part of Python) | `pip install` or `make install-python` |
+
+Keeping the computation in the C library means one solver for the `asynch` program, C programs and Python, so a run
+from Python gives exactly the numbers of the program (tested: identical files). The package finds the library by itself
+(see *Check* below).
+
+### Install
+
+Python 3.8 or newer and NumPy are required; optional: h5py (to read `.h5` files), Numba (models written in Python at
+C speed, 10.7), mpi4py (only to use MPI from your own Python code, 10.9). A C compiler is needed for models written
+in C; it is already installed if you built ASYNCH.
 
 **With Docker** (chapter 1, option B) nothing else is needed: the image has the package ready.
 
@@ -52,33 +69,31 @@ python3 python/run_example.py            # inside the container, in /asynch/exam
 ```bash
 cd ~/asynch/build
 sudo make install && sudo ldconfig       # asynch -> /usr/local/bin, libasynch.so -> /usr/local/lib
-```
 
-Then make the package visible to Python, in one of two ways:
-
-```bash
-# (a) simplest: tell Python where the package is (add this line to ~/.bashrc to keep it)
-export PYTHONPATH=~/asynch/python
-
-# (b) or install it in a virtual environment (Ubuntu 24.04 does not allow pip outside one)
+# The package: Ubuntu 24.04 installs pip packages only in a virtual environment
 sudo apt-get install -y python3-venv python3-setuptools python3-wheel
-python3 -m venv --system-site-packages ~/asynch-venv      # --system-site-packages: reuse numpy/h5py of apt
-~/asynch-venv/bin/pip install --no-build-isolation ~/asynch/python
-source ~/asynch-venv/bin/activate                          # every new terminal
+python3 -m venv --system-site-packages ~/asynch-venv     # --system-site-packages: reuse numpy/h5py of apt
+make install-python PYTHON_FOR_ASYNCH=~/asynch-venv/bin/python
+source ~/asynch-venv/bin/activate                         # in every new terminal (or add it to ~/.bashrc)
+pip install numba                                         # optional, for jit="numba"
 ```
 
-`--no-build-isolation` makes pip use the `setuptools` and `wheel` installed by apt instead of downloading them (so it
-also works offline). Option (b) also installs the command `asynch-py`, the same as `python3 -m asynch`.
+`make install-python` runs `pip install --no-build-isolation ~/asynch/python` with that Python: `pip install
+~/asynch/python` does the same (without `--no-build-isolation`, pip downloads `setuptools` first). The package is
+then in the environment's `site-packages`, and the command `asynch-py` is available (the same as `python3 -m asynch`).
+Extras: `pip install "~/asynch/python[all]"` also installs h5py, numba and mpi4py.
 
-Check:
+*Without installing*, for a quick try: `export PYTHONPATH=~/asynch/python`.
+
+### Check
 
 ```bash
 python3 -m asynch library
 ```
 
-*You should see* the path of the library, e.g. `/usr/local/lib/libasynch.so`. Without `make install`, the package also
-finds the library of the build folder (`~/asynch/build/src/.libs/libasynch.so`), or the one given by the environment
-variable `ASYNCH_LIBRARY`:
+*You should see* the path of the library, e.g. `/usr/local/lib/libasynch.so`. The package looks for it, in order, in the
+environment variable `ASYNCH_LIBRARY`, next to the package, in the build folder of the source tree
+(`~/asynch/build/src/.libs/`), then in the system folders. To use a particular build:
 
 ```bash
 export ASYNCH_LIBRARY=~/asynch/build/src/.libs/libasynch.so
@@ -274,8 +289,31 @@ model.equations = equations
 `consistency(y, gp, p)` changes `y` in place. If a Python function raises an exception, the simulation stops at the next
 return to Python with a `ModelError` naming it.
 
-**Speed** (measured, 5 000 links, 2 simulated hours, model 190): built-in 0.11 s, C code 0.12 s, Python functions 16 s.
-Use Python functions to try an idea on a small network, C code for real basins.
+**Python at C speed: Numba.** Add `jit="numba"` and the same Python functions are compiled by
+[Numba](https://numba.pydata.org) (`pip install numba`) into machine code with the signature ASYNCH calls; the solver
+then never goes back to Python:
+
+```python
+model = Model(states=["q"], global_params=["k"], params=["A_h"], forcings=["rain"],
+              param_factors={"A_h": 1e6}, jit="numba")
+model.equations = equations              # the function above, unchanged
+```
+
+The functions must then use what Numba supports (NumPy arrays, arithmetic, `math`, loops, `if`) and return a tuple, a
+list or an array; they are compiled when the simulation starts (about a second).
+
+**Which one?** Measured on model 190 rewritten each way, 5 000 links, 2 simulated hours, one process (the results of
+all four are identical to the last bit):
+
+| Equations | Run time | |
+|---|---|---|
+| built-in model (C) | 0.10 s | reference |
+| C code (`model.equations = "..."`) | 0.10 s | same speed; needs a C compiler |
+| Python functions, `jit="numba"` | 0.13 s | + ~1 s compilation at start; needs Numba |
+| Python functions | 4.1 s | no compiler at all; good for small networks and trying ideas |
+
+The plain Python mode was 16 s before a change of 2026-09-26: most of the time went into building NumPy views of the C
+arrays at every call, which are now cached (the remaining 4 s are the Python code of the equations itself).
 
 **Is my model right?** Two checks are built into the tests and worth repeating for your own models:
 
@@ -293,7 +331,8 @@ dictionary link -> upstream links), the parameters (`write_prm`), the initial st
 
 ## 10.9 Several processors (MPI)
 
-Start Python with `mpirun`; every process runs the same script, and ASYNCH shares the links between them:
+Yes, Python and MPI work together, with or without mpi4py. Start Python with `mpirun`: every process runs the same
+script, and ASYNCH shares the links between them.
 
 ```bash
 mpirun -n 4 python3 python/run_example.py clearcreek_2015.gbl
@@ -302,12 +341,36 @@ mpirun -n 4 python3 python/run_example.py clearcreek_2015.gbl
 (Its largest peaks are not at the outlet, 0.56 m3/s, but at links 4086-4090, 0.58 m3/s: the flood wave flattens as it
 travels down. The 2015 reference results show the same.)
 
+**What it gains** (measured on a 4-core computer; each row gives the same results):
+
+| Run | 1 process | 2 processes | 4 processes |
+|---|---|---|---|
+| Clear Creek, 6 359 links, model 254, 100 h (from Python) | 8.0 s | 4.3 s | 2.75 s (2.9x) |
+| 50 000 links, model 190 built-in, 6 h | 1.41 s | 0.98 s | 0.70 s (2.0x) |
+| same, model 190 in Python with `jit="numba"` | 2.00 s | 1.23 s | 0.88 s (2.3x) |
+| same, model 190 in plain Python | 56.6 s | 32.5 s | 20.1 s (2.8x) |
+
+The 50 000-link network is a single long main channel with side streams, which is hard to share between processes;
+real basins such as Clear Creek branch more and gain more.
+
+**Rules:**
+
 * `sim.rank` (0 .. n-1) and `sim.num_procs` tell a process who it is. Print from rank 0 only.
 * `sim.states`, `sim.peaks`, `set_states`, `run`, `advance`, `write_outputs` are **collective**: every process must
   call them, in the same order. They return the values of all links on every process.
 * `sim.state(id)` and `sim.forcing_values(id)` only work on the process that computes the link (`sim.owner(id)`).
-* With mpi4py, pass its communicator: `Simulation(gbl, comm=MPI.COMM_WORLD)`. ASYNCH itself only supports the world
-  communicator.
+* **mpi4py** is not needed, but it can be used for your own communication: pass its communicator,
+  `Simulation(gbl, comm=MPI.COMM_WORLD)` (ASYNCH itself only supports the world communicator):
+
+  ```python
+  from mpi4py import MPI
+  from asynch import Simulation
+  comm = MPI.COMM_WORLD
+  with Simulation("test_2015.gbl", comm=comm) as sim:
+      sim.advance()
+      mine = comm.allreduce(sim.num_links_local)      # your own MPI calls, alongside ASYNCH's
+  ```
+* Models written in Python (plain or Numba) work with MPI: each process evaluates the equations of its own links.
 * As with the `asynch` program, results with several processes differ from one process at the level of the solver
   tolerance (R-05, chapter 8).
 

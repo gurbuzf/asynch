@@ -127,7 +127,7 @@ typedef struct AsynchModelSpec AsynchModelSpec;
 
 /// Derived parameters of one link. params has num_params values; the first num_disk_params were read
 /// from the .prm file (after the conversion factors), the others are to be computed here.
-typedef void (SpecPrecalculationsFunc)(
+typedef void SpecPrecalculationsFunc(
     const double * const global_params, unsigned int num_global_params,
     double *params, unsigned int num_params,
     void *user);
@@ -135,7 +135,7 @@ typedef void (SpecPrecalculationsFunc)(
 /// Initial states of one link. On entry, y holds the states read from the initial-state file (the
 /// first num_read states, see Asynch_Model_Spec_Set_Num_Initial_States) and 0 for the others.
 /// Returns the discontinuity state (0 if unused).
-typedef int (SpecInitializeFunc)(
+typedef int SpecInitializeFunc(
     const double * const global_params, unsigned int num_global_params,
     const double * const params, unsigned int num_params,
     double *y, unsigned int dim,

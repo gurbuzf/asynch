@@ -5,10 +5,12 @@ A model is a set of ordinary differential equations solved at every link of the 
 describe it with names, and give the equations either
 
 * as **C code** (a string): it is compiled once into a small shared library and runs at the speed of
-  the built-in models; or
-* as **Python functions**: no compiler needed, handy to try an idea, but each evaluation goes through
-  the Python interpreter. Measured on 5 000 links, 2 simulated hours, model 190: built-in 0.11 s,
-  C code 0.12 s, Python functions 16 s (about 140 times slower). The three give identical numbers.
+  the built-in models;
+* as **Python functions**: no compiler needed, handy to try an idea;
+* as **Python functions compiled by Numba** (``jit="numba"``): the same functions, at the speed of C.
+
+Measured on 5 000 links, 2 simulated hours, model 190: built-in 0.10 s, C code 0.10 s, Numba 0.13 s (plus about
+1 s of compilation), plain Python functions 4.1 s. All four give identical numbers.
 
 Example: a linear reservoir at every link, dq/dt = (inflow - q) / k, with the rain falling on the
 hillslope of area A_h going straight into the channel::
@@ -115,7 +117,14 @@ class Model:
         converts back).
     name : str
         Used for the name of the compiled library.
+    jit : None or "numba"
+        With ``"numba"``, the model functions given as Python functions are compiled by Numba (``pip install numba``)
+        into C functions: they run at the speed of C code instead of calling the Python interpreter at every
+        evaluation. They must then use only what Numba supports (NumPy arrays, math, loops) and return a tuple, a
+        list or an array.
 
+    Notes
+    -----
     Equations are set with the attributes :attr:`equations` (required), :attr:`precalculations`,
     :attr:`initialize` and :attr:`consistency`, each either C code (str) or a Python function, and
     :attr:`support_code` for C helper functions.

@@ -2,6 +2,19 @@
 
 Newest first.
 
+## 2026-09-26: Python speed, MPI, library packaging, cleanup, documentation website (owner request)
+
+- Profiled Python models: 21 us/call, of which ~17 us building NumPy views (ctypes); user code 3 us. Cached views by
+  address (bounded cache) -> 4x faster. Added jit="numba" (numba.cfunc with the C signatures): 0.13 s vs 0.10 s
+  built-in on bench5k, bit-identical. Tests include numba when installed.
+- MPI from Python measured (4 cores): Clear Creek 8.0 -> 2.75 s; 50k fishbone 2.0-2.8x. mpi4py test added.
+- Library: make install-python target, pyproject extras; explained design (thin ctypes layer over libasynch.so).
+- Cleanup: M-01 dead code + ide/, conda/, travis, rtd, workspace, cluster scripts, LaTeX manual, tracked Makefile.in,
+  pycache; fresh copy builds and passes make check.
+- Docs site: Sphinx + furo + MyST + autodoc + breathe (Doxygen), 0 warnings; GitHub Pages workflow and tests workflow
+  (not run yet: they run on GitHub after push; Pages must be enabled by the owner: Settings > Pages > GitHub Actions).
+- Needed from owner: enable Pages; check the first Actions runs.
+
 ## 2026-09-25: link count, Python API, tests, README (owner request)
 
 - Link count above 65 535 (B-06) fixed earlier; now also covered by a Python test on a 70 000-link network.

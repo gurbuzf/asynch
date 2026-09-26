@@ -1,1 +1,8 @@
+# To build the documentation: pip install -r docs/requirements.txt ; plus Doxygen (apt-get install doxygen) for the C API
+sphinx>=7
+furo
+myst-parser
+sphinx-copybutton
+sphinx-design
 breathe
+numpy            # imported by the Python package, for its API pages

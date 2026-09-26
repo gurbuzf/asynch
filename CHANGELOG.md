@@ -8,6 +8,31 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Documentation website (Sphinx, GitHub Pages); CI with GitHub Actions
+
+*Results:* unchanged (the program is bit-identical to the previous commit).
+
+#### Added
+- One documentation site, built by Sphinx from `docs/`: the guide (Markdown, MyST), the reference manual (`.rst`), the
+  Python API generated from the package's docstrings (autodoc) and the C API generated from the header comments
+  (Doxygen and breathe, now including `asynch_api.h` and `models/model.h`). Furo theme (light and dark, phone
+  layout), full-text search, copy buttons, a home page with the main entry points. It builds without warnings.
+- `.github/workflows/docs.yml`: builds the site on every push and publishes it on GitHub Pages
+  (<https://gurbuzf.github.io/asynch/>, after *Settings > Pages > Source: GitHub Actions*).
+- `.github/workflows/tests.yml`: builds ASYNCH and runs `make check` on every push (replaces the Travis CI setup).
+- `docs/guide/10_python.md`: the package as a library (how it relates to `libasynch.so`, `make install-python`),
+  the three ways to write equations with measured speeds, MPI with measured speed-ups and mpi4py.
+
+#### Changed
+- Function types in the headers written `typedef void Name(...)` instead of `typedef void (Name)(...)` (the same type
+  for the compiler; the documentation tools could not read the second form).
+- `docs/contribute.rst`: how the documentation is built and published now.
+
+#### Removed
+- `docs/install.rst`, `docs/getting_started.rst` (outdated: Visual Studio projects, HDF5 1.8, cluster job scripts;
+  chapters 1 and 2 of the guide replace them), the empty `docs/model_400.rst`, `docs/make.bat`, and two figures only
+  they used.
+
 ### Faster Python models, Numba, `make install-python`; repository cleaned
 
 *Results:* unchanged (the program is bit-identical to the previous commit; a fresh clone builds and passes `make check`).

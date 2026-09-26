@@ -52,6 +52,8 @@ class Simulation:
         Load everything (network, parameters, initial states, forcings, outputs) right away.
         Use ``load=False`` to register custom outputs (:meth:`set_output`) first, then call :meth:`load`.
 
+    Notes
+    -----
     The steps of :meth:`load` can also be called one by one, as in ``src/asynch_cli.c``.
     """
 

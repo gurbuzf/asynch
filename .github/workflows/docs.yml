@@ -1,0 +1,47 @@
+# Builds the documentation (docs/, Sphinx) and publishes it with GitHub Pages.
+# One-time setup in the repository: Settings > Pages > Build and deployment > Source: "GitHub Actions".
+name: Documentation
+
+on:
+  push:
+    branches: [modernization]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Doxygen (C API pages)
+        run: sudo apt-get update && sudo apt-get install -y doxygen
+      - name: Install Sphinx and extensions
+        run: pip install -r docs/requirements.txt
+      - name: Build
+        run: sphinx-build --keep-going -b html docs docs/_build/html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/_build/html
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
