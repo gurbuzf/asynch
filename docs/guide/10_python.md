@@ -83,7 +83,7 @@ library and the `asynch` program already compiled, with the libraries they need 
 ```bash
 python3 -m venv ~/asynch-venv && source ~/asynch-venv/bin/activate
 pip install --upgrade pip        # pip 20.3 or newer reads the wheel's platform tag
-pip install https://github.com/gurbuzf/asynch/releases/download/v1.5.0/asynch-1.5.0-py3-none-manylinux_2_31_x86_64.whl
+pip install https://github.com/gurbuzf/asynch/releases/download/v1.5.0/asynch_hydro-1.5.0-py3-none-manylinux_2_31_x86_64.whl
 pip install h5py numba           # optional: read .h5 outputs; models in Python at C speed
 ```
 
@@ -409,6 +409,20 @@ travels down. The 2015 reference results show the same.)
 | 50 000 links, model 190 built-in, 6 h | 1.41 s | 0.98 s | 0.70 s (2.0x) |
 | same, model 190 in Python with `jit="numba"` | 2.00 s | 1.23 s | 0.88 s (2.3x) |
 | same, model 190 in plain Python | 56.6 s | 32.5 s | 20.1 s (2.8x) |
+
+**From a notebook, or without typing `mpiexec`.** A running Python program cannot turn itself into several MPI
+processes, so these functions start new ones with `mpiexec` and wait for them (they find `mpiexec` and the `asynch`
+program themselves; with the ready-made wheel both come with the installation):
+
+```python
+import asynch
+asynch.run_parallel("clearcreek_2015.gbl", 4)            # = mpiexec -n 4 asynch clearcreek_2015.gbl
+asynch.run_script_parallel("my_study.py", 4, "--rc", 0.5)  # = mpiexec -n 4 python my_study.py --rc 0.5
+```
+
+The output files are those the global file names; `capture=True` returns the printed text, and a failed run raises
+`asynch.ParallelRunError`. A study of many independent runs (e.g. one run per parameter value) is a script like
+`examples/python/sensitivity.py`, started this way.
 
 The 50 000-link network is a single long main channel with side streams, which is hard to share between processes;
 real basins such as Clear Creek branch more and gain more.

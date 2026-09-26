@@ -428,7 +428,7 @@ examples give bit-identical results.
 **No regression testing.** *High.* `make check` runs a single unit test (`days_in_month`).
 Nothing checks that the model still produces the same hydrographs. **Addressed by**
 `tests/regression/run_examples.py` (see [09_reproducibility.md](09_reproducibility.md)). Since 2026-09-25
-`make check` runs 23 C unit tests (`tests/check_asynch.c`), 70 tests of the Python package (`tests/python`) and the
+`make check` runs 23 C unit tests (`tests/check_asynch.c`), 73 tests of the Python package (`tests/python`) and the
 9 example comparisons; the tests found B-22 to B-25. Line coverage: 66.5 % (chapter 9).
 
 ### R-02

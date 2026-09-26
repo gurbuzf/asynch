@@ -156,7 +156,7 @@ This runs three sets of tests (chapter 9) and takes about a minute:
 | Test suite | What it checks |
 |---|---|
 | `check_asynch` | 23 C unit tests: the solver's coefficient tables, the setup and equations of every built-in model, ... |
-| `run_python_tests.sh` | 70 tests of the Python package (chapter 10), with the library just built |
+| `run_python_tests.sh` | 73 tests of the Python package (chapter 10), with the library just built |
 | `run_regression.sh` | every example, compared with the reference results shipped with the original ASYNCH |
 
 :::{admonition} You should see

@@ -77,7 +77,7 @@ carries the library and the `asynch` program already compiled; pip also installs
 ```bash
 python3 -m venv ~/asynch-venv && source ~/asynch-venv/bin/activate
 pip install --upgrade pip                  # pip 20.3 or newer reads the wheel's platform tag
-pip install https://github.com/gurbuzf/asynch/releases/download/v1.5.0/asynch-1.5.0-py3-none-manylinux_2_31_x86_64.whl
+pip install https://github.com/gurbuzf/asynch/releases/download/v1.5.0/asynch_hydro-1.5.0-py3-none-manylinux_2_31_x86_64.whl
 asynch test.gbl                            # the program; mpiexec -n 4 asynch test.gbl on 4 processes
 ```
 
@@ -126,7 +126,8 @@ with Simulation("my_network.gbl", model=model) as sim:
 Measured on 5 000 links (model 190 rewritten each way, identical results): built-in C 0.10 s, C code 0.10 s,
 Python + Numba 0.13 s, plain Python 4.1 s.
 
-**MPI**: `mpirun -n 4 python3 my_script.py` (with the ready-made wheel: `mpiexec -n 4 python3 my_script.py`); every
+**MPI**: `mpirun -n 4 python3 my_script.py` (with the ready-made wheel: `mpiexec -n 4 python3 my_script.py`), or from
+a notebook `asynch.run_parallel("my_basin.gbl", 4)` and `asynch.run_script_parallel("my_script.py", 4)`; every
 process runs the script and ASYNCH shares the links (Clear Creek,
 6 359 links: 8.0 s on 1 process, 2.75 s on 4). mpi4py is optional (`Simulation(..., comm=MPI.COMM_WORLD)`).
 
@@ -139,7 +140,7 @@ More in the [Python chapter](docs/guide/10_python.md), the
 
 * 23 C unit tests (`tests/check_asynch.c`): the coefficient tables of the numerical methods, the setup and equations of
   every built-in model, sorting and lookups, argument checks;
-* 70 tests of the Python package (`tests/python`): runs identical to the `asynch` program byte for byte, models written
+* 73 tests of the Python package (`tests/python`): runs identical to the `asynch` program byte for byte, models written
   in Python identical to the built-in ones, exact solutions, 52 built-in models integrating a short simulation, rain in
   four file formats, 70 000-link networks, MPI;
 * every example, compared with the reference results shipped with ASYNCH (`tests/regression/run_examples.py`).

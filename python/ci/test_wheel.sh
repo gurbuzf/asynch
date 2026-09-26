@@ -15,7 +15,7 @@ if ! command -v python3 > /dev/null; then
 fi
 python3 -m venv /tmp/v
 /tmp/v/bin/pip install -q --upgrade pip
-/tmp/v/bin/pip install -q /w/dist/asynch-*.whl h5py
+/tmp/v/bin/pip install -q /w/dist/asynch*.whl h5py
 export PATH=/tmp/v/bin:$PATH
 pkg=$(python -c "import asynch, os; print(os.path.dirname(asynch.__file__))")
 work=$(mktemp -d) && cp -a /w/examples /w/tests "$work/" && cd "$work/examples"
@@ -23,9 +23,16 @@ work=$(mktemp -d) && cp -a /w/examples /w/tests "$work/" && cd "$work/examples"
 asynch -v | head -1
 asynch test_2015.gbl > run.log 2>&1 || { cat run.log; exit 1; }
 mpiexec -n 2 asynch clearcreek_2015.gbl > run2.log 2>&1 || { cat run2.log; exit 1; }
-grep -q "Process 1 (2 total)" run2.log || { echo "mpiexec -n 2 did not start 2 processes:"; cat run2.log; exit 1; }
+# each process prints "Process <rank> (2 total)"; the lines of two processes can be cut into each other
+grep -q -e "Process 0 (2 total)" -e "Process 1 (2 total)" run2.log \
+    || { echo "mpiexec -n 2 did not start 2 processes:"; cat run2.log; exit 1; }
 mpiexec -n 2 python python/run_example.py > run3.log 2>&1 || { cat run3.log; exit 1; }
 python -c "import asynch; asynch._lib.lib(); import h5py; print('asynch and h5py in one program: ok')"
+python -c "
+import asynch
+p = asynch.run_parallel('test_2015.gbl', 2, capture=True)
+assert 'Process 0 (2 total)' in p.stdout or 'Process 1 (2 total)' in p.stdout, p.stdout
+print('asynch.run_parallel on 2 processes: ok')"
 echo "examples against the references:"
 for np in 1 2; do
     python "$work/tests/regression/run_examples.py" --asynch "$pkg/bin/asynch" --np $np > reg.log 2>&1 \

@@ -36,7 +36,7 @@ New Features
   and define new models with equations in C, Numba or Python (:doc:`guide/10_python`, :doc:`python_api`). Works with
   MPI (``mpirun -n 4 python3 script.py``) and mpi4py.
 * ``asynch_api.h``: a C interface for other languages and for custom models defined outside the source code.
-* ``make check`` runs 23 C unit tests, 70 Python tests and every example against the reference results of the original
+* ``make check`` runs 23 C unit tests, 73 Python tests and every example against the reference results of the original
   repository (:doc:`guide/09_reproducibility`). GitHub Actions run it on every push.
 * Per-link solver settings (``.rkd`` files) and solver methods 0 and 1 work (they did not, B-14 and B-13).
 * A ``Dockerfile`` for a ready-made environment, and this documentation website.

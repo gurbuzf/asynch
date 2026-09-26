@@ -12,7 +12,7 @@ The full technical record is [chapter 8](08_known_issues.md), and every change i
 <div><p>2</p><p>critical issues fixed</p></div>
 <div><p>10</p><p>high-severity issues fixed</p></div>
 <div><p>0</p><p>reference files modified</p></div>
-<div><p>93</p><p>automatic tests (C + Python)</p></div>
+<div><p>96</p><p>automatic tests (C + Python)</p></div>
 </div>
 
 ## 7.1 How every change was checked
@@ -322,7 +322,7 @@ How we know the package is right: the files it writes are identical to those of 
 models 190 and 191 rewritten through it give exactly the numbers of the built-in models; and simple models with a known
 exact solution (a chain of linear reservoirs) are reproduced to better than 1e-8.
 
-`make check` now runs three sets of tests (chapter 9): 23 C unit tests, 70 tests of the Python package, and all the
+`make check` now runs three sets of tests (chapter 9): 23 C unit tests, 73 tests of the Python package, and all the
 examples against their reference results. The C unit tests check, among other things, the coefficient tables of the
 three numerical methods against the textbook conditions (a check that would have caught B-13) and the setup and equations
 of every built-in model; with the Python tests (52 models run a short simulation; rain in four file formats) they

@@ -3,7 +3,7 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "asynch"
+name = "asynch-hydro"          # on PyPI ("asynch" is another project there); import asynch
 version = "1.5.0"
 description = "Python interface to ASYNCH, an asynchronous solver of hydrological models on river networks"
 readme = "README.md"

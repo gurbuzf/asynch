@@ -2,6 +2,15 @@
 
 Newest first.
 
+## 2026-09-26: parallel runs from Python, PyPI (owner question)
+
+- Parallel already worked (mpiexec -n N python script.py); added asynch.run_parallel / run_script_parallel for
+  notebooks (start mpiexec). Found: multi-process tests compared printed lines, which Open MPI can cut into each
+  other (likely the unexplained single failure earlier): tests now read one file per process.
+- PyPI: "asynch" is taken (ClickHouse driver) -> distribution renamed asynch-hydro (import asynch). Trusted
+  Publishing job in release.yml, gated by repo variable PUBLISH_TO_PYPI; setup steps in docs/contribute.rst (owner
+  must create the PyPI account / pending publisher). twine check passes.
+
 ## 2026-09-26: ready-made Linux wheel (owner: "serve it built in")
 
 - Wheel carries libasynch.so + the asynch program + HDF5/libpq/... (auditwheel); MPI from PyPI `mpich` (dependency,

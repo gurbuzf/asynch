@@ -7,7 +7,7 @@ yourself with one command.</p>
 
 <div class="stats">
 <div><p>23</p><p>C unit tests</p></div>
-<div><p>70</p><p>Python tests</p></div>
+<div><p>73</p><p>Python tests</p></div>
 <div><p>66.5 %</p><p>of the C lines run by the tests</p></div>
 <div><p>0</p><p>reference files ever modified</p></div>
 </div>
@@ -31,7 +31,7 @@ Run in the build folder, `make check` runs three sets of tests, in about a minut
 | Test | File | What it checks |
 |---|---|---|
 | `check_asynch` | `tests/check_asynch.c` | 23 C unit tests: the Runge-Kutta tables satisfy the order conditions (sum of b = 1, rows of A add up to c, ...) and reach their order on y' = y; their dense output is consistent; every built-in model has consistent sizes and all the functions the solver calls, and its equations give finite values and set every derivative; sorting and the id lookup; argument checks of `asynch_api.h` |
-| `run_python_tests.sh` | `tests/python/` | 70 tests of the Python package: runs identical to the `asynch` program, byte for byte; models written in Python identical to the built-in ones; exact solutions of reservoir chains; 52 built-in models integrate one hour (5 more need realistic parameters); rain in 4 file formats gives identical results; 70 000 links; 2 MPI processes; the example scripts |
+| `run_python_tests.sh` | `tests/python/` | 73 tests of the Python package: runs identical to the `asynch` program, byte for byte; models written in Python identical to the built-in ones; exact solutions of reservoir chains; 52 built-in models integrate one hour (5 more need realistic parameters); rain in 4 file formats gives identical results; 70 000 links; 2 MPI processes; the example scripts |
 | `run_regression.sh` | `tests/regression/run_examples.py` | every example against the reference results (9.1) |
 
 The outcome is at the end (`# PASS: 3`, `# FAIL: 0`); the details are in `tests/*.log` of the build folder. If Python

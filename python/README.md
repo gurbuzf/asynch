@@ -1,6 +1,6 @@
-# asynch (Python package)
+# asynch-hydro: the Python package of ASYNCH (`import asynch`)
 
-Python interface to [ASYNCH](../README.md), the asynchronous solver of hydrological models on river networks.
+Python interface to [ASYNCH](https://github.com/gurbuzf/asynch), the asynchronous solver of hydrological models on river networks.
 The numerical work is done by the C library `libasynch.so`; Python drives it.
 
 ```python
@@ -15,15 +15,14 @@ with Simulation("test_2015.gbl") as sim:     # run in examples/
 * `GlobalConfig`: read, change and write global files (`.gbl`).
 * `asynch.io`: read output files, write input files.
 
-Installation, tutorial and reference: [docs/guide/10_python.md](../docs/guide/10_python.md) and
-<https://gurbuzf.github.io/asynch/>.
+Installation, tutorial and reference: <https://gurbuzf.github.io/asynch/guide/10_python.html>.
 
 **Ready-made (Linux x86-64, glibc 2.31 or newer).** The wheel attached to each release of
 <https://github.com/gurbuzf/asynch/releases> carries the library and the `asynch` program, compiled; pip installs MPI
 with it (the `mpich` package, with `mpiexec`). Nothing to build:
 
 ```sh
-pip install --upgrade pip && pip install asynch-<version>-py3-none-manylinux_2_31_x86_64.whl
+pip install --upgrade pip && pip install asynch_hydro-<version>-py3-none-manylinux_2_31_x86_64.whl
 asynch test.gbl               # the program; mpiexec -n 4 asynch test.gbl
 ```
 

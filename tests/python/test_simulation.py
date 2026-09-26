@@ -441,7 +441,9 @@ with Simulation("test_2015.gbl") as sim:
     local = sim.num_links_local
     owners = [sim.owner(l) for l in sim.link_ids]
     np.save("states_%d.npy" % sim.rank, s)
-    print("rank", sim.rank, "of", sim.num_procs, "local", local, "owners", sorted(set(owners)))
+    # one file per process: lines printed by two processes at once can be mixed in the output
+    with open("rank_%d.txt" % sim.rank, "w") as f:
+        f.write("rank %d of %d local %d owners %s" % (sim.rank, sim.num_procs, local, sorted(set(owners))))
 """
 
     def test_two_processes(self):
@@ -450,9 +452,11 @@ with Simulation("test_2015.gbl") as sim:
             ref = sim.states
         proc = helpers.run_python(self.CODE, self.dir, np=2)
         self.assertEqual(proc.returncode, 0, proc.stdout)
-        self.assertIn("rank 0 of 2", proc.stdout)
-        self.assertIn("rank 1 of 2", proc.stdout)
-        self.assertIn("owners [0, 1]", proc.stdout)
+        for rank in (0, 1):
+            with open("rank_%d.txt" % rank) as f:
+                line = f.read()
+            self.assertIn("rank %d of 2" % rank, line)
+            self.assertIn("owners [0, 1]", line)
         s0, s1 = np.load("states_0.npy"), np.load("states_1.npy")
         np.testing.assert_array_equal(s0, s1)                   # gathered on every process
         np.testing.assert_allclose(s0, ref, rtol=1e-3, atol=1e-5)
@@ -466,7 +470,8 @@ with Simulation("test_2015.gbl", comm=comm) as sim:
     total = comm.allreduce(sim.num_links_local)
     s = sim.states
     if comm.rank == 0:
-        print("links", sim.num_links, "sum of local", total, "procs", sim.num_procs)
+        with open("mpi4py_result.txt", "w") as f:           # a file: printed output of processes can be mixed
+            f.write("links %d sum of local %d procs %d" % (sim.num_links, total, sim.num_procs))
 """
 
     def test_mpi4py_communicator(self):
@@ -477,7 +482,44 @@ with Simulation("test_2015.gbl", comm=comm) as sim:
             self.skipTest("mpi4py not installed")
         proc = helpers.run_python(self.MPI4PY_CODE, self.dir, np=3)
         self.assertEqual(proc.returncode, 0, proc.stdout)
-        self.assertIn("links 11 sum of local 11 procs 3", proc.stdout)
+        with open("mpi4py_result.txt") as f:
+            self.assertEqual(f.read(), "links 11 sum of local 11 procs 3")
+
+
+@helpers.requires_library
+class TestRunParallel(helpers.InExamples):
+    """asynch.run_parallel and run_script_parallel start MPI runs from Python (e.g. from a notebook)."""
+
+    @helpers.requires_exe
+    def test_program_on_two_processes(self):
+        import asynch
+        proc = asynch.run_parallel("test_2015.gbl", 2, program=helpers.EXE, capture=True, timeout=600)
+        # each process prints "Process <rank> (2 total) ..."; lines of two processes can be cut into each other
+        self.assertTrue("Process 0 (2 total)" in proc.stdout or "Process 1 (2 total)" in proc.stdout, proc.stdout)
+        self.assertTrue(os.path.exists("out_2015/test.pea"))
+
+    def test_script_on_two_processes(self):
+        import asynch
+        with open("ranks.py", "w") as f:
+            f.write("from asynch import Simulation\n"
+                    "with Simulation('test_2015.gbl') as sim:\n"
+                    "    sim.advance()\n"
+                    "    with open('rank_%d.txt' % sim.rank, 'w') as out:\n"
+                    "        out.write('rank %d of %d time %g' % (sim.rank, sim.num_procs, sim.time))\n")
+        # the processes import the package of this repository, as this test does
+        old = os.environ.get("PYTHONPATH")
+        self.addCleanup(lambda: os.environ.__setitem__("PYTHONPATH", old) if old is not None
+                        else os.environ.pop("PYTHONPATH", None))
+        os.environ["PYTHONPATH"] = os.path.join(helpers.REPO, "python") + (os.pathsep + old if old else "")
+        asynch.run_script_parallel("ranks.py", 2, capture=True, timeout=600)
+        for rank in (0, 1):                         # one file per process (printed lines can be mixed)
+            with open("rank_%d.txt" % rank) as f:
+                self.assertEqual(f.read(), "rank %d of 2 time 300" % rank)
+
+    def test_failure_is_reported(self):
+        import asynch
+        with self.assertRaises(asynch.ParallelRunError):
+            asynch.run_script_parallel("does_not_exist.py", 1, capture=True, timeout=600)
 
 
 if __name__ == "__main__":

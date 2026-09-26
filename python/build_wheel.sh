@@ -1,6 +1,6 @@
 #!/bin/sh
 # Builds the self-contained wheel of the asynch package: the Python code, libasynch.so, the asynch program and the
-# libraries they need (HDF5, libpq, ...), so that `pip install asynch-*.whl` works without building ASYNCH. MPI is
+# libraries they need (HDF5, libpq, ...), so that `pip install asynch_hydro-*.whl` works without building ASYNCH. MPI is
 # not copied: the wheel requires the `mpich` package of PyPI, which brings the MPI library and `mpiexec`.
 #
 #   python/build_wheel.sh BUILD_DIR [OUT_DIR]
@@ -40,7 +40,9 @@ patchelf --add-rpath '$ORIGIN/../../../..' "$dir/asynch/bin/asynch"
 # The libraries copied by auditwheel find each other in their own folder ($ORIGIN): a search path set on a library
 # does not apply to the libraries it loads (DT_RUNPATH, which patchelf writes). The program's copy of libasynch also
 # needs the folder of MPICH.
-for f in "$dir"/asynch.libs/*.so*; do
+libs=$(echo "$dir"/*.libs)                        # <distribution>.libs, named by auditwheel
+[ -d "$libs" ] || { echo "auditwheel wrote no .libs folder" >&2; exit 1; }
+for f in "$libs"/*.so*; do
     patchelf --add-rpath '$ORIGIN' "$f"
     case "$(basename "$f")" in libasynch*) patchelf --add-rpath '$ORIGIN/../../..' "$f" ;; esac
 done

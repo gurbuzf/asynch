@@ -45,6 +45,16 @@ Global files
 .. autoclass:: asynch.Selection
 .. autoclass:: asynch.FileRef
 
+Parallel runs
+-------------
+
+.. automodule:: asynch.parallel
+   :no-members:
+
+.. autofunction:: asynch.run_parallel
+.. autofunction:: asynch.run_script_parallel
+.. autoexception:: asynch.ParallelRunError
+
 Input and output files
 ----------------------
 

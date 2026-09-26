@@ -14,9 +14,29 @@ Nothing yet.
 
 The first release of this branch. In short: a working Python library (`asynch`: run and change simulations, new
 models in C, Numba or Python, MPI), installable on Linux with pip without building anything, 2 critical and 10 high-severity bugs fixed, networks above 65 535 links, `make check`
-with 93 tests against the reference results, GitHub Actions, and a documentation website. The entries below list every
+with 96 tests against the reference results, GitHub Actions, and a documentation website. The entries below list every
 change and whether it changes numerical results; only the results of model 254 (S-02, on purpose) and of models 105 and 263 (B-26: they were undefined) change. The release notes
 (`docs/release_notes.rst`) summarise what changes for a user.
+
+### Parallel runs started from Python; PyPI publishing
+
+*Results:* unchanged (no change to the C code).
+
+#### Added
+- `asynch.run_parallel(global_file, processes)` and `asynch.run_script_parallel(script, processes, ...)`
+  (`python/asynch/parallel.py`): start `mpiexec -n N asynch file.gbl` or `mpiexec -n N python script.py` from Python,
+  e.g. from a notebook, which cannot become several MPI processes itself; they find `mpiexec` and the program (those of
+  the ready-made wheel included) and raise `ParallelRunError` on failure. 3 tests (2 processes).
+
+#### Fixed
+- Tests with several processes compared lines printed by the processes, which MPI can deliver cut into each other
+  (`rank 1rank 0 of 2 ...`): an occasional false failure. Each process now writes its own file, which the test reads.
+- `.github/workflows/release.yml`, job `pypi`: uploads the ready-made wheel to PyPI with Trusted Publishing (no stored
+  token), when the repository variable `PUBLISH_TO_PYPI` is `true`; `docs/contribute.rst` gives the one-time setup.
+
+#### Changed
+- The Python distribution is named `asynch-hydro` (`asynch` is another project on PyPI); the import name is still
+  `asynch`. The wheel file is `asynch_hydro-<version>-py3-none-manylinux_2_31_x86_64.whl`.
 
 ### Ready-made Linux wheel: `pip install` without building; fix A-02 (h5py next to asynch)
 
