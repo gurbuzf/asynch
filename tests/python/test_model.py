@@ -72,6 +72,8 @@ def model190(backend):
 
         m.precalculations = precalculations
         m.equations = equations
+        if backend == "numba":
+            m.jit = "numba"                 # the same Python functions, compiled by Numba
     return m
 
 
@@ -98,6 +100,10 @@ class TestModel190(helpers.InExamples):
 
     def test_python_functions(self):
         self.check_identical("py")
+
+    @helpers.requires_numba
+    def test_numba(self):
+        self.check_identical("numba")
 
     @helpers.requires_compiler
     @helpers.requires_exe
@@ -160,6 +166,8 @@ def reservoir(backend, forcings=()):
             inflow = up[:, 0].sum() + (f[0] * p[0] * (0.001 / 3600.0) if len(f) else 0.0)
             return [(inflow - y[0]) / g[0]]
         m.equations = eq
+        if backend == "numba":
+            m.jit = "numba"
     return m
 
 
@@ -184,9 +192,9 @@ class TestExactSolutions(unittest.TestCase):
             states = sim.states
         return {l: states[i] for i, l in enumerate(ids)}, io.read_dat("chain.dat")
 
-    def check_backends(self, backends=("c", "py")):
+    def check_backends(self, backends=("c", "py", "numba")):
         for b in backends:
-            if b == "c" and not helpers.has_compiler():
+            if b == "c" and not helpers.has_compiler() or b == "numba" and not helpers.has_numba():
                 continue
             yield b
 
@@ -273,11 +281,13 @@ class TestModelFeatures(unittest.TestCase):
                 if y[0] < 0.25:
                     y[0] = 0.25
             m.consistency = cons
+            if backend == "numba":
+                m.jit = "numba"
         return m
 
     def test_initialize_precalculations_consistency(self):
-        for b in ("c", "py"):
-            if b == "c" and not helpers.has_compiler():
+        for b in ("c", "py", "numba"):
+            if b == "c" and not helpers.has_compiler() or b == "numba" and not helpers.has_numba():
                 continue
             with self.subTest(backend=b):
                 net = Network(os.path.join(self.tmp, b), links=2, minutes=60, num_states=2, tol=1e-10)

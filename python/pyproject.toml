@@ -11,9 +11,23 @@ requires-python = ">=3.8"
 license = {text = "GPL-2.0"}
 dependencies = ["numpy"]
 
+keywords = ["hydrology", "river network", "ODE", "Runge-Kutta", "MPI"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: C",
+    "Topic :: Scientific/Engineering :: Hydrology",
+    "Operating System :: POSIX :: Linux",
+]
+
 [project.optional-dependencies]
-h5 = ["h5py"]
-mpi = ["mpi4py"]
+h5 = ["h5py"]            # read .h5 outputs
+fast = ["numba"]         # Model(..., jit="numba"): models written in Python at C speed
+mpi = ["mpi4py"]         # pass an mpi4py communicator (mpirun works without it)
+all = ["h5py", "numba", "mpi4py"]
+
+[project.urls]
+Documentation = "https://gurbuzf.github.io/asynch/"
+Source = "https://github.com/gurbuzf/asynch"
 
 [project.scripts]
 asynch-py = "asynch.__main__:main"

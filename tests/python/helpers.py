@@ -62,6 +62,17 @@ def has_compiler():
 requires_compiler = unittest.skipUnless(has_compiler(), "no C compiler")
 
 
+def has_numba():
+    try:
+        import numba  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+requires_numba = unittest.skipUnless(has_numba(), "numba not installed")
+
+
 def has_mpirun():
     return shutil.which("mpirun") is not None
 

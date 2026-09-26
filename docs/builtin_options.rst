@@ -6,7 +6,7 @@ Through a global file, many options are selected, including which model to use, 
 Built-In Output Time Series
 ---------------------------
 
-Figure [fig: built-in output time series] contains the names and a description of built-in output time series. These outputs are defined in the source file *modeloutputs.c*. Up to seven states can be outputted with the built-in output time series. In addition to these, users can create their own time series outputs. See Section :ref:`Custom Outputs`.
+Figure [fig: built-in output time series] contains the names and a description of built-in output time series. These outputs are defined in the source file *outputs.c*. Up to seven states can be outputted with the built-in output time series. In addition to these, users can create their own time series outputs. See Section :ref:`Custom Outputs`.
 
 .. table:: Built-in output time series
 

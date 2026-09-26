@@ -39,6 +39,16 @@ DIFFERENTIAL = ctypes.CFUNCTYPE(
     ctypes.c_void_p,                              # user
     c_double_p)                                   # ans
 
+#: the same signatures with every pointer as a plain address (an int, or None for NULL): converting an address is
+#: much cheaper than building a ctypes pointer object, which matters in functions called millions of times
+V_P = ctypes.c_void_p
+DIFFERENTIAL_ADDR = ctypes.CFUNCTYPE(
+    None, ctypes.c_double, V_P, ctypes.c_uint, V_P, ctypes.c_ushort, ctypes.c_uint, V_P, V_P, V_P, V_P,
+    ctypes.c_int, V_P, V_P)
+CHECK_CONSISTENCY_ADDR = ctypes.CFUNCTYPE(None, V_P, ctypes.c_uint, V_P, ctypes.c_uint, V_P, ctypes.c_uint, V_P)
+PRECALCULATIONS_ADDR = ctypes.CFUNCTYPE(None, V_P, ctypes.c_uint, V_P, ctypes.c_uint, V_P)
+INITIALIZE_ADDR = ctypes.CFUNCTYPE(ctypes.c_int, V_P, ctypes.c_uint, V_P, ctypes.c_uint, V_P, ctypes.c_uint, V_P)
+
 #: consistency check of one link (CheckConsistencyFunc)
 CHECK_CONSISTENCY = ctypes.CFUNCTYPE(
     None, c_double_p, ctypes.c_uint, c_double_p, ctypes.c_uint, c_double_p, ctypes.c_uint, ctypes.c_void_p)

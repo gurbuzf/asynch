@@ -72,7 +72,7 @@ explained in detail in [06_c_primer.md §6.1](06_c_primer.md#61-how-a-c-program-
 
 ```bash
 autoreconf --install
-cd build
+mkdir -p build && cd build
 ../configure CFLAGS="-O3 -DNDEBUG -Wno-format-security"
 make -j4
 ```

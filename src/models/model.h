@@ -17,12 +17,6 @@
 #include <structs_fwd.h>
 
 
-/// Get a model given its uid
-/// 
-/// \param_uid Model uid
-/// \return A pointer to the model
-AsynchModel const * GetModel(unsigned short model_uid);
-
 
 /// These are the right-hand side functions for the differential equations.
 ///

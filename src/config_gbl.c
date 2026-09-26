@@ -126,12 +126,6 @@ GlobalVars* Read_Global_Data(
 
     globals->model_uid = uid;
 
-    //model = GetModel(uid);
-    //if (model == NULL)
-    //{
-    //    printf("Error: Model %hu not defined.\n", uid);
-    //    return NULL;
-    //}
 
     //Grab the begin and end time
     struct tm begin_tm;

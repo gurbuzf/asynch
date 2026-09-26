@@ -123,8 +123,11 @@ class Model:
 
     def __init__(self, states, global_params=(), params=(), derived_params=(), forcings=(), dense=None,
                  read_initial=None, nonnegative=None, param_factors=None, area=None, hillslope_area=None,
-                 areas_converted_to_m2=False, min_error_tolerances=None, name="custom"):
+                 areas_converted_to_m2=False, min_error_tolerances=None, name="custom", jit=None):
         self.name = str(name)
+        if jit not in (None, "numba"):
+            raise ModelError("jit must be None or 'numba'")
+        self.jit = jit
         self.states = list(states)
         self.global_params = list(global_params)
         self.params = list(params)
@@ -334,11 +337,15 @@ class Model:
     # -- installation into a solver -------------------------------------------------------------------
 
     def _fn(self, clib_name, python_func, ctype, wrapper):
-        """Address of a model function: from the compiled library or a ctypes callback."""
+        """Address of a model function: from the compiled library, compiled by Numba, or a ctypes callback."""
         if python_func is None:
             return None
         if isinstance(python_func, str):
             return ctypes.cast(getattr(self._clib, clib_name), ctypes.c_void_p).value
+        if self.jit == "numba":
+            cf = _numba_cfunc(self, clib_name, python_func)
+            self._callbacks.append(cf)
+            return cf.address
         cb = ctype(wrapper(python_func))
         self._callbacks.append(cb)
         return ctypes.cast(cb, ctypes.c_void_p).value
@@ -362,19 +369,19 @@ class Model:
                 raise ModelError("could not set %s of model %r" % (what, self.name))
 
         check(L.Asynch_Model_Spec_Set_Differential(
-            spec, self._fn("asynch_model_differential", self.equations, _lib.DIFFERENTIAL, self._wrap_equations)),
+            spec, self._fn("asynch_model_differential", self.equations, _lib.DIFFERENTIAL_ADDR, self._wrap_equations)),
             "the equations")
         if self.precalculations is not None:
             check(L.Asynch_Model_Spec_Set_Precalculations(spec, self._fn(
-                "asynch_model_precalculations", self.precalculations, _lib.PRECALCULATIONS, self._wrap_precalc)),
+                "asynch_model_precalculations", self.precalculations, _lib.PRECALCULATIONS_ADDR, self._wrap_precalc)),
                 "the precalculations")
         if self.initialize is not None:
             check(L.Asynch_Model_Spec_Set_Initialize(spec, self._fn(
-                "asynch_model_initialize", self.initialize, _lib.INITIALIZE, self._wrap_initialize)),
+                "asynch_model_initialize", self.initialize, _lib.INITIALIZE_ADDR, self._wrap_initialize)),
                 "the initialization")
         if self.consistency is not None:
             check(L.Asynch_Model_Spec_Set_Check_Consistency(spec, self._fn(
-                "asynch_model_consistency", self.consistency, _lib.CHECK_CONSISTENCY, self._wrap_consistency)),
+                "asynch_model_consistency", self.consistency, _lib.CHECK_CONSISTENCY_ADDR, self._wrap_consistency)),
                 "the consistency check")
         check(L.Asynch_Model_Spec_Set_Nonnegative(spec, _NONNEGATIVE[self.nonnegative]), "nonnegative")
         check(L.Asynch_Model_Spec_Set_Num_Initial_States(spec, len(self.read_initial)), "read_initial")
@@ -409,48 +416,48 @@ class Model:
 
     def _wrap_equations(self, f):
         n_states, n_gp, n_p, n_f = len(self.states), len(self.global_params), len(self.all_params), len(self.forcings)
-        arr = np.ctypeslib.as_array
+        view, view2 = _views()
+        empty = np.zeros(0)
 
         def rhs(t, y_i, num_dof, y_p, num_parents, max_dim, gp, p, forcing, qvs, state, user, ans):
-            y = arr(y_i, (num_dof,))
-            ups = arr(y_p, (num_parents, max_dim)) if num_parents else np.zeros((0, max_dim))
-            res = f(t, y, ups, arr(gp, (n_gp,)) if n_gp else np.zeros(0), arr(p, (n_p,)) if n_p else np.zeros(0),
-                    arr(forcing, (n_f,)) if n_f else np.zeros(0))
-            out = arr(ans, (n_states,))
-            out[:] = res
+            res = f(t, view(y_i, num_dof),
+                    view2(y_p, num_parents, max_dim) if num_parents else np.zeros((0, max_dim)),
+                    view(gp, n_gp) if n_gp else empty, view(p, n_p) if n_p else empty,
+                    view(forcing, n_f) if n_f else empty)
+            view(ans, n_states)[:] = res
 
         def zero(*args):
             # after an error: zero derivatives let the run end quickly (NaN could stall the step control)
-            arr(args[-1], (n_states,))[:] = 0.0
+            view(args[-1], n_states)[:] = 0.0
         return self._guard(rhs, zero)
 
     def _wrap_precalc(self, f):
         n_disk, n_all = len(self.params), len(self.all_params)
-        arr = np.ctypeslib.as_array
+        view, _ = _views()
 
         def pre(gp, n_gp, p, n_p, user):
-            params = arr(p, (n_all,))
-            res = f(arr(gp, (n_gp,)) if n_gp else np.zeros(0), params)
+            params = view(p, n_all)
+            res = f(view(gp, n_gp) if n_gp else np.zeros(0), params)
             if res is not None:
                 params[n_disk:] = res
         return self._guard(pre, lambda *a: None)
 
     def _wrap_initialize(self, f):
-        arr = np.ctypeslib.as_array
+        view, _ = _views()
 
         def init(gp, n_gp, p, n_p, y, dim, user):
-            yy = arr(y, (dim,))
-            res = f(arr(gp, (n_gp,)) if n_gp else np.zeros(0), arr(p, (n_p,)) if n_p else np.zeros(0), yy)
+            yy = view(y, dim)
+            res = f(view(gp, n_gp) if n_gp else np.zeros(0), view(p, n_p) if n_p else np.zeros(0), yy)
             if res is not None:
                 yy[:] = res
             return 0
         return self._guard(init, lambda *a: 0)
 
     def _wrap_consistency(self, f):
-        arr = np.ctypeslib.as_array
+        view, _ = _views()
 
         def cons(y, dim, gp, n_gp, p, n_p, user):
-            f(arr(y, (dim,)), arr(gp, (n_gp,)) if n_gp else np.zeros(0), arr(p, (n_p,)) if n_p else np.zeros(0))
+            f(view(y, dim), view(gp, n_gp) if n_gp else np.zeros(0), view(p, n_p) if n_p else np.zeros(0))
         return self._guard(cons, lambda *a: None)
 
     def raise_pending_error(self):
@@ -458,6 +465,94 @@ class Model:
         if self._error is not None:
             e, self._error = self._error, None
             raise ModelError("error in a Python function of model %r: %r" % (self.name, e)) from e
+
+
+def _numba_cfunc(model, kind, f):
+    """Compile a Python model function with Numba into a C function with the signature ASYNCH calls
+    (DifferentialFunc, SpecPrecalculationsFunc, SpecInitializeFunc or CheckConsistencyFunc). The user function
+    keeps the signature of the pure Python mode; it is compiled with numba.njit (nopython mode)."""
+    try:
+        import numba
+        from numba import types, carray
+    except ImportError:
+        raise ModelError("jit='numba' needs the numba package (pip install numba)")
+    fj = f if hasattr(f, "py_func") else numba.njit(f)
+    f64, u32, dp, vp = types.float64, types.uint32, types.CPointer(types.float64), types.voidptr
+    n_states, n_gp = len(model.states), len(model.global_params)
+    n_p, n_f, n_disk = len(model.all_params), len(model.forcings), len(model.params)
+    n_derived = n_p - n_disk
+
+    if kind == "asynch_model_differential":
+        sig = types.void(f64, dp, u32, dp, types.uint16, u32, dp, dp, dp, vp, types.int32, vp, dp)
+
+        def rhs(t, y_i, num_dof, y_p, num_parents, max_dim, gp, p, fo, qvs, state, user, ans):
+            res = fj(t, carray(y_i, (num_dof,)), carray(y_p, (num_parents, max_dim)), carray(gp, (n_gp,)),
+                     carray(p, (n_p,)), carray(fo, (n_f,)))
+            out = carray(ans, (n_states,))
+            for k in range(n_states):
+                out[k] = res[k]
+        py = rhs
+    elif kind == "asynch_model_precalculations":
+        sig = types.void(dp, u32, dp, u32, vp)
+        if n_derived:
+            def pre(gp, ngp, p, np_, user):
+                params = carray(p, (n_p,))
+                res = fj(carray(gp, (ngp,)), params)
+                for k in range(n_derived):
+                    params[n_disk + k] = res[k]
+        else:
+            def pre(gp, ngp, p, np_, user):
+                fj(carray(gp, (ngp,)), carray(p, (n_p,)))
+        py = pre
+    elif kind == "asynch_model_initialize":
+        sig = types.int32(dp, u32, dp, u32, dp, u32, vp)
+
+        def init(gp, ngp, p, np_, y, dim, user):
+            yy = carray(y, (dim,))
+            res = fj(carray(gp, (ngp,)), carray(p, (np_,)), yy)
+            for k in range(dim):
+                yy[k] = res[k]
+            return 0
+        py = init
+    else:
+        sig = types.void(dp, u32, dp, u32, dp, u32, vp)
+
+        def cons(y, dim, gp, ngp, p, np_, user):
+            fj(carray(y, (dim,)), carray(gp, (ngp,)), carray(p, (np_,)))
+        py = cons
+    try:
+        return numba.cfunc(sig, nopython=True)(py)
+    except Exception as e:
+        raise ModelError("Numba could not compile %s of model %r (in jit='numba' mode, use only NumPy and math "
+                         "operations Numba supports, and return a tuple or an array): %s" % (kind[13:], model.name, e))
+
+
+def _views(limit=200000):
+    """NumPy views of C arrays given by their address, cached: the same arrays (parameters of a link, the solver's
+    work arrays) are passed again and again, and building a view costs more than the equations of a small model.
+    The cache is emptied when it holds `limit` views, which bounds its memory on very large networks."""
+    cache = {}
+    as_array = np.ctypeslib.as_array
+    c_double = ctypes.c_double
+
+    def view(addr, n):
+        key = (addr, n)
+        v = cache.get(key)
+        if v is None:
+            if len(cache) >= limit:
+                cache.clear()
+            v = cache[key] = as_array((c_double * n).from_address(addr))
+        return v
+
+    def view2(addr, rows, cols):
+        key = (addr, rows, cols)
+        v = cache.get(key)
+        if v is None:
+            if len(cache) >= limit:
+                cache.clear()
+            v = cache[key] = as_array((c_double * (rows * cols)).from_address(addr)).reshape(rows, cols)
+        return v
+    return view, view2
 
 
 def _dedent(code):

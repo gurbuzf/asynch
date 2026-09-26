@@ -435,6 +435,28 @@ with Simulation("test_2015.gbl") as sim:
         np.testing.assert_array_equal(s0, s1)                   # gathered on every process
         np.testing.assert_allclose(s0, ref, rtol=1e-3, atol=1e-5)
 
+    MPI4PY_CODE = """
+from mpi4py import MPI
+from asynch import Simulation
+comm = MPI.COMM_WORLD
+with Simulation("test_2015.gbl", comm=comm) as sim:
+    sim.advance(write=False)
+    total = comm.allreduce(sim.num_links_local)
+    s = sim.states
+    if comm.rank == 0:
+        print("links", sim.num_links, "sum of local", total, "procs", sim.num_procs)
+"""
+
+    def test_mpi4py_communicator(self):
+        """ASYNCH and mpi4py in the same program (the communicator is passed to Simulation)."""
+        try:
+            import mpi4py  # noqa: F401
+        except ImportError:
+            self.skipTest("mpi4py not installed")
+        proc = helpers.run_python(self.MPI4PY_CODE, self.dir, np=3)
+        self.assertEqual(proc.returncode, 0, proc.stdout)
+        self.assertIn("links 11 sum of local 11 procs 3", proc.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

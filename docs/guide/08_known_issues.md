@@ -55,7 +55,7 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [R-04](#r-04) | fixed | confirmed | Examples 258/259 pointed to a file on the original developers' cluster |
 | [R-05](#r-05) | info | confirmed | Results change at noise level with the number of MPI processes |
 | [A-01](#a-01) | **resolved** | confirmed | Old Python API broken beyond repair; replaced by the `python/` package (chapter 10) |
-| [M-01](#m-01) | medium | confirmed | ~6 500 lines (15 %) of C are never compiled |
+| [M-01](#m-01) | **resolved** | confirmed | ~6 500 lines (15 %) of C were never compiled; removed |
 | [M-02](#m-02) | medium | code reading | A model is defined in 7 different places; duplicated unreachable code |
 | [M-03](#m-03) | low | confirmed | CI (Travis) is dead; build docs mention obsolete steps |
 | [P-01](#p-01) | low | confirmed | CLI sleeps 1 s during initialisation |
@@ -157,7 +157,7 @@ In reality (`src/riversys.c:686-690`) the table contains:
 | 0 | RK3(2) dense ("RKDense3_2") | explicit |
 | 1 | RK4(3) dense ("TheRKDense4_3") | explicit |
 | 2 | Dormand–Prince 5(4) dense ("DOPRI5_dense") | explicit |
-| 3 | Radau IIA order 3 | **implicit, but its stepper `steppers/implicit.c` is not compiled** |
+| 3 | Radau IIA order 3 | **implicit, but it has no stepper (the old `steppers/implicit.c` was never compiled and was removed)** |
 
 The index read in `src/config_gbl.c:628-630` is never validated. Running `examples/test.gbl` with index 3,
 4 or 7 gives a segmentation fault (exit 139). With index 3 you first see
@@ -493,7 +493,11 @@ model of `asynchdist_custom.py` is ported in `examples/python/custom_model.py` a
 That is about 6 500 lines, 15 % of the C code. Also in `src/models/definitions.c`,
 `ReadInitData`, the branches for models 200, 254, 255, 256 and 257 at lines 3629-3704
 are **unreachable duplicates**, because the same `if/else` chain already matched those models above.
-Recommendation: move the dead files to an `attic/` folder (or delete them; git keeps the history).
+**Resolved** (2026-09-26): the eight files were deleted (git keeps their history), together with other unused
+files: the Visual Studio projects (`ide/`, which referred to files that no longer existed), an old conda recipe, the
+Travis CI and Read the Docs settings (replaced by GitHub Actions and GitHub Pages), cluster job scripts, an editor
+workspace, a personal build script, the old LaTeX manual (replaced by the `.rst` reference) and a generated
+`Makefile.in`. The unreachable branches of `ReadInitData` are still there.
 
 ### M-02
 **A model is spread over 7 places.** Adding or reading model *N* means finding its

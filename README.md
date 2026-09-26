@@ -43,7 +43,7 @@ sudo apt-get install -y git ca-certificates gcc gfortran make autoconf automake 
 
 git clone https://github.com/gurbuzf/asynch.git && cd asynch && git checkout modernization
 autoreconf --install
-cd build
+mkdir -p build && cd build
 ../configure CFLAGS="-O3 -DNDEBUG -Wno-format-security"
 make -j4
 make check                               # C unit tests, Python tests, examples vs reference results

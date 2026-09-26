@@ -187,7 +187,7 @@ Release on Github
 Merge the release branch ``release-x.y.z`` to ``master``. The easiest way is to submit a new Pull Request. The *base* branch should be ``Iowa-Flood-Center/asynch`` / ``master`` and the *compare* branch ``Iowa-Flood-Center/asynch`` / ``release-x.y.z``.
 
 
-Review your Pull Request, or better let someone else do the review. If everything looks good, and you have `Travis CI <https://travis-ci.org/Iowa-Flood-Center/asynch>`_'s blessing, do a *"Merge and Squash"*.
+Review your Pull Request, or better let someone else do the review. If everything looks good, and the GitHub Actions checks (tests and documentation, ``.github/workflows``) pass, do a *"Merge and Squash"*.
 
 You can safely delete the release branch at this point.
 

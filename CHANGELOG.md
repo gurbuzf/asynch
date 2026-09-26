@@ -8,6 +8,33 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Faster Python models, Numba, `make install-python`; repository cleaned
+
+*Results:* unchanged (the program is bit-identical to the previous commit; a fresh clone builds and passes `make check`).
+
+#### Added
+- `Model(..., jit="numba")`: the Python functions of a model are compiled by Numba into C functions with the signature
+  ASYNCH calls. Model 190 written in Python, 5 000 links, 2 simulated hours: 0.13 s (built-in C: 0.10 s), results
+  identical to the built-in model. Tests run it when Numba is installed.
+- `make install-python` (top-level `Makefile.am`): installs the package with pip into a chosen Python
+  (`PYTHON_FOR_ASYNCH=...`). `pyproject.toml`: extras `fast` (numba), `mpi` (mpi4py), `h5`, `all`; project links.
+- `tests/python/test_simulation.py`: ASYNCH and mpi4py in the same program (3 processes).
+
+#### Changed
+- Python model functions without Numba are 3.6 times faster (17.7 s -> 4.9 s on the benchmark above): the callbacks
+  receive plain addresses and reuse cached NumPy views of the C arrays instead of building new ones at every call
+  (the building cost 17 of the 21 microseconds of a call).
+
+#### Removed
+- Code never compiled (issue M-01, about 6 500 lines): `src/rkmethods.c`, `rainfall.c`, `asynchdist_custom.c`,
+  `modeloutputs.c`, `models/model.c`, `steppers/implicit.c`, `steppers/explicit_discont.c`, `steppers/assim.c`, and
+  the declaration of `GetModel`.
+- Files no longer used: `ide/` (Visual Studio projects referring to missing files), `conda/` (outdated recipe with the
+  wrong package name and license), `.travis.yml`, `.readthedocs.yml`, `asynch.code-workspace`, `build/recompile.sh`
+  (personal cluster script), `examples/test.sh` and `clearcreek.sh` (Iowa cluster job scripts), `m4/ax_python_devel.m4`
+  (unused), the old LaTeX manual `docs/documentation.tex/.pdf/.toc`, and the generated `src/Makefile.in` (was tracked).
+  The `build/` folder is now created by the build instructions (`mkdir -p build`).
+
 ### Tests for every model and every rain file format; fix B-25 (binary rain files)
 
 *Results:* unchanged for every example (bit-identical to the previous commit with 1 process; 1 and 2 processes pass;

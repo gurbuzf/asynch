@@ -67,9 +67,8 @@ asynch/
 └── docs/guide/                    this guide
 ```
 
-Files in `src/` that are **not compiled** (dead code, ignore them): `rkmethods.c`,
-`rainfall.c`, `asynchdist_custom.c`, `modeloutputs.c`, `models/model.c`,
-`steppers/implicit.c`, `steppers/explicit_discont.c`, `steppers/assim.c`.
+Every `.c` file in `src/` is compiled: about 6 500 lines of old code that were not (issue M-01, chapter 8) were
+removed in 2026; they remain in the git history.
 
 ## 3.3 The life of a run
 
