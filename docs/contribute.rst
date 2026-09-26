@@ -96,13 +96,17 @@ Publishing on PyPI
 The job ``pypi`` of ``.github/workflows/release.yml`` also uploads the ready-made wheel to PyPI, as the project
 ``asynch-hlm`` (the name ``asynch`` belongs to another project there; the package is still imported as ``asynch``).
 It uses *Trusted Publishing*: PyPI accepts uploads from this workflow of this repository, so no password or token is
-stored in GitHub. It runs only when the repository variable ``PUBLISH_TO_PYPI`` is ``true``. To set it up, once:
+stored in GitHub. To set it up, once:
 
 1. Create an account on https://pypi.org (with two-factor authentication, which PyPI requires).
 2. In *Your account > Publishing > Add a new pending publisher*, choose GitHub and enter: PyPI project name
    ``asynch-hlm``, owner ``gurbuzf``, repository ``asynch``, workflow ``release.yml``, environment ``pypi``.
-3. In the GitHub repository, *Settings > Secrets and variables > Actions > Variables*, add ``PUBLISH_TO_PYPI`` with
-   the value ``true``.
+
+From the Actions tab (*Release > Run workflow*), the wheel goes to PyPI when *Publish on PyPI* is ticked (the
+default). For a release started by pushing a tag, set the repository variable ``PUBLISH_TO_PYPI`` to ``true``
+(*Settings > Secrets and variables > Actions > Variables*). To upload the wheel of a release that already exists
+(for instance made before PyPI was set up), run the workflow with its version and tick *Only upload an existing
+release to PyPI*: nothing is built, and the release is not changed.
 
 The next release then creates the project on PyPI, and ``pip install asynch-hlm`` installs it. A version number can
 be uploaded to PyPI only once: a release that must be redone needs a new version.

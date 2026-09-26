@@ -32,7 +32,9 @@ change and whether it changes numerical results; only the results of model 254 (
 - Tests with several processes compared lines printed by the processes, which MPI can deliver cut into each other
   (`rank 1rank 0 of 2 ...`): an occasional false failure. Each process now writes its own file, which the test reads.
 - `.github/workflows/release.yml`, job `pypi`: uploads the ready-made wheel to PyPI with Trusted Publishing (no stored
-  token), when the repository variable `PUBLISH_TO_PYPI` is `true`; `docs/contribute.rst` gives the one-time setup.
+  token): from the Actions tab when *Publish on PyPI* is ticked (default), for a pushed tag when the repository
+  variable `PUBLISH_TO_PYPI` is `true`; *Only upload an existing release to PyPI* publishes the wheel of a release
+  already made. `docs/contribute.rst` gives the one-time setup.
 
 #### Changed
 - The Python distribution is named `asynch-hlm` (`asynch` is another project on PyPI); the import name is still

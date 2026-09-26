@@ -4,8 +4,9 @@
 # of CHANGELOG.md for that version. Attached: the source archive made by `make dist` (it builds without autotools:
 # ./configure && make), the self-contained Linux wheel (pip install it: the Python package, the library and the
 # `asynch` program, nothing to build; workflow wheel.yml) and the documentation website as a zip file.
-# The wheel is also published on PyPI (as asynch-hlm) when the repository variable PUBLISH_TO_PYPI is "true": see
-# the job `pypi` below and docs/contribute.rst.
+# The wheel is also published on PyPI (as asynch-hlm): from the Actions tab when "Publish on PyPI" is ticked (the
+# default), for a pushed tag when the repository variable PUBLISH_TO_PYPI is "true". "Only upload an existing release
+# to PyPI" takes the wheel of a release already published, without building anything. See docs/contribute.rst.
 name: Release
 
 on:
@@ -16,16 +17,26 @@ on:
       version:
         description: "Version to release, as in configure.ac (for example 1.5.0)"
         required: true
+      publish_to_pypi:
+        description: "Publish on PyPI (asynch-hlm)"
+        type: boolean
+        default: true
+      pypi_only:
+        description: "Only upload an existing release to PyPI (no build, no new release)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
 
 jobs:
   wheel:
+    if: ${{ !inputs.pypi_only }}
     uses: ./.github/workflows/wheel.yml
 
   release:
     needs: wheel
+    if: ${{ !inputs.pypi_only }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -97,10 +108,15 @@ jobs:
 
   # PyPI, with Trusted Publishing: PyPI accepts this workflow of this repository, no password or token is stored.
   # Set up once on pypi.org (a "pending publisher" for project asynch-hlm: owner gurbuzf, repository asynch,
-  # workflow release.yml, environment pypi), then set the repository variable PUBLISH_TO_PYPI to "true".
+  # workflow release.yml, environment pypi).
   pypi:
     needs: release
-    if: vars.PUBLISH_TO_PYPI == 'true'
+    # after a successful release, or alone (pypi_only, the release job is then skipped); from the Actions tab when
+    # "Publish on PyPI" is ticked, for a pushed tag when the repository variable PUBLISH_TO_PYPI is "true"
+    if: >-
+      ${{ always() &&
+          (needs.release.result == 'success' || (inputs.pypi_only && needs.release.result == 'skipped')) &&
+          (inputs.publish_to_pypi || inputs.pypi_only || vars.PUBLISH_TO_PYPI == 'true') }}
     runs-on: ubuntu-24.04
     environment:
       name: pypi
@@ -109,8 +125,15 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/download-artifact@v4
+      - name: The wheel built by this run
+        if: ${{ !inputs.pypi_only }}
+        uses: actions/download-artifact@v4
         with:
           name: wheel
           path: dist
+      - name: The wheel of the existing release v${{ inputs.version }}
+        if: ${{ inputs.pypi_only }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "v${{ inputs.version }}" --repo "${GITHUB_REPOSITORY}" --pattern "*.whl" --dir dist
       - uses: pypa/gh-action-pypi-publish@release/v1
