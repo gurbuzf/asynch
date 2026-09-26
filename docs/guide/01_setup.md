@@ -36,6 +36,11 @@ Fedora, macOS with Homebrew. Notes only: if anything fails, use B.
 :::
 ::::
 
+:::{tip}
+**Only need ASYNCH from Python, on Linux?** A ready-made wheel installs the package, the library and the `asynch`
+program with pip, with nothing to compile: see [Installation in chapter 10](10_python.md#102-installation).
+:::
+
 Commands are shown in boxes like the one below; the {octicon}`copy` button at their top right copies them. Type or
 paste them in a **terminal**, the text window of your system: "Terminal" on Ubuntu and macOS, "Ubuntu" (WSL) or
 PowerShell on Windows. Lines starting with `#` are comments. After each step, a green **You should see** box tells

@@ -34,3 +34,7 @@ jobs:
         with:
           name: test-logs
           path: build/tests/*.log
+
+  # the self-contained wheel: built and tested on systems where nothing else is installed
+  wheel:
+    uses: ./.github/workflows/wheel.yml

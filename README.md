@@ -69,7 +69,22 @@ mpirun -n 4 asynch clearcreek.gbl        # Clear Creek, Iowa: 6 359 links, model
 ## ASYNCH as a Python library
 
 `asynch` is a regular Python package (`import asynch`): a thin layer over the C library `libasynch.so`, which does
-all the computation, the way h5py sits on top of HDF5. Install it into a virtual environment after `make install`:
+all the computation, the way h5py sits on top of HDF5.
+
+**Ready-made (Linux, nothing to build).** Each [release](https://github.com/gurbuzf/asynch/releases) has a wheel that
+carries the library and the `asynch` program already compiled; pip also installs MPI (the `mpich` package) with it:
+
+```bash
+python3 -m venv ~/asynch-venv && source ~/asynch-venv/bin/activate
+pip install --upgrade pip                  # pip 20.3 or newer reads the wheel's platform tag
+pip install https://github.com/gurbuzf/asynch/releases/download/v1.5.0/asynch-1.5.0-py3-none-manylinux_2_31_x86_64.whl
+asynch test.gbl                            # the program; mpiexec -n 4 asynch test.gbl on 4 processes
+```
+
+It runs on Linux x86-64 with glibc 2.31 or newer (Ubuntu 20.04+, Debian 11+, RHEL 9+, ...), with Python 3.8 or newer.
+No compiler is needed, except for models written as C code.
+
+**From the sources**, into a virtual environment after `make install`:
 
 ```bash
 sudo apt-get install -y python3-venv python3-setuptools python3-wheel
@@ -111,7 +126,8 @@ with Simulation("my_network.gbl", model=model) as sim:
 Measured on 5 000 links (model 190 rewritten each way, identical results): built-in C 0.10 s, C code 0.10 s,
 Python + Numba 0.13 s, plain Python 4.1 s.
 
-**MPI**: `mpirun -n 4 python3 my_script.py`; every process runs the script and ASYNCH shares the links (Clear Creek,
+**MPI**: `mpirun -n 4 python3 my_script.py` (with the ready-made wheel: `mpiexec -n 4 python3 my_script.py`); every
+process runs the script and ASYNCH shares the links (Clear Creek,
 6 359 links: 8.0 s on 1 process, 2.75 s on 4). mpi4py is optional (`Simulation(..., comm=MPI.COMM_WORLD)`).
 
 More in the [Python chapter](docs/guide/10_python.md), the

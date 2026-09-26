@@ -61,6 +61,7 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [R-04](#r-04) | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> | confirmed | Examples 258/259 pointed to a file on the original developers' cluster |
 | [R-05](#r-05) | <span class="st neutral">n/a</span> | <span class="st info">information</span> | confirmed | Results change at noise level with the number of MPI processes |
 | [A-01](#a-01) | <span class="sev high">High</span> | <span class="st fixed">resolved</span> | confirmed | Old Python API broken beyond repair; replaced by the `python/` package (chapter 10) |
+| [A-02](#a-02) | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> | confirmed | The Python package made the symbols of libasynch's HDF5 global: h5py could not be imported after it |
 | [M-01](#m-01) | <span class="sev low">Low</span> | <span class="st fixed">resolved</span> | confirmed | ~6 500 lines (15 %) of C were never compiled; removed |
 | [M-02](#m-02) | <span class="sev medium">Medium</span> | <span class="st open">open</span> | code reading | A model is defined in 7 different places; duplicated unreachable code |
 | [M-03](#m-03) | <span class="sev low">Low</span> | <span class="st fixed">partly fixed</span> | confirmed | CI (Travis) was dead: replaced by GitHub Actions; `.gitignore` still hides the examples |
@@ -503,6 +504,15 @@ opaque handles, never structure layouts. `py/`, `asynchdist.py` and `asynchdist_
 model of `asynchdist_custom.py` is ported in `examples/python/custom_model.py` and reproduces model 191 exactly.
 
 ---
+
+### A-02
+**The Python package made HDF5's symbols global: h5py could not be imported after asynch.** *Medium, confirmed.*
+`asynch/_lib.py` loaded `libasynch.so` with `RTLD_GLOBAL` (for Open MPI, whose plugins need the MPI symbols). That
+also made the symbols of every library it depends on global, HDF5 among them. h5py, which carries its own HDF5, then
+failed to import in the same program (`ValueError: Not a datatype`), and a library linked with another MPI could be
+handed the wrong MPI functions. Found while testing the ready-made wheel. **Fixed** (2026-09-26): the library is
+loaded with `RTLD_LOCAL`, and only Open MPI's library is made global (`RTLD_NOLOAD`), as mpi4py does. Tested: Open MPI
+build (make check, 2 and 3 processes, mpi4py) and the MPICH wheel (h5py imported after asynch).
 
 ## Maintainability
 

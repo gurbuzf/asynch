@@ -28,6 +28,9 @@ Breaking Changes
 New Features
 ~~~~~~~~~~~~
 
+* A ready-made wheel for Linux (x86-64, glibc 2.31 or newer), attached to the release: ``pip install`` it and the
+  Python package, the library and the ``asynch`` program are there, with nothing to compile; MPI comes with it (the
+  ``mpich`` package of PyPI, with ``mpiexec``).
 * The Python package ``asynch``, installed with ``pip`` or ``make install-python``: run a global file (identical output
   files), advance step by step, read and change states and parameters, add outputs, read and write every file format,
   and define new models with equations in C, Numba or Python (:doc:`guide/10_python`, :doc:`python_api`). Works with

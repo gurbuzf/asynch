@@ -92,9 +92,27 @@ class InExamples(unittest.TestCase):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
 
+def _is_open_mpi():
+    try:
+        out = subprocess.run(["mpirun", "--version"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                             universal_newlines=True, timeout=60).stdout
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return "Open MPI" in out or "OpenRTE" in out
+
+
+def mpirun(np):
+    """The start of an mpirun command for np processes. Open MPI needs to be allowed to run as root and to start more
+    processes than cores; MPICH (e.g. the mpich package of PyPI) does both by default and refuses those options."""
+    cmd = ["mpirun", "-np", str(np)]
+    if _is_open_mpi():
+        cmd[1:1] = ["--allow-run-as-root", "--oversubscribe"]
+    return cmd
+
+
 def run_cli(gbl, cwd, np=1):
     """Run the asynch program; returns the completed process."""
-    cmd = [EXE, gbl] if np == 1 else ["mpirun", "--allow-run-as-root", "--oversubscribe", "-np", str(np), EXE, gbl]
+    cmd = [EXE, gbl] if np == 1 else mpirun(np) + [EXE, gbl]
     return subprocess.run(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True,
                           timeout=600)
 
@@ -104,6 +122,6 @@ def run_python(code, cwd, np=1, timeout=600):
     env = dict(os.environ, PYTHONPATH=os.path.join(REPO, "python"))
     cmd = [sys.executable, "-c", code]
     if np > 1:
-        cmd = ["mpirun", "--allow-run-as-root", "--oversubscribe", "-np", str(np)] + cmd
+        cmd = mpirun(np) + cmd
     return subprocess.run(cmd, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                           universal_newlines=True, timeout=timeout)

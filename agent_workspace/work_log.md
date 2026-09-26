@@ -2,6 +2,17 @@
 
 Newest first.
 
+## 2026-09-26: ready-made Linux wheel (owner: "serve it built in")
+
+- Wheel carries libasynch.so + the asynch program + HDF5/libpq/... (auditwheel); MPI from PyPI `mpich` (dependency,
+  gives mpiexec). Ubuntu's MPICH is PMIx-built (singleton only with hydra) and Open MPI loads plugins: both unusable.
+- Built in ubuntu:20.04 (manylinux_2_31); quay.io and AlmaLinux mirrors are blocked in the sandbox, so manylinux_2_28
+  (RHEL 8) was not possible to test. Tested in bare containers: Ubuntu 20.04/24.04, Debian 11/12; with gcc+numba+mpi4py
+  all 70 tests pass.
+- Found A-02 (RTLD_GLOBAL made HDF5 symbols global: h5py import failed). Fixed. Test fixes: Open MPI-only flags,
+  HDF5 compare by content (creation times).
+- One unexplained failure in a first venv test run (not saved); not reproduced in 23 runs.
+
 ## 2026-09-26: documentation redesign and release 1.5.0 (owner request)
 
 - Pages deployment verified (run 36223745641, attempt 2, deploy job succeeded after Pages was enabled).

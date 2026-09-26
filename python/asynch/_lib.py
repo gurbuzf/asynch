@@ -233,6 +233,32 @@ def _candidates():
                 yield os.path.join(prefix, "lib", name)
 
 
+def mpich_libdir():
+    """Folder of libmpi.so.12 installed by the `mpich` package of PyPI (the MPI of the self-contained wheel), or None.
+    pip puts it in the lib folder of the environment (or of the user base for `pip install --user`)."""
+    import site
+    prefixes = [sys.prefix, getattr(site, "USER_BASE", None) or site.getuserbase(), sys.base_prefix]
+    for prefix in prefixes:
+        if prefix and os.path.exists(os.path.join(prefix, "lib", "libmpi.so.12")):
+            return os.path.join(prefix, "lib")
+    return None
+
+
+def _bundled(path):
+    """True for the library carried by the self-contained wheel (inside the package folder)."""
+    return os.path.dirname(os.path.abspath(path)) == os.path.dirname(os.path.abspath(__file__))
+
+
+def _make_mpi_global():
+    """Makes Open MPI's library global when libasynch loaded it (as mpi4py does): Open MPI loads plugins at MPI_Init
+    that need its symbols. RTLD_NOLOAD: only a library already loaded is affected. MPICH needs no plugins, and stays
+    local, so that another library of the program linked with a different MPI is not handed MPICH's symbols."""
+    try:
+        ctypes.CDLL("libmpi.so.40", mode=ctypes.RTLD_GLOBAL | getattr(os, "RTLD_NOLOAD", 4))
+    except OSError:
+        pass
+
+
 def find_library():
     """Path of the libasynch shared library that would be loaded."""
     tried = []
@@ -253,8 +279,17 @@ def lib():
     global _lib
     if _lib is None:
         path = find_library()
-        # RTLD_GLOBAL: Open MPI loads plugins that need the MPI symbols of libasynch's dependencies
-        library = ctypes.CDLL(path, mode=ctypes.RTLD_GLOBAL)
+        if _bundled(path):
+            # the self-contained wheel does not carry MPI: it uses the MPICH of the `mpich` package. The library
+            # finds it in the lib folder of the environment; loading it first also covers other installation layouts
+            mpi_dir = mpich_libdir()
+            if mpi_dir is None:
+                raise OSError("the MPI library of the `mpich` package was not found: pip install mpich")
+            ctypes.CDLL(os.path.join(mpi_dir, "libmpi.so.12"), mode=ctypes.RTLD_LOCAL)
+        # RTLD_LOCAL: the symbols of libasynch's dependencies (HDF5 in particular) must not become global, or another
+        # library loaded later in the same program, such as h5py with its own HDF5, would use them and fail.
+        library = ctypes.CDLL(path, mode=ctypes.RTLD_LOCAL)
+        _make_mpi_global()
         for name, (restype, argtypes) in PROTOTYPES.items():
             try:
                 func = getattr(library, name)

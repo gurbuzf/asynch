@@ -1,0 +1,36 @@
+# Builds the self-contained Linux wheel of the asynch package (python/ci/build_linux_wheel.sh, in Ubuntu 20.04: ASYNCH
+# is built with MPICH and must pass make check) and tests it on other systems where nothing else is installed
+# (python/ci/test_wheel.sh). Called by the Tests workflow on every push and by the Release workflow.
+name: Wheel
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the wheel (Ubuntu 20.04 container)
+        run: docker run --rm -v "$PWD":/w ubuntu:20.04 bash /w/python/ci/build_linux_wheel.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheel
+          path: dist/*.whl
+
+  test:
+    needs: build
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["ubuntu:24.04", "python:3.9-slim-bullseye", "python:3.11-slim-bookworm"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheel
+          path: dist
+      - name: Install and test the wheel (${{ matrix.image }})
+        run: docker run --rm -v "$PWD":/w "${{ matrix.image }}" bash /w/python/ci/test_wheel.sh

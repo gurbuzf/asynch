@@ -2,8 +2,8 @@
 # from the Actions tab: Release > Run workflow, with the version (the tag v<version> is then created on the chosen
 # branch's latest commit). The tag must match the version of configure.ac; ASYNCH is built and tested first; the release notes are the section
 # of CHANGELOG.md for that version. Attached: the source archive made by `make dist` (it builds without autotools:
-# ./configure && make), the Python package as a wheel (it still needs libasynch.so, built from the sources) and the
-# documentation website as a zip file, to read offline.
+# ./configure && make), the self-contained Linux wheel (pip install it: the Python package, the library and the
+# `asynch` program, nothing to build; workflow wheel.yml) and the documentation website as a zip file.
 name: Release
 
 on:
@@ -19,7 +19,11 @@ permissions:
   contents: write
 
 jobs:
+  wheel:
+    uses: ./.github/workflows/wheel.yml
+
   release:
+    needs: wheel
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -59,8 +63,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Python wheel
-        run: python -m pip wheel --no-deps ./python -w dist
+      - name: The self-contained wheel (built and tested by wheel.yml)
+        uses: actions/download-artifact@v4
+        with:
+          name: wheel
+          path: dist
       - name: Documentation website (zip)
         run: |
           pip install -r docs/requirements.txt

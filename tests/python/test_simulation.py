@@ -13,9 +13,21 @@ from asynch import Simulation, AsynchError, GlobalConfig, io
 from asynch.config import Output, Selection
 
 
+def h5_content(group):
+    """Every dataset (its bytes) and attribute of an HDF5 group, recursively."""
+    out = {"attrs": {k: repr(v) for k, v in group.attrs.items()}}
+    for name, item in group.items():
+        if hasattr(item, "items"):
+            out[name] = h5_content(item)
+        else:
+            out[name] = (item.dtype.str, item.shape, item[()].tobytes(), {k: repr(v) for k, v in item.attrs.items()})
+    return out
+
+
 @helpers.requires_library
 class TestRunLikeTheProgram(helpers.InExamples):
-    """Simulation.run() writes the same files as the asynch program, to the last byte (1 process)."""
+    """Simulation.run() writes the same files as the asynch program, to the last byte (1 process); for HDF5 files, the
+    same datasets and attributes (the bytes also hold the creation time)."""
 
     def compare(self, folder, gbl, outputs):
         cli_dir = os.path.join(self.tmp, "cli")
@@ -27,8 +39,18 @@ class TestRunLikeTheProgram(helpers.InExamples):
             sim.run()
         for out in outputs:
             with self.subTest(output=out):
-                self.assertTrue(filecmp.cmp(os.path.join(cli_dir, folder, out), out, shallow=False),
-                                "%s differs from the asynch program" % out)
+                other = os.path.join(cli_dir, folder, out)
+                if out.endswith(".h5"):
+                    # HDF5 stores the creation time of its objects: two runs a second apart differ in those bytes
+                    # only. Compare what the file holds instead.
+                    try:
+                        import h5py
+                    except ImportError:
+                        self.skipTest("h5py is needed to compare .h5 files")
+                    with h5py.File(other, "r") as a, h5py.File(out, "r") as b:
+                        self.assertEqual(h5_content(a), h5_content(b), "%s differs from the asynch program" % out)
+                else:
+                    self.assertTrue(filecmp.cmp(other, out, shallow=False), "%s differs from the asynch program" % out)
 
     @helpers.requires_exe
     def test_test_2015(self):

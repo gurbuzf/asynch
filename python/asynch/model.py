@@ -333,7 +333,13 @@ class Model:
                 f.write(source)
             tmp_so = tmp_c[:-2] + ".so"
             cmd = compiler + flags + ["-o", tmp_so, tmp_c, "-lm"]
-            proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+            try:
+                proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+            except FileNotFoundError:
+                os.unlink(tmp_c)
+                raise ModelError("model %r is written in C, and no C compiler was found (%s). Install one (Ubuntu: "
+                                 "sudo apt-get install gcc), set CC, or write the equations as Python functions "
+                                 "(with jit=\"numba\" they run at C speed)." % (self.name, compiler[0]))
             if proc.returncode != 0:
                 os.unlink(tmp_c)
                 raise ModelError("compiling model %r failed:\n$ %s\n%s\n--- generated source ---\n%s"

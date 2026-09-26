@@ -9,7 +9,7 @@ description = "Python interface to ASYNCH, an asynchronous solver of hydrologica
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "GPL-2.0"}
-dependencies = ["numpy"]
+dynamic = ["scripts", "dependencies"]   # setup.py: numpy; plus mpich and the `asynch` command in the self-contained wheel
 
 keywords = ["hydrology", "river network", "ODE", "Runge-Kutta", "MPI"]
 classifiers = [
@@ -28,9 +28,6 @@ all = ["h5py", "numba", "mpi4py"]
 [project.urls]
 Documentation = "https://gurbuzf.github.io/asynch/"
 Source = "https://github.com/gurbuzf/asynch"
-
-[project.scripts]
-asynch-py = "asynch.__main__:main"
 
 [tool.setuptools]
 packages = ["asynch"]

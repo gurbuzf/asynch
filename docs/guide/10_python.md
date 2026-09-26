@@ -59,7 +59,7 @@ library HDF5):
 
 | Part | What it is | Installed by |
 |---|---|---|
-| the C library `libasynch.so` | the solver, the models, the file readers: all the computation | `make install` (with the rest of ASYNCH) |
+| the C library `libasynch.so` | the solver, the models, the file readers: all the computation | `make install` (with the rest of ASYNCH), or inside the ready-made wheel |
 | the Python package `asynch` | a thin layer that calls the library (with `ctypes`, part of Python) | `pip install` or `make install-python` |
 
 Keeping the computation in the C library means one solver for the `asynch` program, C programs and Python, so a run
@@ -75,6 +75,24 @@ C speed, 10.7), mpi4py (only to use MPI from your own Python code, 10.9). A C co
 in C; it is already installed if you built ASYNCH.
 
 ::::{tab-set}
+:::{tab-item} Ready-made wheel
+Nothing to build: each [release](https://github.com/gurbuzf/asynch/releases) has a wheel for Linux that carries the
+library and the `asynch` program already compiled, with the libraries they need (HDF5, ...). pip installs MPI with it
+(the `mpich` package of PyPI, which also provides `mpiexec`).
+
+```bash
+python3 -m venv ~/asynch-venv && source ~/asynch-venv/bin/activate
+pip install --upgrade pip        # pip 20.3 or newer reads the wheel's platform tag
+pip install https://github.com/gurbuzf/asynch/releases/download/v1.5.0/asynch-1.5.0-py3-none-manylinux_2_31_x86_64.whl
+pip install h5py numba           # optional: read .h5 outputs; models in Python at C speed
+```
+
+It runs on Linux x86-64 with glibc 2.31 or newer (Ubuntu 20.04+, Debian 11+, RHEL 9+, ...) and Python 3.8 or newer.
+It also installs the command `asynch`, the program itself (`asynch test.gbl`, `mpiexec -n 4 asynch test.gbl`). A C
+compiler is needed only for models written as C code. Tested: the wheel is installed on systems with nothing else
+(no compiler, MPI or HDF5), and the tests of the package and every example against the reference results pass.
+:::
+
 :::{tab-item} Ubuntu or WSL
 After `make` in `~/asynch/build` (chapter 1, option A):
 
@@ -475,6 +493,7 @@ The tests (`make check` runs them; chapter 9):
 
 | Message | Cause and fix |
 |---|---|
+| `... is not a supported wheel on this platform` | pip older than 20.3 (`pip install --upgrade pip`), or a Linux older than glibc 2.31, or not x86-64: build from the sources |
 | `OSError: libasynch was not found` | build ASYNCH (chapter 1); then `sudo make install && sudo ldconfig`, or `export ASYNCH_LIBRARY=.../libasynch.so` |
 | `... does not provide Asynch_...: it is older than this Python package` | the library found is an old build: rebuild, or point `ASYNCH_LIBRARY` to the new one |
 | `ModuleNotFoundError: No module named 'asynch'` | `export PYTHONPATH=~/asynch/python`, or install the package (10.2) |

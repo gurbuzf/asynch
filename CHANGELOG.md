@@ -13,10 +13,40 @@ Nothing yet.
 ## [1.5.0] - 2026-09-26
 
 The first release of this branch. In short: a working Python library (`asynch`: run and change simulations, new
-models in C, Numba or Python, MPI), 2 critical and 10 high-severity bugs fixed, networks above 65 535 links, `make check`
+models in C, Numba or Python, MPI), installable on Linux with pip without building anything, 2 critical and 10 high-severity bugs fixed, networks above 65 535 links, `make check`
 with 93 tests against the reference results, GitHub Actions, and a documentation website. The entries below list every
 change and whether it changes numerical results; only the results of model 254 (S-02, on purpose) and of models 105 and 263 (B-26: they were undefined) change. The release notes
 (`docs/release_notes.rst`) summarise what changes for a user.
+
+### Ready-made Linux wheel: `pip install` without building; fix A-02 (h5py next to asynch)
+
+*Results:* unchanged. The program is bit-identical to the previous commit with 1 process; built with MPICH for the
+wheel, `make check` passes and every example agrees with the references with 1 and 2 processes.
+
+#### Added
+- A self-contained wheel for Linux x86-64 (glibc 2.31 or newer): the Python package with `libasynch.so`, the `asynch`
+  program and the libraries they need (HDF5, libpq, ...), copied in by `auditwheel`. MPI comes from the `mpich`
+  package of PyPI, which the wheel requires (it also provides `mpiexec`). `pip install` it: nothing to compile.
+  `python/build_wheel.sh`, `python/setup.py` (a platform wheel when a library is bundled), `asynch/_cli.py` (the
+  command `asynch`).
+- `python/ci/build_linux_wheel.sh` (built in Ubuntu 20.04, after `make check`) and `python/ci/test_wheel.sh`;
+  `.github/workflows/wheel.yml` builds the wheel and tests it on Ubuntu 24.04, Debian 11 and Debian 12 containers where
+  nothing else is installed, on every push; the release attaches it. Tested also on Ubuntu 20.04 (Python 3.8), and
+  with a compiler, Numba and mpi4py: all 70 Python tests pass.
+
+#### Fixed
+- A-02 (`python/asynch/_lib.py`): the library was loaded with `RTLD_GLOBAL`, which made the symbols of its HDF5 global:
+  importing h5py (with its own HDF5) after asynch failed (`ValueError: Not a datatype`), and another library linked
+  with a different MPI could be handed MPICH's symbols. The library is loaded locally; only Open MPI's library is
+  made global (its plugins need it), as mpi4py does.
+- A model written as C code without a C compiler now fails with a message saying so, instead of `FileNotFoundError`.
+- Tests: MPI options specific to Open MPI (`--allow-run-as-root`, `--oversubscribe`) only with Open MPI; HDF5 files
+  written by Python and by the program are compared by content (their bytes include creation times, so runs a
+  second apart differed).
+
+#### Changed
+- The pure-Python wheel is no longer attached to releases (the ready-made wheel replaces it; `pip install ./python`
+  still installs the package for a library built from the sources).
 
 ### Fix B-26 and B-27: derivatives left unset (models 105, 263); uninitialised reads in the steppers
 
@@ -52,7 +82,7 @@ commit with 1 process; within tolerance with 2 and 4 processes. No AddressSaniti
   figures in tiles; equations of chapters 4, 5 and 9 typeset with MathJax.
 - `docs/release_notes.rst`: notes for version 1.5.
 - `.github/workflows/release.yml`: pushing a tag `v*` builds and tests ASYNCH, and publishes a GitHub release with
-  the summary of the version from this file, the source archive (`make dist`), the Python package as a wheel and the
+  the summary of the version from this file, the source archive (`make dist`), the ready-made wheel and the
   documentation website as a zip file. It can also be started from the Actions tab (*Release > Run workflow*, with
   the version), which creates the tag. `docs/contribute.rst` describes the procedure.
 

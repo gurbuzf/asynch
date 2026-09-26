@@ -453,8 +453,10 @@ def main():
     env.setdefault("OMPI_ALLOW_RUN_AS_ROOT", "1")          # harmless when not root
     env.setdefault("OMPI_ALLOW_RUN_AS_ROOT_CONFIRM", "1")
     mpi_cmd = [mpirun, "-n", str(args.np)]
-    if args.np > 1:
-        mpi_cmd.append("--oversubscribe")
+    version = subprocess.run([mpirun, "--version"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                             universal_newlines=True).stdout
+    if args.np > 1 and ("Open MPI" in version or "OpenRTE" in version):
+        mpi_cmd.append("--oversubscribe")                  # Open MPI only; MPICH allows it by default
 
     failures = 0
     for case in CASES:
