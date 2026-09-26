@@ -2053,12 +2053,19 @@ void model263(double t, const double * const y_i, unsigned int dim, const double
     //ans[5] = forcing_values[1] * c_1;   // et[5]
     //ans[6] = q_pl;                      // runoff[]6
     //ans[7] = q_sl * A_h - q_b*60.0;     // baseflow[7]
+    // Before 1.5.0 the sum below started from whatever the work array held, and states 5 to 7 had no derivative at
+    // all (B-26). The sum now starts at 0, and states 5 to 7 keep their initial values (their equations are the
+    // commented lines above).
+    ans[4] = 0.0;
     for (i = 0; i < num_parents; i++)
         //ans[4] += y_p[i * dim + 4] * 60.0;
         ans[4] += y_p[i * dim + 4] ;
     //ans[4] *= v_B / L;
     //pow using q not q_b to move at same flow velocity that state0
     ans[4] = invtau * pow(q, lambda_1) * ans[4];    // baseflow[0]
+    ans[5] = 0.0;
+    ans[6] = 0.0;
+    ans[7] = 0.0;
 }
 
 //Type 264: similar to model 256, with a forcing for snowmelt
@@ -6268,6 +6275,10 @@ void river_rainfall_summary(double t, const double * const y_i, unsigned int dim
     for (i = 0; i<num_parents; i++)
         ans[0] += y_p[i * dim];
     ans[0] = invtau * pow(q, lambda_1) * ans[0];
+
+    // The storage s (state 1) has no equation in this model: it keeps its initial value. Before 1.5.0 its derivative
+    // was not set, and was taken from whatever the work array held (B-26).
+    ans[1] = 0.0;
 }
     //Ponded water equation (y_i[1])
 //The numbering is:	0   1   2    3     4

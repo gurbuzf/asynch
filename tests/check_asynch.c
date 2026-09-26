@@ -460,6 +460,14 @@ static int evaluate_model(unsigned short uid)
     for (unsigned int i = link.diff_start; i < dim; i++)
         if (!isfinite(ans[i]))
             return 2;
+    // Every derivative must be set by the model: the solver passes a work array that holds values of an earlier
+    // stage, so a derivative that is not written (or that is added to instead of set) takes those values (B-26).
+    // Same call with the array filled with NaN first: a NaN left means "not written".
+    for (unsigned int i = 0; i < 64; i++) ans[i] = NAN;
+    link.differential(0.0, y, dim, yp, 2, dim, gp, params, forcing, NULL, state, NULL, ans);
+    for (unsigned int i = link.diff_start; i < dim; i++)
+        if (isnan(ans[i]))
+            return 10 + i;
     return 0;
 }
 
@@ -484,6 +492,8 @@ START_TEST(test_model_equations_finite)
             problem("crashed (signal %u)%.0u", uid, WTERMSIG(status), 0);
         else if (WEXITSTATUS(status) == 2)
             problem("a derivative is not a finite number%.0u%.0u", uid, 0, 0);
+        else if (WEXITSTATUS(status) >= 10)
+            problem("derivative %u is not set by the equations%.0u", uid, WEXITSTATUS(status) - 10, 0);
         else if (WEXITSTATUS(status) != 0)
             problem("exit status %u%.0u", uid, WEXITSTATUS(status), 0);
     }

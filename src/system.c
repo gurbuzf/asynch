@@ -213,20 +213,23 @@ void Create_Workspace(Workspace *workspace, unsigned int max_dim, unsigned short
 {
     memset(workspace, 0, sizeof(Workspace));
 
-    workspace->sum =malloc(max_dim * sizeof(double));
-    workspace->temp = malloc(max_dim * sizeof(double));
-    workspace->temp2 = malloc(max_dim * sizeof(double));
-    workspace->temp3 = malloc(max_dim * sizeof(double));
+    // calloc: zero-filled, so that no value of these arrays is ever undefined. The consistency check of the
+    // steppers is applied to the whole state vector of each parent, of which only the dense states are
+    // interpolated: the other entries were read uninitialised (B-27, no effect on results).
+    workspace->sum = calloc(max_dim, sizeof(double));
+    workspace->temp = calloc(max_dim, sizeof(double));
+    workspace->temp2 = calloc(max_dim, sizeof(double));
+    workspace->temp3 = calloc(max_dim, sizeof(double));
 
 
-    workspace->parents_approx = malloc(max_parents * max_dim * sizeof(double));
-    workspace->stages_parents_approx = malloc(num_stages * max_parents * max_dim * sizeof(double));
+    workspace->parents_approx = calloc((size_t)max_parents * max_dim, sizeof(double));
+    workspace->stages_parents_approx = calloc((size_t)num_stages * max_parents * max_dim, sizeof(double));
 
     //workspace->temp_k = (VEC*)malloc(num_stages * sizeof(VEC));
     //for (unsigned int i = 0; i < num_stages; i++)
     //    workspace->temp_k[i] = v_init(dim);
 
-    workspace->temp_k = malloc(num_stages * max_dim * sizeof(double));
+    workspace->temp_k = calloc((size_t)num_stages * max_dim, sizeof(double));
 
     for (unsigned int i = 0; i < num_stages; i++)
         workspace->temp_k_slices[i] = workspace->temp_k + i * max_dim;
