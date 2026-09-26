@@ -69,12 +69,17 @@ Versions follow `semantic versioning <https://semver.org/>`__: ``x.y.z``. To rel
    changes for a user, breaking changes first.
 3. Build and run ``make check`` (:doc:`guide/09_reproducibility`); compare the examples with the previous version with
    ``tests/regression/run_examples.py --compare-to``.
-4. Commit, then create and push the tag:
+4. Commit and push, then create the tag, in either of two ways:
 
-   .. code-block:: sh
+   * from the command line:
 
-      git tag -a vx.y.z -m "ASYNCH x.y.z"
-      git push origin vx.y.z
+     .. code-block:: sh
+
+        git tag -a vx.y.z -m "ASYNCH x.y.z"
+        git push origin vx.y.z
+
+   * or on GitHub: *Actions > Release > Run workflow*, choose the branch and type the version ``x.y.z``; the tag is
+     created on the latest commit of that branch, after it has been built and tested.
 
 The workflow ``.github/workflows/release.yml`` then checks that the tag matches ``configure.ac``, builds ASYNCH, runs
 ``make check``, and publishes the GitHub release. Its description is the summary of the version from

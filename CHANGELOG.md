@@ -53,7 +53,8 @@ commit with 1 process; within tolerance with 2 and 4 processes. No AddressSaniti
 - `docs/release_notes.rst`: notes for version 1.5.
 - `.github/workflows/release.yml`: pushing a tag `v*` builds and tests ASYNCH, and publishes a GitHub release with
   the summary of the version from this file, the source archive (`make dist`), the Python package as a wheel and the
-  documentation website as a zip file. `docs/contribute.rst` describes the procedure.
+  documentation website as a zip file. It can also be started from the Actions tab (*Release > Run workflow*, with
+  the version), which creates the tag. `docs/contribute.rst` describes the procedure.
 
 #### Changed
 - Version 1.5.0 (`configure.ac`, the Python package).
