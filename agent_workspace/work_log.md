@@ -2,6 +2,19 @@
 
 Newest first.
 
+## 2026-09-27 (later): P-01, stiff solver, Tiger/HydroLegion review
+
+- P-01 removed (48b2b40): init 1.3 s -> 0.27 s, examples bit-identical np=1.
+- Solver index 4 = Rodas5P (14e4a92). Model 254, 6 359 links, 100 h, errors vs tol 1e-8 run:
+  DOPRI 11.3 s / 5.44 M steps / 21 % rejected / err 4.0e-5; Rodas5P same tol 0.69 s / 189 k / 5.4 % / 5.6e-3;
+  Rodas5P tol x0.01 1.71 s / 465 k / 2.2 % / 7.8e-5 (peak err 6.7e-5 vs 3.4e-4). Guidance: divide tolerances by 100.
+- CI: wheel job (Ubuntu 20.04, libcheck 0.10) lacked ck_assert_ptr_nonnull -> use ck_assert_ptr_ne(.., NULL).
+- Tiger-HLM (MIT, Princeton): GPU runoff only (own Runoff5 model, RK45 + Radau per hillslope, NetCDF/YAML);
+  routing separate CPU/OpenMP repo, channel RHS same form as 254 link equation. HydroLegion-HLM (MIT, Perez,
+  v0.3.0): pure Python; GPU tier = fixed-step RK4 or exponential/IMEX step, float32 default, families 204/205
+  only, sparse-matmul routing, ensemble axis. Neither implements ASYNCH 254 as-is; reuse = ideas, not code.
+- GPU prototype on hold (owner).
+
 ## 2026-09-27: units audit fixes, 1.6.0, GPU investigation
 
 - Units audit of every model (report delivered to the owner as PDF, not in the repo). Owner: "fix all as you

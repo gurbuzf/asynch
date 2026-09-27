@@ -734,7 +734,7 @@ START_TEST(test_model254_jacobian)
     Link link;
     double gp[64], params[128], yp[2 * 64], forcing[16], J[64], fp[8], fm[8], y[8];
     unsigned int dim = setup_model(254, &g, gp, params, &link);
-    ck_assert_ptr_nonnull(link.jacobian);
+    ck_assert_ptr_ne(link.jacobian, NULL);
     // realistic global parameters: v_0 lambda_1 lambda_2 v_h k_3 k_I_factor h_b S_L A B exponent v_B
     const double g254[12] = { 0.33, 0.2, -0.1, 0.02, 2.0425e-6, 0.02, 0.5, 0.1, 0.0, 99.0, 3.0, 0.75 };
     memcpy(gp, g254, sizeof(g254));
