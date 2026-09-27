@@ -317,7 +317,7 @@ int main(int argc, char* argv[])
 
     //Make sure everyone is good before getting down to it...
     printf("Process %i (%i total) is good to go with %i links.\n", my_rank, np, Asynch_Get_Num_Links_Proc(asynch));
-    ASYNCH_SLEEP(1);
+    fflush(stdout);                 //until 1.6 a 1 s pause followed (P-01); it changed no result
     MPI_Barrier(MPI_COMM_WORLD);
 
     if (my_rank == 0)

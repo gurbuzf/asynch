@@ -74,7 +74,7 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [M-01](#m-01) | <span class="sev low">Low</span> | <span class="st fixed">resolved</span> | confirmed | ~6 500 lines (15 %) of C were never compiled; removed |
 | [M-02](#m-02) | <span class="sev medium">Medium</span> | <span class="st open">open</span> | code reading | A model is defined in 7 different places; duplicated unreachable code |
 | [M-03](#m-03) | <span class="sev low">Low</span> | <span class="st fixed">partly fixed</span> | confirmed | CI (Travis) was dead: replaced by GitHub Actions; `.gitignore` still hides the examples |
-| [P-01](#p-01) | <span class="sev low">Low</span> | <span class="st open">open</span> | confirmed | CLI sleeps 1 s during initialisation |
+| [P-01](#p-01) | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> | confirmed | CLI slept 1 s during initialisation |
 | [P-02](#p-02) | <span class="sev medium">Medium</span> | <span class="st open">open</span> | code reading | Snapshots gather every link through rank 0 one message at a time |
 | [P-03](#p-03) | <span class="st neutral">n/a</span> | <span class="st open">open</span> | hypothesis | Scheduler, barriers and step-size resets in `Advance`: needs profiling |
 | [S-01](#s-01) | <span class="st neutral">n/a</span> | <span class="st info">open question</span> | code reading | Parent states indexed with `dim` instead of `max_dim` in the equations |
@@ -662,6 +662,14 @@ network) before anything is changed.
 `src/asynch_cli.c:320` sleeps for 1 s (`ASYNCH_SLEEP(1)`) before the computation.
 Negligible for large runs, but it makes up 99 % of the runtime of the small examples.
 (On Windows the same macro sleeps 1 ms, because `Sleep` takes milliseconds.)
+
+The pause came with the first upload (2015), right after each process prints "good to go" and before a barrier:
+most likely to let those lines reach the screen before the next message. It has no numerical role: without it every
+example gives bit-identical results with 1 process, and differences with 2 and 4 processes are of the same size as
+between two runs of the unchanged program (R-05). **Fixed** (1.6.1): the pause is removed; output is flushed before
+the barrier. Initialisation of the 6 359-link test network: 1.3 s → 0.27 s. The pauses left in
+`src/asynch_interface.c` and `src/processdata.c` are on error paths (they let process 0 print its message before the
+program aborts) and stay.
 
 ### P-02
 Recurrent HDF5 snapshots (`DumpStateH5`, `src/processdata.c:1893-1936`) send **one

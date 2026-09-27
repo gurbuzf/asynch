@@ -8,7 +8,15 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
-Nothing yet.
+### Fix P-01: no 1-second pause at start-up
+
+*Results:* unchanged. Every example is bit-identical to the previous commit with 1 process; with 2 and 4 processes the
+differences are of the size seen between two runs of the unchanged program (R-05).
+
+#### Fixed
+- `src/asynch_cli.c`: the program paused 1 s before computing (`sleep(1)` after the "good to go" messages, since
+  2015). It had no numerical role. It is removed; the output is flushed before the barrier. Initialisation of the
+  6 359-link test network: 1.3 s → 0.27 s.
 
 ## [1.6.0] - 2026-09-27
 
