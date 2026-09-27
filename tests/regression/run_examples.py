@@ -142,9 +142,16 @@ for _m in (192, 196, 258, 259):
         ],
         "xfail": None,
     })
-# See docs/guide/08_known_issues.md, issue "R-03".
-CASES[-1]["xfail"] = ("benchmark was produced with an evaporation file that is not in the "
-                      "repository; the 2018 code gives the same result as today's code")
+# The benchmarks of models 258 and 259 were produced in 2018 by code that multiplied the evaporation of
+# ponded water by 1000 (issue B-28) and read the baseflow from the wrong state (B-30). Both were fixed
+# in 1.6.0, so the results are meant to differ from the benchmarks and from the original code.
+# See docs/guide/08_known_issues.md, issues "B-28", "B-30" and "R-03".
+for _case in CASES[-2:]:
+    _case["changed_vs_original"] = "evaporation of ponded water and baseflow state fixed (B-28, B-30)"
+    _case["xfail"] = ("benchmark was produced by code that multiplied the evaporation of ponded water "
+                      "by 1000 and read the baseflow from the wrong state (B-28, B-30)")
+CASES[-1]["xfail"] += ("; in addition it used an evaporation file that is not in the repository "
+                       "(R-03)")
 
 
 # ---------------------------------------------------------------------------

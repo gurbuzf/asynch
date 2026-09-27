@@ -12,6 +12,8 @@ and compares both with the 2015 reference files in examples/results/.
         --before ~/asynch-original/build/src/asynch --after build/src/asynch
 
 Needs numpy and matplotlib, and mpirun in the PATH. Takes about a minute.
+
+    --figures model258   makes only the figure of model 258 (issue B-28), with --after only
 """
 import argparse
 import os
@@ -76,15 +78,62 @@ def max_diff(new, ref):
     return max(float(np.max(np.abs(np.asarray(new[k]) - np.asarray(ref[k])))) for k in ref)
 
 
+def model258_figure(exe, out, np_):
+    """Figure 4: example of model 258, benchmark (2018 code, with the evaporation error B-28) and this version."""
+    d = tempfile.mkdtemp(prefix="asynch_plot_")
+    shutil.copytree(os.path.join(REPO, "examples"), d, dirs_exist_ok=True)
+    wd = os.path.join(d, "more", "model_258")
+    os.makedirs(os.path.join(wd, "results"), exist_ok=True)
+    env = dict(os.environ, OMPI_ALLOW_RUN_AS_ROOT="1", OMPI_ALLOW_RUN_AS_ROOT_CONFIRM="1")
+    with open(os.path.join(d, "run.log"), "w") as log:
+        rc = subprocess.call(["mpirun", "-n", str(np_), exe, "test258.gbl"], cwd=wd, stdout=log,
+                             stderr=subprocess.STDOUT, env=env, timeout=1800)
+    if rc != 0:
+        sys.exit("run of test258.gbl failed, see %s/run.log" % d)
+
+    def read(path):
+        """test258_hydr.csv: per link, columns time, link id, discharge; returns {link: (t, q)}."""
+        head = open(path).readline()
+        links = [int(s.split()[1]) for s in head.split(",") if s.strip().startswith("Link")]
+        a = np.loadtxt(path, delimiter=",", skiprows=2, usecols=range(3 * len(links)))
+        return {k: (a[:, 3 * i], a[:, 3 * i + 2]) for i, k in enumerate(links)}
+    ref = read(os.path.join(REPO, "examples", "more", "model_258", "results_benchmark", "test258_hydr.csv"))
+    new = read(os.path.join(wd, "results", "test258_hydr.csv"))
+    fig, axes = plt.subplots(1, len(ref), figsize=(8, 3.6), sharey=False)
+    for ax, k in zip(np.atleast_1d(axes), sorted(ref)):
+        ax.plot(ref[k][0] / 60, ref[k][1], color=BEFORE, ls="--", label="benchmark (2018 code, with the ×1000)")
+        ax.plot(new[k][0] / 60, new[k][1], color=AFTER, label="this version")
+        ax.set_title("link %d" % k, loc="left")
+        ax.set_xlabel("time since start [hours]")
+        print("model 258, link %d: peak %.4f -> %.4f m3/s" % (k, ref[k][1].max(), new[k][1].max()))
+    np.atleast_1d(axes)[0].set_ylabel("discharge q [m³/s]")
+    np.atleast_1d(axes)[0].legend(loc="upper right", fontsize=8)
+    fig.suptitle("Model 258 example: ponded water no longer evaporates 1000 times too fast (B-28)",
+                 x=0.01, ha="left", fontweight="bold", fontsize=11)
+    fig.tight_layout()
+    fig.savefig(os.path.join(out, "model258_evaporation_fix.png"), dpi=150)
+    plt.close(fig)
+    shutil.rmtree(d, ignore_errors=True)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--before", required=True, help="asynch executable of the original code")
+    ap.add_argument("--before", help="asynch executable of the original code")
     ap.add_argument("--after", required=True, help="asynch executable of the current code")
     ap.add_argument("--out", default=os.path.join(REPO, "docs", "guide", "figures"))
     ap.add_argument("--np", type=int, default=1, help="MPI processes (default 1)")
+    ap.add_argument("--figures", default="reference,model258",
+                    help="comma-separated: reference (figures 1-3, needs --before), model258 (figure 4)")
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
     style()
+    figures = args.figures.split(",")
+    if "model258" in figures:
+        model258_figure(args.after, args.out, args.np)
+    if "reference" not in figures:
+        return
+    if not args.before:
+        ap.error("--before is needed for the reference figures")
 
     ex = os.path.join(REPO, "examples")
     gbl = {n: open(os.path.join(ex, n + ".gbl")).read() for n in ("test_2015", "clearcreek_2015")}

@@ -9,10 +9,10 @@ The full technical record is [chapter 8](08_known_issues.md), and every change i
 [changelog](../../CHANGELOG.md).
 
 <div class="stats">
-<div><p>2</p><p>critical issues fixed</p></div>
-<div><p>10</p><p>high-severity issues fixed</p></div>
+<div><p>4</p><p>critical issues fixed</p></div>
+<div><p>12</p><p>high-severity issues fixed</p></div>
 <div><p>0</p><p>reference files modified</p></div>
-<div><p>96</p><p>automatic tests (C + Python)</p></div>
+<div><p>117</p><p>automatic tests (C + Python)</p></div>
 </div>
 
 ## 7.1 How every change was checked
@@ -48,9 +48,13 @@ A "silent" error is always worse than a crash: a crash is noticed, a wrong numbe
 
 | Area | Issue | Class | Status |
 |---|---|---|---|
+| Model equations | B-28: five models evaporated ponded water 1000 times too fast (since 2015) | <span class="sev critical">Critical</span> | <span class="st fixed">fixed</span> |
+| Model equations | B-29: model 255 turned channel storage into 8 to 15 times too much discharge (since 2022) | <span class="sev critical">Critical</span> | <span class="st fixed">fixed</span> |
 | Numerical solver | B-13: solver methods 0 and 1 computed with random numbers | <span class="sev critical">Critical</span> | <span class="st fixed">fixed</span> |
 | Memory / outputs | B-01: the main example overwrote memory; crashed on one processor | <span class="sev critical">Critical</span> | <span class="st fixed">fixed</span> |
 | Model equations | S-02: model 254 baseflow forced to 0 by a line added in 2021 | <span class="sev high">High</span> | <span class="st fixed">fixed</span> (original equation restored) |
+| Model equations | B-30: models 258 and 259 computed the baseflow from the evaporation total | <span class="sev high">High</span> | <span class="st fixed">fixed</span> |
+| Model equations | B-31: model 249 mixed m³/min and m³/s in its baseflow | <span class="sev high">High</span> | <span class="st fixed">fixed</span> |
 | Inputs | B-12: missing initial values were taken from random memory | <span class="sev high">High</span> | <span class="st fixed">fixed</span> |
 | Numerical solver | B-14: per-link solver settings (`.rkd`) never worked | <span class="sev high">High</span> | <span class="st fixed">fixed</span> |
 | Outputs | B-15: a missing output folder lost all results, yet the run "succeeded" | <span class="sev high">High</span> | <span class="st fixed">fixed</span> |
@@ -60,6 +64,8 @@ A "silent" error is always worse than a crash: a crash is noticed, a wrong numbe
 | Library / Python | B-20: user-defined outputs of some states were written as 0 | <span class="sev high">High</span> | <span class="st fixed">fixed</span> |
 | Model equations | B-26: models 105 and 263 took some of their values from leftover memory | <span class="sev high">High</span> | <span class="st fixed">fixed</span> |
 | Python | A-01: the Python interface did not work at all | <span class="sev high">High</span> | <span class="st fixed">replaced</span> (chapter 10) |
+| Model equations | B-34: models 225 and 601–609 gave "not a number" when the hillslope was completely dry | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> |
+| Outputs / models | B-32, B-33, B-35: an evaporation total 720 times too large, a wrong area in peak files, a derivative left unset | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> |
 | Models | B-24: 7 model numbers without equations crashed; solvers of one program shared tables | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> |
 | Library | B-17: library functions that crashed with built-in models, or were missing | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> |
 | Inputs | B-18: dam models could start in the wrong regime when read from an `.ini` file | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> |
@@ -74,6 +80,56 @@ A "silent" error is always worse than a crash: a crash is noticed, a wrong numbe
 | Memory | B-27: a check read memory that was never written (no effect on results) | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> |
 
 ## 7.4 The critical issues
+
+### B-28: five models evaporated ponded water 1000 times too fast
+
+<span class="sev critical">Critical</span> <span class="st fixed">fixed</span>
+
+**What happened.** The Top Layer models share the potential evaporation (read from the evaporation file) between
+three stores of water: water ponded on the surface, the top soil and the deeper soil. The three parts must add up to
+the potential evaporation. In June 2015 a change titled "fixed evaporation bug in models" multiplied the part taken
+from the ponded water by 1000, in every Top Layer model of the time. New models were later written by copying these
+ones, so the factor spread. It was removed one model at a time over the years (from model 254 in April 2020), but never
+everywhere: models 257, 258, 259, 261 and 262 still had it.
+
+**Why it matters.** Whenever water was ponded, it evaporated up to 1000 times faster than it should, more than the
+potential evaporation itself. Ponded water is what becomes surface runoff, so these models gave too little runoff and
+**flood peaks that were too low**, without any warning. Model 254 results from every release up to 1.4.3 had the same
+error.
+
+:::{admonition} Now
+:class: expect
+The factor is removed. A new test checks, for 15 models, that the evaporation taken from the three stores adds up
+exactly to the potential evaporation; it fails on the old code for exactly these five models. In the model 258
+example the outlet peak rises from 0.69 to 0.84 m³/s (figure). The reference results of this example were produced
+with the error, so they are kept unchanged and the difference is recorded as intended.
+:::
+
+![Model 258 example: benchmark (with the error) and this version](figures/model258_evaporation_fix.png)
+
+:::{admonition} C lesson
+:class: lesson
+A number written in the middle of a formula (a "magic number") says nothing about its unit. Checking the units of
+every term (m, m/min, m³/s) is what showed that `1e3` could not belong there.
+:::
+
+### B-29: model 255 turned channel storage into far too much discharge
+
+<span class="sev critical">Critical</span> <span class="st fixed">fixed</span>
+
+**What happened.** Model 255 keeps the water stored in each channel and computes the discharge from it. In July 2022,
+in a change titled "changes to model 402", the correct formula was commented out and replaced by one of the wrong
+form, whose result is not even in m³/s.
+
+**Why it matters.** For the same water in the channel, the discharge was 8 to 15 times too large (the larger the
+basin, the larger the error): flood waves travelled much too fast. The start of each run was also inconsistent,
+because the initial storage was computed with the correct formula.
+
+:::{admonition} Now
+:class: expect
+The correct formula is restored. A new test converts a discharge to a storage and back, for the three models that work
+this way; it fails on the old code only for model 255.
+:::
 
 ### B-13: solver methods 0 and 1 computed with random numbers
 
@@ -152,6 +208,23 @@ ASYNCH are reproduced within the accuracy of the solver.
 :::
 
 ![Clear Creek outlet: total discharge and baseflow, before and after](figures/clearcreek_outlet_before_after.png)
+
+### B-30 and B-31: baseflow of models 258, 259 and 249
+
+<span class="sev high">High</span> <span class="st fixed">fixed</span>
+
+**What happened.** Models 258 and 259 keep the running total of evaporation in state 6 and the baseflow in state 7,
+but their baseflow equation read state 6, and passed state 6 downstream. Model 249 added baseflow in m³/min to
+baseflow in m³/s, a factor 60 apart; its version for links with a reservoir also printed two lines at every step.
+
+**Why it matters.** The baseflow outputs of these models were meaningless. Their total discharge did not use them and
+was not affected.
+
+:::{admonition} Now
+:class: expect
+Each model reads its own baseflow state, in one unit (m³/s). A test checks that the baseflow of 258 and 259 no longer
+depends on the evaporation total and that the upstream baseflow reaches the link.
+:::
 
 ### B-12: missing initial values taken from random memory
 
@@ -276,6 +349,14 @@ that every model sets every state; it found exactly these two models.
 
 ## 7.6 Medium and low issues, in brief
 
+* **B-34** (Medium): models 225 and 601–609 divided by the total water on the hillslope to share evaporation; on a
+  completely dry hillslope this is a division by zero, and the run produced "not a number". Now there is simply no
+  evaporation from an empty hillslope. A new test runs every model on a dry hillslope.
+* **B-32, B-33, B-35** (Low): model 257's evaporation total was converted with the rain factor (720 times too large);
+  peak-flow files of the oldest models wrote the area in km² × 10⁻⁶; model 606 left one derivative unset when its tile
+  storage was empty.
+* **Model 249 with reservoirs** (B-36) does not work and is recorded for its author; several other questions about
+  the units and constants of rarely used models (S-08 to S-12) are listed in [chapter 8](08_known_issues.md).
 * **B-04** (Medium): a solver number other than 0, 1 or 2 (the `.gbl` comment even suggested 3 and 4) crashed
   the program. It now stops with a message listing the valid values.
 * **B-02** (Medium): snapshot values below 10⁻¹² were set to 0 only for links computed by the first processor, so
@@ -283,7 +364,8 @@ that every model sets every state; it found exactly these two models.
 * **B-03** (Medium): the output file was closed twice at the very end, which crashed "debug" versions of the program
   (results were already written). Fixed.
 * **Examples 258/259** (Medium): pointed to a file on a University of Iowa computer, so they could not run anywhere
-  else. They now use the evaporation file shipped in the repository, and reproduce their reference exactly.
+  else. They now use the evaporation file shipped in the repository. Model 258 reproduced its reference exactly
+  until 1.6.0; since the evaporation fix (B-28) it differs on purpose.
 * **B-16** (High): at a junction, ASYNCH keeps the data of every upstream stream in a list with room for 8. The file
   reader accepted up to 10, and a junction with 9 or 10 upstream streams overwrote memory at every time step, which
   crashed the run. Now one limit of 16 applies everywhere, and a network exceeding it is refused with a clear message.

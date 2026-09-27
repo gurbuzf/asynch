@@ -170,3 +170,9 @@ These concern the original reference page; the code is right in all three cases.
   `+ 60·q_b,in`, which is the dimensionally consistent form.
 * **D-03** `docs/builtin_models.rst`: V_r is described as a flux in m³/s. It is an accumulated
   depth in m (the integral of q_pc [m/min]).
+
+All three were corrected in `docs/builtin_models.rst` in version 1.6.0.
+
+Model 254 itself had one more error in its history, fixed in 2020: from June 2015 to April 2020 (releases 1.0.0 to
+1.4.3) the evaporation of ponded water was multiplied by 1000. The same error remained in models 257, 258, 259, 261
+and 262 until 1.6.0 ([B-28](08_known_issues.md#b-28)).

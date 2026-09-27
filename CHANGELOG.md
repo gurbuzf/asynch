@@ -8,7 +8,54 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
-Nothing yet.
+### Units checked in every built-in model: B-28 to B-35 fixed
+
+*Results:* **change for models 255, 257, 258, 259, 261, 262 (B-28, B-29), and in the cases described below for models
+225, 249, 601–609 and 606, and in `.pea` files of models 0–6, 105.** Every other model is **bit-identical** to the
+previous commit with 1 process: all examples except 258 and 259 (27 of 27, 3 of 3 output files identical), within
+tolerance with 2 and 4 processes; AddressSanitizer clean. The examples of models 258 and 259 now differ from their 2018
+benchmarks, which were produced with B-28 and B-30 (outlet peak of example 258: 0.69 → 0.84 m³/s); the benchmark files
+are unchanged and the regression harness declares the difference as intended.
+
+Every unit conversion of every model (parameters, precalculations, equations) was checked. Details, history and
+evidence: `docs/guide/08_known_issues.md`, issues B-28 to B-36, S-08 to S-12, D-04 to D-07.
+
+#### Fixed
+- **B-28** (`src/models/equations.c`, models 257, 258, 259, 261, 262): the evaporation of ponded water was multiplied
+  by 1000 (`e_p = s_p * 1e3 * e_pot / Corr`), so ponded water evaporated up to 1000 times too fast and flood peaks
+  were too low. The factor came in on 2015-06-22 (`fb21cb1`) in every Top Layer model and was removed from model 254
+  in 2020 (`14054bf`), but not from these five.
+- **B-29** (`dam_model255`): model 255 computed the discharge from the channel storage with
+  `invtau/60 · S^(1/(1-λ₁))` (since 2022-07-24, `82fcfc1`), 8 to 15 times too much; restored
+  `((1-λ₁) invtau/60 · S)^(1/(1-λ₁))`, the inverse of its own initial conditions and the form of models 261 and 262.
+- **B-30** (models 258, 259): the baseflow equation read state 6 (accumulated evaporation) instead of state 7 (the
+  baseflow), at the link and at its parents; state 7 is now read and passed downstream (`dense_indices`).
+- **B-31** (model 249): the baseflow added terms in m³/min and m³/s; all terms are now in m³/s. The reservoir
+  version no longer prints two lines at every evaluation.
+- **B-32** (model 257): the accumulated evaporation (state 5) was converted with the rain factor (720 times too
+  large); it now accumulates the potential evaporation, as models 258 and 259.
+- **B-33** (`SetParamSizes`, models 0–6, 105, 200, 2000): `convertarea_flag` said the areas were converted to m²,
+  so `.pea` files wrote the area in km² × 10⁻⁶; they now write km², as for the other models.
+- **B-34** (models 225, 601–609): the evaporation weights divided by the sum of the storages: NaN when every storage
+  is 0. No evaporation in that case; unchanged otherwise.
+- **B-35** (model 606): derivative 5 was left unset when the tile storage is empty.
+
+#### Added
+- `tests/check_asynch.c`, 21 new checks (44 in all): the evaporation taken from the storages equals the potential
+  evaporation (15 Top Layer models); discharge → storage → discharge gives back the discharge (models 255, 261, 262);
+  the baseflow of 258/259 does not depend on the evaporation total and receives the parents' baseflow; every model
+  evaluated with empty storages sets every derivative to a finite number. On the previous code they fail for exactly
+  the models above.
+- `tools/python/make_comparison_plots.py --figures model258`: figure of example 258 before and after
+  (`docs/guide/figures/model258_evaporation_fix.png`).
+
+#### Changed
+- `tests/regression/run_examples.py`: cases `model_258` and `model_259` are known mismatches with their benchmarks and
+  intended changes from the original code (B-28, B-30).
+- Documentation: `docs/builtin_models.rst` corrects D-01 to D-03 (model 254) and D-04 to D-06 (1/τ of models 190 and
+  21, evaporation of model 191 in mm/month); code comments of models 400–405 give the melt factor in mm/day/degree (D-07).
+  Chapters 5, 7, 8 and 9 of the guide describe the fixes. Open questions for the model authors are recorded: B-36
+  (model 249 with reservoirs), S-08 to S-12.
 
 ## [1.5.0] - 2026-09-26
 

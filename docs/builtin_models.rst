@@ -94,7 +94,7 @@ Some values in the equations above are constant in time, and are given by:
   u &= 10^{-3}/(30\cdot24\cdot60) \\
   k_2 &= v_h \cdot L / A_h \cdot 60 \cdot 10^{-3} \hspace{.2in} [1/min] \\
   k_3 &= v_g \cdot L / A_h \cdot 60 \cdot 10^{-3} \hspace{.2in} [1/min] \\
-  \frac{1}{\tau} &= \frac{60 \cdot v_r \cdot (A/A_r)^{\lambda_2}}{(1-\lambda_1) \cdot L \cdot 10^{-3}} \hspace{.2in} [1/min] \\
+  \frac{1}{\tau} &= \frac{60 \cdot v_r \cdot (A/A_r)^{\lambda_2}}{(1-\lambda_1) \cdot L \cdot 10^{3}} \hspace{.2in} [1/min] \\
   c_1 &= RC \cdot (0.001/60) \\
   c_2 &= (1-RC) \cdot (0.001/60) \\
   q_r &= 1 \hspace{.2in} [m^3/s] \\
@@ -357,7 +357,7 @@ Seven states are modeled at every link:
 +-----------------------+-------------------------------------------------------------------------------------+
 | :math:`s_{precip}(t)` | Total fallen precipitation from time :math:`0` to :math:`t` [:math:`m`\ ]           |
 +-----------------------+-------------------------------------------------------------------------------------+
-| :math:`V_r(t)`        | Total flux of water from runoff from time :math:`0` to :math:`t` [:math:`m^3/s`\ ]  |
+| :math:`V_r(t)`        | Total runoff depth from time :math:`0` to :math:`t` [:math:`m`\ ]                   |
 +-----------------------+-------------------------------------------------------------------------------------+
 | :math:`q_b(t)`        | Channel discharge from baseflow [:math:`m^3/s`\ ]                                   |
 +-----------------------+-------------------------------------------------------------------------------------+
@@ -374,7 +374,7 @@ These states are given as the solution to the differential equations
   \frac{ds_s}{dt} &= q_{ts} - q_{sc} - e_s \\
   \frac{ds_{precip}}{dt} &= c_1 p(t) \\
   \frac{dV_r}{dt} &= q_{pc} \\
-  \frac{dq_b}{dt} &= \frac{v_B}{L} (A_h q_{sc} - 60 \cdot q_b + q_{b,in}(t)).
+  \frac{dq_b}{dt} &= \frac{v_B}{L} (A_h q_{sc} - 60 \cdot q_b + 60 \cdot q_{b,in}(t)).
 
 Here, precipitation and potential evaporation are given as the time series :math:`p(t)` and :math:`e_{pot}(t)`, measured in :math:`mm/hr` and :math:`mm/month`, respectively. The function :math:`q_{in}(t)` is again the total discharge entering the channel from the channels of parent links, measured in :math:`m^3/s`. The function :math:`q_{b,in}(t)` is the total of the parents’ baseflow, measured in [:math:`m^3/s`\ ]. Fluxes move water around the different layers of the hillslope, and other fluxes move water from the hillslope to the channel. These are defined by
 
@@ -402,7 +402,7 @@ Some values in the equations above are given by
 .. math::
 
   u &= 10^{-3}/(30\cdot24\cdot60) \\
-  \frac{1}{\tau} &= \frac{60 \cdot v_r \cdot (A_{up}/A_r)^{\lambda_2}}{(1-\lambda_1) \cdot L \cdot 10^{-3}} \hspace{.2in} [1/min] \\
+  \frac{1}{\tau} &= \frac{60 \cdot v_r \cdot (A_{up}/A_r)^{\lambda_2}}{(1-\lambda_1) \cdot L \cdot 10^{3}} \hspace{.2in} [1/min] \\
   k_2 &= v_h \cdot L / A_h \cdot 60 \cdot 10^{-3} \hspace{.2in} [1/min] \\
   k_i &= k_2 \beta \hspace{.2in} [1/min] \\
   c_1 &= 0.001 / 60 \\
@@ -572,7 +572,7 @@ Some values in the equations above are given by
 
   u &= 10^{-3}/60 \\
   g &= 9.81 \hspace{.2in} [m/s^2] \\
-  \frac{1}{\tau} &= \frac{60 \cdot v_r \cdot (A/A_r)^{\lambda_2}}{(1-\lambda_1) \cdot L \cdot 10^{-3}} \hspace{.2in} [1/min] \\
+  \frac{1}{\tau} &= 60 \cdot \left( \frac{v_r \cdot (A/A_r)^{\lambda_2}}{L \cdot 10^{3}} \right)^{1/(1-\lambda_1)} \hspace{.2in} [1/min] \\
   k_2 &= v_h \cdot L / A_h \cdot 60 \cdot 10^{-3} \hspace{.2in} [1/min] \\
   k_3 &= v_g \cdot L / A_h \cdot 60 \cdot 10^{-3} \hspace{.2in} [1/min] \\
   O_a &= \frac{\pi}{4} d^2 \hspace{.2in} [m^2] \\
@@ -834,7 +834,7 @@ One addition of this model is the support to artificailly controlled reservoirs,
 +====================+===============================================================+
 | :math:`p(t)`       | Precipitation [:math:`mm/hour`]                               |
 +--------------------+---------------------------------------------------------------+
-| :math:`e_{pot}(t)` | Potential evapotranspiration [:math:`mm/hour`]                |
+| :math:`e_{pot}(t)` | Potential evapotranspiration [:math:`mm/month`]               |
 +--------------------+---------------------------------------------------------------+
 | :math:`Res(t)`     | Artificial reservoirs [:math:`m^3/s`]                         |
 +--------------------+---------------------------------------------------------------+

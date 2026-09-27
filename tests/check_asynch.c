@@ -501,6 +501,198 @@ START_TEST(test_model_equations_finite)
 }
 END_TEST
 
+// A link of model uid with the parameters of evaluate_model, ready for its equations (the caller sets the states).
+// Returns the number of states.
+static unsigned int setup_model(unsigned short uid, GlobalVars *g, double *gp, double *params, Link *link)
+{
+    memset(g, 0, sizeof(*g));
+    g->model_uid = uid;
+    g->num_global_params = 64;
+    quiet();
+    SetParamSizes(g, NULL);
+    loud();
+    for (unsigned int i = 0; i < 64; i++) gp[i] = 0.3 + 0.1 * i;
+    for (unsigned int i = 0; i < 128; i++) params[i] = 0.2 + 0.037 * i;
+    memset(link, 0, sizeof(*link));
+    link->ID = 1;
+    link->num_params = g->num_params;
+    link->params = params;
+    InitRoutines(link, uid, 0, 0, NULL);
+    if (uid == 257)
+        params[3] = 3.0;                        // model 257: parameter 3 is a stream order, 1 to 10
+    ConvertParams(params, uid, NULL);
+    Precalculations(link, gp, g->num_global_params, params, g->num_disk_params, g->num_params, 0, uid, NULL);
+    return link->dim;
+}
+
+// Top Layer models: the evaporation taken from the three hillslope storages must add up to the potential
+// evaporation (it is shared between them). Until 2026, models 257, 258, 259, 261 and 262 multiplied the part
+// taken from the ponded water by 1000.
+static const struct { unsigned short uid, evap, s[3]; } evap_models[] = {
+    { 249, 1, { 1, 2, 3 } }, { 251, 1, { 1, 2, 3 } }, { 252, 1, { 1, 2, 3 } }, { 253, 1, { 1, 2, 3 } },
+    { 254, 1, { 1, 2, 3 } }, { 255, 1, { 2, 3, 4 } }, { 256, 1, { 1, 2, 3 } }, { 257, 1, { 1, 2, 3 } },
+    { 258, 2, { 1, 2, 3 } }, { 259, 2, { 1, 2, 3 } }, { 261, 1, { 2, 3, 4 } }, { 262, 1, { 2, 3, 4 } },
+    { 263, 1, { 1, 2, 3 } }, { 264, 1, { 1, 2, 3 } }, { 654, 1, { 1, 2, 3 } } };
+
+START_TEST(test_evaporation_total)
+{
+    GlobalVars g;
+    Link link;
+    double gp[64], params[128], y[64], yp[2 * 64], forcing[16], ans0[64], ans1[64];
+    unsigned short uid = evap_models[_i].uid, *s = (unsigned short *)evap_models[_i].s;
+    unsigned int dim = setup_model(uid, &g, gp, params, &link);
+
+    for (unsigned int i = 0; i < 64; i++) y[i] = 0.1;
+    y[s[2]] = 1e-4;                             // keeps the evaporation weights positive whatever h_b and S_L are
+    for (unsigned int i = 0; i < 2 * 64; i++) yp[i] = 0.1;
+    for (unsigned int i = 0; i < 16; i++) forcing[i] = 1.0;
+
+    forcing[evap_models[_i].evap] = 0.0;
+    memset(ans0, 0, sizeof(ans0));
+    link.differential(0.0, y, dim, yp, 2, dim, gp, params, forcing, NULL, -1, NULL, ans0);
+    forcing[evap_models[_i].evap] = 30.0;       // [mm/month]
+    memset(ans1, 0, sizeof(ans1));
+    link.differential(0.0, y, dim, yp, 2, dim, gp, params, forcing, NULL, -1, NULL, ans1);
+
+    double e_pot = 30.0 * 1e-3 / (30.0 * 24.0 * 60.0);        // [m/min]
+    double taken = 0.0;
+    for (unsigned int j = 0; j < 3; j++)
+        taken -= ans1[s[j]] - ans0[s[j]];
+    ck_assert_msg(fabs(taken - e_pot) <= 1e-9 * e_pot,
+        "model %u: evaporation taken from the storages is %g m/min, the potential evaporation is %g m/min",
+        uid, taken, e_pot);
+}
+END_TEST
+
+// Models whose channel storage is a state: the discharge computed from the storage (the algebraic equation) must
+// be the inverse of the storage computed from the initial discharge (ReadInitData). Until 2026, model 255 used
+// invtau/60 S^(1/(1-lambda_1)) instead of ((1-lambda_1) invtau/60 S)^(1/(1-lambda_1)).
+static const unsigned short storage_models[] = { 255, 261, 262 };
+
+START_TEST(test_storage_discharge)
+{
+    GlobalVars g;
+    Link link;
+    double gp[64], params[128], y[64];
+    unsigned short uid = storage_models[_i];
+    unsigned int dim = setup_model(uid, &g, gp, params, &link);
+    ck_assert_msg(link.algebraic != NULL, "model %u has no algebraic equation", uid);
+
+    for (double q0 = 0.01; q0 < 2000.0; q0 *= 10.0)
+    {
+        memset(y, 0, sizeof(y));
+        y[1] = q0;                              // without a dam, the initial discharge is read into state 1
+        int state = ReadInitData(gp, g.num_global_params, params, g.num_params, NULL, 0, y, dim, uid,
+            link.diff_start, link.no_ini_start, NULL, NULL);
+        ck_assert_int_eq(state, -1);
+        double storage = y[1];
+        y[0] = 0.0;
+        link.algebraic(y, dim, gp, params, NULL, state, NULL, y);
+        ck_assert_msg(fabs(y[0] - q0) <= 1e-9 * q0,
+            "model %u: storage %g m3 from discharge %g m3/s gives back %g m3/s", uid, storage, q0, y[0]);
+    }
+}
+END_TEST
+
+// Models 258 and 259: the baseflow is state 7; state 6 is the accumulated evaporation. Until 2026 the baseflow
+// equation read state 6, at the link and at its parents.
+START_TEST(test_offline_baseflow_state)
+{
+    GlobalVars g;
+    Link link;
+    double gp[64], params[128], y[64], yp[2 * 64], forcing[16], a[64], b[64];
+    unsigned short uid = _i == 0 ? 258 : 259;
+    unsigned int dim = setup_model(uid, &g, gp, params, &link);
+    ck_assert_uint_eq(dim, 8);
+    ck_assert_uint_eq(link.dense_indices[1], 7);    // the parents' baseflow reaches the link
+
+    for (unsigned int i = 0; i < 64; i++) y[i] = 0.1;
+    for (unsigned int i = 0; i < 2 * 64; i++) yp[i] = 0.1;
+    for (unsigned int i = 0; i < 16; i++) forcing[i] = 1.0;
+    link.differential(0.0, y, dim, yp, 2, dim, gp, params, forcing, NULL, -1, NULL, a);
+
+    y[6] = 7.0;                                 // accumulated evaporation, here and at the parents
+    yp[6] = yp[dim + 6] = 7.0;
+    link.differential(0.0, y, dim, yp, 2, dim, gp, params, forcing, NULL, -1, NULL, b);
+    ck_assert_msg(b[7] == a[7], "model %u: the baseflow depends on the accumulated evaporation", uid);
+
+    y[7] = 0.5;                                 // the baseflow itself
+    link.differential(0.0, y, dim, yp, 2, dim, gp, params, forcing, NULL, -1, NULL, b);
+    ck_assert_msg(b[7] < a[7], "model %u: the baseflow does not drain with the baseflow", uid);
+    yp[7] = yp[dim + 7] = 0.5;                  // the parents' baseflow
+    link.differential(0.0, y, dim, yp, 2, dim, gp, params, forcing, NULL, -1, NULL, a);
+    ck_assert_msg(a[7] > b[7], "model %u: the parents' baseflow does not reach the link", uid);
+}
+END_TEST
+
+// Every model with every storage empty (a dry start): every derivative must be set and finite. Found in 2026:
+// models 225 and 601 to 609 divided by the sum of the storages (NaN), model 606 left derivative 5 unset.
+// An unset derivative keeps what the array held: two different sentinels detect it.
+static int evaluate_model_empty(unsigned short uid)
+{
+    GlobalVars g;
+    Link link;
+    double gp[64], params[128], y[64], yp[2 * 64], forcing[16], ans[2][64];
+    unsigned int dim = setup_model(uid, &g, gp, params, &link);
+    const double sentinel[2] = { 1.25e300, -3.5e299 };
+
+    memset(y, 0, sizeof(y));
+    memset(yp, 0, sizeof(yp));
+    for (unsigned int i = 0; i < 16; i++) forcing[i] = 1.0;
+    int state = ReadInitData(gp, g.num_global_params, params, g.num_params, NULL, 0, y, dim, uid, link.diff_start,
+        link.no_ini_start, NULL, NULL);
+    for (unsigned int i = link.diff_start; i < dim; i++)
+        y[i] = 0.0;                             // ReadInitData may set some states (e.g. baseflow = discharge)
+    if (link.check_state)
+        state = link.check_state(y, dim, gp, g.num_global_params, params, g.num_params, NULL, false, NULL);
+    if (link.algebraic)
+        link.algebraic(y, dim, gp, params, NULL, state, NULL, y);
+    for (int r = 0; r < 2; r++)
+    {
+        for (unsigned int i = 0; i < 64; i++) ans[r][i] = sentinel[r];
+        link.differential(0.0, y, dim, yp, 2, dim, gp, params, forcing, NULL, state, NULL, ans[r]);
+    }
+    for (unsigned int i = link.diff_start; i < dim; i++)
+    {
+        if (ans[0][i] == sentinel[0] && ans[1][i] == sentinel[1])
+            return 10 + i;
+        if (!isfinite(ans[0][i]))
+            return 2;
+    }
+    return 0;
+}
+
+START_TEST(test_model_equations_empty)
+{
+    problems[0] = '\0';
+    for (unsigned int k = 0; k < sizeof(model_uids) / sizeof(model_uids[0]); k++)
+    {
+        unsigned short uid = model_uids[k];
+        if (is_unusable(uid))
+            continue;
+        fflush(stdout);
+        pid_t pid = fork();
+        if (pid == 0)
+        {
+            quiet();
+            exit(evaluate_model_empty(uid));
+        }
+        int status = 0;
+        waitpid(pid, &status, 0);
+        if (WIFSIGNALED(status))
+            problem("crashed with empty storages (signal %u)%.0u", uid, WTERMSIG(status), 0);
+        else if (WEXITSTATUS(status) == 2)
+            problem("a derivative is not a finite number with empty storages%.0u%.0u", uid, 0, 0);
+        else if (WEXITSTATUS(status) >= 10)
+            problem("derivative %u is not set by the equations with empty storages%.0u", uid,
+                WEXITSTATUS(status) - 10, 0);
+        else if (WEXITSTATUS(status) != 0)
+            problem("exit status %u%.0u", uid, WEXITSTATUS(status), 0);
+    }
+    ck_assert_msg(problems[0] == '\0', "model equations:%s", problems);
+}
+END_TEST
+
 // ---------------------------------------------------------------------------------------------------
 // equations
 // ---------------------------------------------------------------------------------------------------
@@ -635,6 +827,10 @@ Suite *asynch_suite(void)
     tcase_add_test(tc, test_model_routines);
     tcase_add_test(tc, test_model_without_equations);
     tcase_add_test(tc, test_model_equations_finite);
+    tcase_add_test(tc, test_model_equations_empty);
+    tcase_add_loop_test(tc, test_evaporation_total, 0, sizeof(evap_models) / sizeof(evap_models[0]));
+    tcase_add_loop_test(tc, test_storage_discharge, 0, sizeof(storage_models) / sizeof(storage_models[0]));
+    tcase_add_loop_test(tc, test_offline_baseflow_state, 0, 2);
     tcase_set_timeout(tc, 120);
     suite_add_tcase(s, tc);
 

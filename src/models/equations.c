@@ -200,7 +200,7 @@ void VariableHillslope(double t, const double * const y_i, unsigned int dim, con
     double C_p = s_p;
     double C_l = s_l/t_L;
     double C_s = s_s/b_L;
-    double Corr_evap = 1/(C_p + C_l + C_s);
+    double Corr_evap = (C_p + C_l + C_s != 0.0) ? 1/(C_p + C_l + C_s) : 0.0;  //every storage empty: no evaporation (was 1/0, NaN)
     double e_pot = forcing_values[1] * (1e-3 / (30.0*24.0*60.0));	//[mm/month] -> [m/min]
     double e_p = Corr_evap * C_p * e_pot;
     double e_l = Corr_evap * C_l * e_pot;
@@ -272,7 +272,7 @@ void VariableInterflow(double t, const double * const y_i, unsigned int dim, con
     double C_p = s_p;
     double C_l = s_l/t_L;
     double C_s = s_s/b_L;
-    double Corr_evap = 1/(C_p + C_l + C_s);
+    double Corr_evap = (C_p + C_l + C_s != 0.0) ? 1/(C_p + C_l + C_s) : 0.0;  //every storage empty: no evaporation (was 1/0, NaN)
     double e_pot = forcing_values[1] * (1e-3 / (30.0*24.0*60.0));	//[mm/month] -> [m/min]
     double e_p = Corr_evap * C_p * e_pot;
     double e_l = Corr_evap * C_l * e_pot;
@@ -346,7 +346,7 @@ void VariableTriLayer(double t, const double * const y_i, unsigned int dim, cons
     double C1 = s1/h1;
     double C2 = s2/h2;
     double C3 = s3/h3;
-    double Corr_evap = 1/(Cp + C1 + C2 + C3);
+    double Corr_evap = (Cp + C1 + C2 + C3 != 0.0) ? 1/(Cp + C1 + C2 + C3) : 0.0;  //every storage empty: no evaporation (was 1/0, NaN)
     double e_pot = forcing_values[1] * (1e-3 / (30.0*24.0*60.0));	//[mm/month] -> [m/min]
     double ep = Corr_evap * Cp * e_pot;
     double e1 = Corr_evap * C1 * e_pot;
@@ -424,7 +424,7 @@ void VariableThreshold(double t, const double * const y_i, unsigned int dim, con
     double C_p = s_p;
     double C_l = s_l/t_L;
     double C_s = s_s/Si;
-    double Corr_evap = 1/(C_p + C_l + C_s);
+    double Corr_evap = (C_p + C_l + C_s != 0.0) ? 1/(C_p + C_l + C_s) : 0.0;  //every storage empty: no evaporation (was 1/0, NaN)
     double e_pot = forcing_values[1] * (1e-3 / (30.0*24.0*60.0));	//[mm/month] -> [m/min]
     double e_p = Corr_evap * C_p * e_pot;
     double e_l = Corr_evap * C_l * e_pot;
@@ -517,7 +517,7 @@ void VariableThreshold3(double t, const double * const y_i, unsigned int dim, co
     double C_p = s_p;
     double C_l = s_l/t_L;
     double C_s = s_s/S2;
-    double Corr_evap = 1/(C_p + C_l + C_s);
+    double Corr_evap = (C_p + C_l + C_s != 0.0) ? 1/(C_p + C_l + C_s) : 0.0;  //every storage empty: no evaporation (was 1/0, NaN)
     double e_pot = forcing_values[1] * (1e-3 / (30.0*24.0*60.0));	//[mm/month] -> [m/min]
     double e_p = Corr_evap * C_p * e_pot;
     double e_l = Corr_evap * C_l * e_pot;
@@ -600,8 +600,8 @@ void ExponentialExp(double t, const double * const y_i, unsigned int dim, const 
     if (s_t > 0.0){
         q_outT = 2500*v_r * pow(s_t, a_r); // Tile bring water regardless of the level of the subsurface level
         //q_outT = 0.9*s_t;
-        ans[5] = q_outT;
     }
+    ans[5] = q_outT;    //set also when the tile storage is empty (was left unset, as in B-26)
     if (s_s>Beta){
         q_sLtemp = (s_s - Beta) * a * exp(b * (s_s - Beta)); // Active runoff explained by an exponential func
         q_sLink += q_sLtemp;
@@ -612,7 +612,7 @@ void ExponentialExp(double t, const double * const y_i, unsigned int dim, const 
     double C_p = s_p;
     double C_l = s_l/t_L;
     double C_s = s_s/Beta;
-    double Corr_evap = 1/(C_p + C_l + C_s);
+    double Corr_evap = (C_p + C_l + C_s != 0.0) ? 1/(C_p + C_l + C_s) : 0.0;  //every storage empty: no evaporation (was 1/0, NaN)
     double e_pot = forcing_values[1] * (1e-3 / (30.0*24.0*60.0));	//[mm/month] -> [m/min]
     double e_p = Corr_evap * C_p * e_pot;
     double e_l = Corr_evap * C_l * e_pot;
@@ -741,7 +741,7 @@ void TilesModel(double t, const double * const y_i, unsigned int dim, const doub
     double C_p = s_p;
     double C_l = s_l/t_L;
     double C_s = s_s/(Beta-NoFlow);
-    double Corr_evap = 1/(C_p + C_l + C_s);
+    double Corr_evap = (C_p + C_l + C_s != 0.0) ? 1/(C_p + C_l + C_s) : 0.0;  //every storage empty: no evaporation (was 1/0, NaN)
     double e_pot = forcing_values[1] * (1e-3 / (30.0*24.0*60.0));	//[mm/month] -> [m/min]
     double e_p = Corr_evap * C_p * e_pot;
     double e_l = Corr_evap * C_l * e_pot;
@@ -860,7 +860,7 @@ void TilesModel_Base(double t, const double * const y_i, unsigned int dim, const
     double C_l = s_l/t_L;
     double C_s = s_s/(Beta-NoFlow);
     //double C_c = (crop > 0.0)? s_c: 0.0;
-    double Corr_evap = 1/(C_p + C_l + C_s);
+    double Corr_evap = (C_p + C_l + C_s != 0.0) ? 1/(C_p + C_l + C_s) : 0.0;  //every storage empty: no evaporation (was 1/0, NaN)
     double e_pot = forcing_values[1] * (1e-3 / (30.0*24.0*60.0));	//[mm/month] -> [m/min]
     double e_p = Corr_evap * C_p * e_pot;
     double e_l = Corr_evap * C_l * e_pot;
@@ -1035,7 +1035,7 @@ void TilingHillslope(double t, const double * const y_i, unsigned int dim, const
     double C_p = s_p;
     double C_l = s_l/tL;
     double C_s = s_s/bL;
-    double Corr_evap = 1/(C_p + C_l + C_s);
+    double Corr_evap = (C_p + C_l + C_s != 0.0) ? 1/(C_p + C_l + C_s) : 0.0;  //every storage empty: no evaporation (was 1/0, NaN)
     double e_pot = forcing_values[1] * (1e-3 / (30.0*24.0*60.0));	//[mm/month] -> [m/min]
 
     double e_p = Corr_evap * C_p * e_pot;
@@ -1322,10 +1322,11 @@ void model249(double t, const double * const y_i, unsigned int dim, const double
     ans[1] = forcing_values[0] * c_1 - q_pl - q_pt - e_p;
     ans[2] = q_pt - q_ts - e_t;
     ans[3] = q_ts - q_sl - e_s;
-    ans[4] = q_sl * A_h - q_b*60.0;
+    //Baseflow, routed like the discharge; every term in m^3/s. Until 2026 the local terms were in m^3/min
+    //(q_sl * A_h - 60 q_b) while the upstream baseflow was in m^3/s.
+    ans[4] = q_sl * A_h / 60.0 - q_b;
     for (i = 0; i<num_parents; i++)
-        ans[4] += y_p[i * dim + 4] ;
-    //ans[6] += k_3*y_p[i].ve[3]*A_h;
+        ans[4] += y_p[i * dim + 4];
     ans[4] = invtau * pow(q, lambda_1) * ans[4];
 }
 void model249_reservoirs(double t, const double * const y_i, unsigned int dim, const double * const y_p, unsigned short num_parents, unsigned int max_dim, const double * const global_params, const double * const params, const double * const forcing_values, const QVSData * const qvs, int state, void* user, double *ans)
@@ -1398,8 +1399,6 @@ void model249_reservoirs(double t, const double * const y_i, unsigned int dim, c
         //ans[5] += y_p[i * dim+5];
         ans[5] += y_p[i * dim];
     ans[5] = invtau * pow(q_openloop, lambda_1) * ans[5];
-    printf(" q_openloop: %f invtau: %f lambda1: %f\n", q_openloop, invtau, lambda_1);
-    printf(" ans5: %f \n", ans[5]);
     // if(forcing_values[2] <=0){
     //     ans[0] =ans[5];
 	// }
@@ -1407,7 +1406,7 @@ void model249_reservoirs(double t, const double * const y_i, unsigned int dim, c
     ans[1] = forcing_values[0] * c_1 - q_pl - q_pt - e_p;
     ans[2] = q_pt - q_ts - e_t;
     ans[3] = q_ts - q_sl - e_s;
-    ans[4] = q_sl * A_h - q_b*60.0;
+    ans[4] = q_sl * A_h / 60.0 - q_b;     //[m^3/s], as in model249
     for (i = 0; i<num_parents; i++)
         ans[4] += y_p[i * dim + 4];
     ans[4] = invtau * pow(q_b, lambda_1) * ans[4];
@@ -1788,10 +1787,10 @@ void dam_model255(const double * const y_i, unsigned int num_dof, const double *
     if (state == -1)
     {
         S = (y_i[1] < 0.0) ? 0.0 : y_i[1];
-        ans[0] = invtau/60.0*pow(S,1.0/(1.0-lambda_1));
-        //ans[0] = pow((1.0 - lambda_1)*invtau / 60.0 * S, 1.0 / (1.0 - lambda_1));
-        
-        
+        //Storage-discharge relation of the routing equation dq/dt = invtau q^lambda_1 (q_in - q), as in models 261
+        //and 262 and in the initial conditions of this model (ReadInitData). From July 2022 to 2026 this line was
+        //invtau/60*S^(1/(1-lambda_1)), which is not in m^3/s and gave 8 to 15 times the discharge (commit 82fcfc1).
+        ans[0] = pow((1.0 - lambda_1)*invtau / 60.0 * S, 1.0 / (1.0 - lambda_1));
     }
     else if (state == (int)qvs->n_values - 1)
     {
@@ -2211,7 +2210,7 @@ void TopLayerHillslope_spatial_velocity(double t, const double * const y_i, unsi
     double Corr = s_p + s_t / S_L + s_s / (h_b - S_L);
     if (e_pot > 0.0 && Corr > 1e-12)
     {
-        e_p = s_p * 1e3 * e_pot / Corr;
+        e_p = s_p * e_pot / Corr;
         e_t = s_t / S_L * e_pot / Corr;
         e_s = s_s / (h_b - S_L) * e_pot / Corr;
     }
@@ -2245,7 +2244,7 @@ void TopLayerHillslope_spatial_velocity(double t, const double * const y_i, unsi
 
                                                             //Additional states
     ans[4] = forcing_values[0] * c_1;   // precip[4]
-    ans[5] = forcing_values[1] * c_1;   // et[5]
+    ans[5] = e_pot;                     // et[5]: potential evaporation [m/min] (was converted as rain, 720 times too large)
     ans[6] = q_pl;                      // runoff[]6
     ans[7] = q_sl * A_h - q_b*60.0;     // baseflow[7]
     for (i = 0; i < num_parents; i++)
@@ -2284,14 +2283,14 @@ void OfflineTopLayerHillslope(double t, const double * const y_i, unsigned int d
     double s_s = y_i[3];	//[m]
                             //double s_precip = y_i[4];	//[m]
                             //double V_r = y_i[5];	//[m^3]
-    double q_b = y_i[6];	//[m^3/s]
+    double q_b = y_i[7];	//[m^3/s]
 
                             //Evaporation
     double e_p, e_t, e_s;
     double Corr = s_p + s_t / S_L + s_s / (h_b - S_L);
     if (e_pot > 0.0 && Corr > 1e-12)
     {
-        e_p = s_p * 1e3 * e_pot / Corr;
+        e_p = s_p * e_pot / Corr;
         e_t = s_t / S_L * e_pot / Corr;
         e_s = s_s / (h_b - S_L) * e_pot / Corr;
     }
@@ -2330,7 +2329,7 @@ void OfflineTopLayerHillslope(double t, const double * const y_i, unsigned int d
     ans[6] = e_pot;                                       // acc evaporation
     ans[7] = q_ss_li * A_h - q_b*60.0;                    // base flow
     for (i = 0; i<num_parents; i++)
-        ans[7] += y_p[i * dim + 6] * 60.0;
+        ans[7] += y_p[i * dim + 7] * 60.0;
     ans[7] *= v_B / L;
 }
 
@@ -2381,14 +2380,14 @@ void OfflineTopLayerInterflowHillslope(double t, const double * const y_i, unsig
     double s_s = y_i[3];	//[m]
                             //double s_precip = y_i[4];	//[m]
                             //double V_r = y_i[5];	//[m^3]
-    double q_b = y_i[6];	//[m^3/s]
+    double q_b = y_i[7];	//[m^3/s]
 
                             //Evaporation
     double e_p, e_t, e_s;
     double Corr = s_p + s_t / S_L + s_s / (h_b - S_L);
     if (e_pot > 0.0 && Corr > 1e-12)
     {
-        e_p = s_p * 1e3 * e_pot / Corr;
+        e_p = s_p * e_pot / Corr;
         e_t = s_t / S_L * e_pot / Corr;
         e_s = s_s / (h_b - S_L) * e_pot / Corr;
     }
@@ -2428,7 +2427,7 @@ void OfflineTopLayerInterflowHillslope(double t, const double * const y_i, unsig
     ans[6] = e_pot;                                       // acc evaporation
     ans[7] = q_ss_li * A_h - q_b*60.0;                    // base flow
     for (i = 0; i<num_parents; i++)
-        ans[7] += y_p[i * dim + 6] * 60.0;
+        ans[7] += y_p[i * dim + 7] * 60.0;
     ans[7] *= v_B / L;
 }
 
@@ -3797,7 +3796,7 @@ void TopLayerNonlinearExpSoilvel(double t, const double * const y_i, unsigned in
     double Corr = s_p + s_t / T_L + s_s / (h_b - T_L);
     if (e_pot > 0.0 && Corr > 1e-12)
     {
-        e_p = s_p * 1e3 * e_pot / Corr;
+        e_p = s_p * e_pot / Corr;
         e_t = s_t / T_L * e_pot / Corr;
         e_s = s_s / (h_b - T_L) * e_pot / Corr;
     }
@@ -3950,7 +3949,7 @@ void TopLayerNonlinearExpSoilvel_ConstEta(double t, const double * const y_i, un
     double Corr = s_p + s_t / T_L + s_s / (h_b - T_L);
     if (e_pot > 0.0 && Corr > 1e-12)
     {
-        e_p = s_p * 1e3 * e_pot / Corr;
+        e_p = s_p * e_pot / Corr;
         e_t = s_t / T_L * e_pot / Corr;
         e_s = s_s / (h_b - T_L) * e_pot / Corr;
     }

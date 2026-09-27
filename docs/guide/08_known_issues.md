@@ -55,6 +55,15 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [B-25](#b-25) | <span class="sev high">High</span> | <span class="st fixed">fixed</span> | test | Binary rain files: file past the range read, last file lasted 0.0001 min, overflow, crash on a missing file |
 | [B-26](#b-26) | <span class="sev high">High</span> | <span class="st fixed">fixed</span> | valgrind, unit test | Models 105 and 263 left derivatives unset: states changed by values left in memory |
 | [B-27](#b-27) | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> | valgrind | Consistency check read the parents' non-dense states uninitialised (no effect on results) |
+| [B-28](#b-28) | <span class="sev high">High</span> | <span class="st fixed">fixed</span> | unit test, examples | Models 257, 258, 259, 261, 262 evaporated ponded water 1000 times too fast (since 2015) |
+| [B-29](#b-29) | <span class="sev high">High</span> | <span class="st fixed">fixed</span> | unit test | Model 255 turned channel storage into 8 to 15 times too much discharge (since 2022) |
+| [B-30](#b-30) | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> | unit test | Models 258, 259: the baseflow equation read the accumulated evaporation (state 6) |
+| [B-31](#b-31) | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> | code reading | Model 249: baseflow mixed m³/min and m³/s; its reservoir version printed at every evaluation |
+| [B-32](#b-32) | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> | code reading | Model 257: the accumulated evaporation output was 720 times too large |
+| [B-33](#b-33) | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> | code reading | Models 0–6, 105, 200, 2000: the area column of `.pea` files was the area in km² × 10⁻⁶ |
+| [B-34](#b-34) | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> | unit test | Models 225, 601–609: NaN when every hillslope storage is empty (division by zero) |
+| [B-35](#b-35) | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> | unit test | Model 606 left derivative 5 unset when the tile storage is empty |
+| [B-36](#b-36) | <span class="sev medium">Medium</span> | <span class="st open">open</span> | code reading | Model 249 with reservoirs: the reservoir function returns derivatives where the solver expects states |
 | [R-01](#r-01) | <span class="sev high">High</span> | <span class="st fixed">fixed</span> | confirmed | No automated regression tests; only one unit test (`days_in_month`) |
 | [R-02](#r-02) | <span class="sev medium">Medium</span> | <span class="st fixed">resolved</span> | confirmed | clearcreek references (2015) differ: another configuration, and a 2021 change to model 254 |
 | [R-03](#r-03) | <span class="sev medium">Medium</span> | <span class="st open">open</span> | confirmed | Model 259 benchmark cannot be reproduced from the files in the repository |
@@ -75,7 +84,13 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [S-05](#s-05) | <span class="st neutral">n/a</span> | <span class="st info">open question</span> | code reading | Snapshot filter rewrites cumulative states with `fmod(x, 1e200)` |
 | [S-06](#s-06) | <span class="st neutral">n/a</span> | <span class="st info">open question</span> | code reading | Model 254 evaporation always runs at the full potential rate; clamping then creates water |
 | [S-07](#s-07) | <span class="st neutral">n/a</span> | <span class="st info">open question</span> | code reading | Models 105 and 263: states without equations; what was intended? |
-| [D-01..03](#d-01-to-d-03) | <span class="sev low">Low</span> | <span class="st open">open</span> | code reading | `docs/builtin_models.rst` disagrees with the model 254 code in 3 places |
+| [S-08](#s-08) | <span class="st neutral">n/a</span> | <span class="st info">open question</span> | code reading | Model 603: the lateral flow of the deepest soil layer never reaches the channel |
+| [S-09](#s-09) | <span class="st neutral">n/a</span> | <span class="st info">open question</span> | code reading | Model 605: the third intercept of the subsurface runoff curve counts the first one twice |
+| [S-10](#s-10) | <span class="st neutral">n/a</span> | <span class="st info">open question</span> | code reading | Models 1–5: hillslope loss and channel gain differ by a factor h_b^(2/3) |
+| [S-11](#s-11) | <span class="st neutral">n/a</span> | <span class="st info">open question</span> | code reading | Models 400–405: storages and rates mixed (1-minute assumption); 402/403 dams drop local runoff |
+| [S-12](#s-12) | <span class="st neutral">n/a</span> | <span class="st info">open question</span> | code reading | Models 604, 606, 30, 21: unexplained or inconsistent constants and units |
+| [D-01..03](#d-01-to-d-03) | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> | code reading | `docs/builtin_models.rst` disagreed with the model 254 code in 3 places |
+| [D-04..07](#d-04-to-d-07) | <span class="sev medium">Medium</span> | <span class="st fixed">fixed</span> | code reading | Units in `docs/builtin_models.rst` (models 190, 191, 21) and in code comments (400–405) |
 
 ---
 
@@ -420,6 +435,81 @@ the consistency check to the whole state vector of each parent, reading entries 
 never use those entries. **Fixed** (2026-09-26): the work arrays are allocated with `calloc` (`src/system.c`). All
 examples give bit-identical results.
 
+### B-28
+**Models 257, 258, 259, 261 and 262 evaporated ponded water 1000 times too fast.** *High for users of these models,
+confirmed with a unit test and the examples of models 258 and 259.* The Top Layer models share the potential
+evaporation `e_pot` [m/min] between the ponded water, the top soil and the deeper soil, so that the three parts add up
+to `e_pot`. In these models the ponded part was `e_p = s_p * 1e3 * e_pot / Corr`: no conversion factor belongs there
+(the storages are in m, `e_pot` in m/min). Whenever water was ponded it evaporated up to 1000 times too fast, total
+evaporation could exceed the potential evaporation of the input file, and surface runoff and flood peaks were too low.
+
+*History:* the factor was added on 2015-06-22 (commit `fb21cb1`, "fixed evaporation bug in models") to every Top Layer
+model, model 254 included, and spread to later models copied from them. It was then removed one model at a time:
+263 (2019, `547f40c`), **254 (2020-04-23, `14054bf`, "I erase the 1000 from the ponded evaporation")**, 252 (2020),
+255 (2022). Every release from 1.0.0 to 1.4.3 has it in model 254; the old branches `assim` and `json` still do. The
+clearcreek reference results (uploaded 2015-05-21) predate it.
+
+**Fixed** (1.6.0): `e_p = s_p * e_pot / Corr` in all five models. A unit test checks, for 15 Top Layer models, that the
+evaporation taken from the storages equals the potential evaporation. The results of models 257–262 change; the
+examples of models 258 and 259 now differ from their 2018 benchmarks, which were produced with the factor: outlet
+peaks rise by up to 23 % (the benchmark files are kept unchanged; see R-03).
+
+### B-29
+**Model 255 turned channel storage into 8 to 15 times too much discharge.** *High for users of model 255, confirmed with
+a unit test.* Model 255 computes the discharge from the channel storage S (`dam_model255`). Since 2022-07-24 (commit
+`82fcfc1`, titled "changes to model 402") it used `invtau/60 * S^(1/(1-λ₁))`, which is not in m³/s; the correct
+relation, `((1-λ₁) invtau/60 · S)^(1/(1-λ₁))`, had been written in 2021 (`1d793c1`) and was left commented out on the
+next line. It is also the relation used by models 261 and 262 and by the initial conditions of model 255 itself, so the
+first step of every run jumped. For v₀ = 0.33 m/s, λ₁ = 0.2, λ₂ = −0.1 the error is ×7.8 at 1 km², ×9.8 at 10 km²,
+×14.5 at 1000 km²: flood waves travelled too fast and too sharp.
+
+**Fixed** (1.6.0): the correct relation is restored. A unit test checks, for models 255, 261 and 262, that the
+discharge computed from the storage gives back the discharge the storage was computed from.
+
+### B-30
+**Models 258 and 259: the baseflow equation read the accumulated evaporation.** *Medium, confirmed with a unit test.*
+The baseflow is state 7 (`ReadInitData` initialises it, the equation writes `ans[7]`); state 6 is the accumulated
+evaporation. The equation read `q_b = y_i[6]`, added the parents' state 6, and passed state 6 downstream
+(`dense_indices`). The baseflow output was meaningless; the discharge (state 0) does not use it and was not affected.
+The mistake came with the models in 2018. **Fixed** (1.6.0): the baseflow is read from state 7 at the link and at its
+parents, and state 7 is passed downstream.
+
+### B-31
+**Model 249: the baseflow mixed m³/min and m³/s; its reservoir version printed at every evaluation.** *Medium, code
+reading.* The baseflow `q_b` is routed like the discharge, but the local terms were in m³/min
+(`q_sl · A_h − 60 q_b`) and the parents' baseflow in m³/s, a factor 60 between them. The reservoir version printed two
+lines each time it was evaluated. **Fixed** (1.6.0): every term in m³/s (`q_sl · A_h / 60 − q_b + Σ q_b,parents`);
+the prints are removed. See also B-36.
+
+### B-32
+**Model 257: the accumulated evaporation output was 720 times too large.** *Low (output only), code reading.* State 5
+accumulated `forcing_values[1] * c_1`: the evaporation forcing (mm/month) converted with the rain factor (mm/h → m/min).
+**Fixed** (1.6.0): it accumulates the potential evaporation `e_pot` [m/min], as models 258 and 259 do.
+
+### B-33
+**Models 0–6, 105, 200 and 2000: wrong area in `.pea` files.** *Low (output only), code reading.* These models declared
+`convertarea_flag = 1` (areas converted to m²) but never convert the upstream area, which stays in km². The peak-flow
+file multiplies the area by 10⁻⁶ for such models, so it showed the area in km² × 10⁻⁶. **Fixed** (1.6.0): the flag is
+0 for these models; the area is written in km², as for every other model.
+
+### B-34
+**Models 225 and 601–609 gave NaN when every hillslope storage was empty.** *Medium, confirmed with a unit test.* The
+evaporation is shared with weights `1/(C_p + C_l + C_s)`, without the check model 254 has: with every storage at 0
+(a dry start, or storages emptied and reset to 0) this is 1/0 and the derivatives became NaN, which stops or corrupts a
+run. **Fixed** (1.6.0): no evaporation when the sum is exactly 0; results are unchanged otherwise. A unit test
+evaluates every model with empty storages.
+
+### B-35
+**Model 606 left derivative 5 unset when the tile storage was empty** (the same kind of bug as B-26). *Low, confirmed
+with a unit test.* **Fixed** (1.6.0): the derivative is set in every case (0 when the storage is empty).
+
+### B-36
+**Model 249 with reservoirs does not work.** *Medium, code reading, open.* At links with a reservoir,
+`ForcedSolutionSolver` uses the output of `model249_reservoirs` as the new *states*, but the function returns
+*derivatives* for states 1 to 5, leaves state 0 unset when the reservoir forcing is 0 or less, and routes the total
+discharge as the open-loop discharge. It looks like an unfinished data-assimilation experiment (2021). What was
+intended needs the model's author; model 249 without reservoirs is not affected.
+
 ---
 
 ## Reproducibility
@@ -468,11 +558,16 @@ in the repository, most likely model 259's own `evap.mon` on the original cluste
 original file lies between the two. The benchmark files are kept unchanged; the case stays
 a known mismatch unless the original evaporation file is found.
 
+*Update (1.6.0):* the benchmark was also computed with the evaporation of ponded water multiplied by 1000 (B-28) and
+the baseflow read from the wrong state (B-30). Both are fixed, so today's results differ from the benchmark for these
+reasons as well; the benchmark stays as it is.
+
 ### R-04
 **Examples 258/259 referenced a cluster path.** *Fixed.* Their `.gbl`
 files pointed to `/Dedicated/IFC/projects/asynch_1_4_3b/tests/mdl25Xa/evap.mon`. They now
 use `../common/evap.mon`, like the other examples. With this change, model 258 reproduces its
-benchmark **bit for bit**.
+benchmark **bit for bit**. *Update (1.6.0):* no longer, on purpose: the benchmark was computed with the evaporation
+error B-28 and the baseflow error B-30, which are fixed. The regression harness declares the difference as intended.
 
 ### R-05
 **Results depend (slightly) on the number of processes.** *Information.* ASYNCH is
@@ -642,13 +737,56 @@ whose equations are commented out in `src/models/equations.c`. Since 1.5.0 these
 What the authors intended (for model 263, state 7 is even passed to the downstream links) needs the model's author or a
 hydrologist.
 
+### S-08
+Model 603 (`VariableTriLayer`): the lateral flow of the deepest soil layer, `qh4 = v4 · s3^a4`, is removed from that
+layer but not added to the channel (`ans[0]` adds `qh1 + qh2 + qh3`). Water disappears. It may be a deliberate deep loss,
+or a forgotten term; the author must say.
+
+### S-09
+Model 605: the intercepts that keep the piecewise-linear subsurface runoff continuous are `I1 = v_s1 (S2 − S1)`,
+`I2 = v_s2 (S3 − S2) + I1`, `I3 = v_s3 (S4 − S3) + I2 + I1` (`definitions.c`, `Precalculations`). `I2` already contains
+`I1`, so the runoff jumps by `I1` when the storage reaches `S4`. Probably `+ I2` only was meant.
+
+### S-10
+Models 1–5 (2011, "September 18, 2011 document"): the hillslope loses `c₄ s^(5/3)` [m/min] but the channel receives
+`c₁ s^(5/3)`, and `c₁` contains an extra factor `h_b^(2/3)` compared with `c₄ · A_h/60/Q_r`. Water is not conserved
+unless the state `s` has a meaning that the code does not show. Needs the 2011 document.
+
+### S-11
+Models 400–405: several lines add or compare a storage [m] and a rate [m/min] (`x2 = max(0, x1 + h1 − Hu)`,
+`min(e_pot, h1)`, `min(h5, melt rate)`), which is only meaningful because the time unit is 1 minute (a storage above
+capacity is drained in one minute). At links with a dam, models 402 and 403 do not add the runoff of the link's own
+hillslope to the reservoir (model 405 does); model 402 uses one hard-coded storage-discharge curve for every dam.
+
+### S-12
+Constants whose unit or origin is not explained:
+* model 604 uses the runoff speed column `v_r` as read, models 605–609 convert the same column to 1/min
+  (`v_r · L/A_h · 60`);
+* model 606 multiplies tile outflow by 2500;
+* model 30: two thresholds on `deriv_a_I` lack the factor 10⁶ that the author's own commented line has ("Should use
+  this");
+* model 21: the groundwater fraction `F_et` is 0.05 on links without a dam and 1.0 on links with a dam.
+
 ## Documentation errors
 
 ### D-01 to D-03
 `docs/builtin_models.rst`, section *Top Layer Hydrological Model* (model 254):
 * **D-01** 1/τ shows `L · 10⁻³` with L in km. It should be `L · 10³`. The code is correct.
 * **D-02** the baseflow equation shows `+ q_b,in(t)`. The code has `+ 60·q_b,in` (dimensionally
-  consistent) and the floor `max(0.001, q_b)` (S-02).
+  consistent).
 * **D-03** V_r is described as m³/s. It is an accumulated depth in m.
 
+**Fixed** (1.6.0) in `docs/builtin_models.rst`.
 Details: [05_model_254_explained.md §5.7](05_model_254_explained.md#57-documentation-discrepancies-found-while-writing-this-page).
+
+### D-04 to D-07
+Found in the units check of all models (2026-09-27):
+* **D-04** the same `L · 10⁻³` as D-01 in the sections of models 190 and 21.
+* **D-05** model 191: potential evaporation given in mm/hour; the code reads mm/month. A user following the page got
+  evaporation 720 times too small.
+* **D-06** model 21: 1/τ defined like the other models; the code uses `60 · (v_r (A/A_r)^λ₂ / L)^(1/(1−λ₁))`, the form
+  that goes with its storage-discharge relation.
+* **D-07** models 400–405: code comments gave the melt factor in mm/hour/degree in one place, mm/day/degree in another;
+  the equations use mm/day/degree.
+
+**Fixed** (1.6.0).

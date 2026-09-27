@@ -85,8 +85,8 @@ python3 tests/regression/run_examples.py --asynch /path/to/other/asynch --keep
 | `clearcreek, 2015 configuration` | 254 | `.dat`, `.pea`, `.rec` | `examples/results/clearcreek.dat`, `.pea`, `.rec`, <span class="st open">known mismatch</span> (R-02: model 254 changed in 2021) |
 | `model_192` | 192 | hydrograph `.csv`, peaks `.pea`, snapshot `.h5` | `examples/more/model_192/results_benchmark/` |
 | `model_196` | 196 | idem | idem |
-| `model_258` | 258 | idem | idem |
-| `model_259` | 259 | idem | idem, <span class="st open">known mismatch</span> (R-03) |
+| `model_258` | 258 | idem | idem, <span class="st open">known mismatch</span> since 1.6.0: the benchmark was produced with the evaporation error B-28 and the baseflow error B-30 |
+| `model_259` | 259 | idem | idem, <span class="st open">known mismatch</span> (R-03, B-28, B-30) |
 
 A *known mismatch* (`XFAIL`) is reported but does not make the run fail. A **crash is
 always a failure**, even for those cases.

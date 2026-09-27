@@ -46,7 +46,7 @@ void SetParamSizes(GlobalVars* globals, void* external) {
         globals->area_idx = 2;
         globals->areah_idx = 1;
         globals->num_disk_params = 12;
-        globals->convertarea_flag = 1;
+        globals->convertarea_flag = 0;   //the upstream area (area_idx) stays in km^2
         globals->num_forcings = 0;
         globals->min_error_tolerances = 1;
         break;
@@ -70,7 +70,7 @@ void SetParamSizes(GlobalVars* globals, void* external) {
             globals->area_idx = 2;
             globals->areah_idx = 1;
             globals->num_disk_params = 12;
-            globals->convertarea_flag = 1;
+            globals->convertarea_flag = 0;   //the upstream area (area_idx) stays in km^2
             globals->num_forcings = 1;
             globals->min_error_tolerances = 1;	//This should probably be higher...
             break;
@@ -82,7 +82,7 @@ void SetParamSizes(GlobalVars* globals, void* external) {
         globals->area_idx = 2;
         globals->areah_idx = 1;
         globals->num_disk_params = 12;
-        globals->convertarea_flag = 1;
+        globals->convertarea_flag = 0;   //the upstream area (area_idx) stays in km^2
         globals->num_forcings = 1;
         globals->min_error_tolerances = 1;	//This should probably be higher...
         break;
@@ -94,7 +94,7 @@ void SetParamSizes(GlobalVars* globals, void* external) {
         globals->area_idx = 2;
         globals->areah_idx = 1;
         globals->num_disk_params = 12;
-        globals->convertarea_flag = 1;
+        globals->convertarea_flag = 0;   //the upstream area (area_idx) stays in km^2
         globals->num_forcings = 1;
         globals->min_error_tolerances = 1;	//This should probably be higher...
         break;
@@ -106,7 +106,7 @@ void SetParamSizes(GlobalVars* globals, void* external) {
         globals->area_idx = 2;
         globals->areah_idx = 1;
         globals->num_disk_params = 12;
-        globals->convertarea_flag = 1;
+        globals->convertarea_flag = 0;   //the upstream area (area_idx) stays in km^2
         globals->num_forcings = 1;
         globals->min_error_tolerances = 1;	//This should probably be higher...
         break;
@@ -118,7 +118,7 @@ void SetParamSizes(GlobalVars* globals, void* external) {
         globals->area_idx = 2;
         globals->areah_idx = 1;
         globals->num_disk_params = 12;
-        globals->convertarea_flag = 1;
+        globals->convertarea_flag = 0;   //the upstream area (area_idx) stays in km^2
         globals->num_forcings = 1;
         globals->min_error_tolerances = 1;	//This should probably be higher...
         break;
@@ -130,7 +130,7 @@ void SetParamSizes(GlobalVars* globals, void* external) {
         globals->area_idx = 2;
         globals->areah_idx = 1;
         globals->num_disk_params = 14;
-        globals->convertarea_flag = 1;
+        globals->convertarea_flag = 0;   //the upstream area (area_idx) stays in km^2
         globals->num_forcings = 1;
         globals->min_error_tolerances = 1;	//This should probably be higher...
         break;
@@ -257,7 +257,7 @@ case 20:	num_global_params = 9;
         globals->area_idx = 2;
         globals->areah_idx = 1;
         globals->num_disk_params = 12;
-        globals->convertarea_flag = 1;
+        globals->convertarea_flag = 0;   //the upstream area (area_idx) stays in km^2
         globals->num_forcings = 1;
         globals->min_error_tolerances = 1;	//This should probably be higher...
         break;
@@ -359,7 +359,7 @@ case 20:	num_global_params = 9;
         globals->area_idx = 2;
         globals->areah_idx = 1;
         globals->num_disk_params = 12;
-        globals->convertarea_flag = 1;
+        globals->convertarea_flag = 0;   //the upstream area (area_idx) stays in km^2
         globals->num_forcings = 1;
         globals->min_error_tolerances = 1;	//This should probably be higher...
         break;
@@ -846,7 +846,7 @@ case 20:	num_global_params = 9;
 		globals->area_idx = 2;
 		globals->areah_idx = 1;
 		globals->num_disk_params = 12;
-		globals->convertarea_flag = 1;
+		globals->convertarea_flag = 0;   //the upstream area (area_idx) stays in km^2
 		globals->num_forcings = 1;
 		globals->min_error_tolerances = 1;	//This should probably be higher...
 		break;
@@ -1865,7 +1865,7 @@ void InitRoutines(
         link->num_dense = 2;
         link->dense_indices = (unsigned int*)realloc(link->dense_indices, link->num_dense * sizeof(unsigned int));
         link->dense_indices[0] = 0;
-        link->dense_indices[1] = 6;
+        link->dense_indices[1] = 7;  //q_b (state 6 is the accumulated evaporation)
 
         if(model_uid == 258)
         {
@@ -3322,7 +3322,7 @@ void Precalculations(
 		double alfa2 = global_params[6]; //surface velocity [m/s]
 		double alfa3 = global_params[7]; //linear reserv. coef gravitational storage [days]
 		double alfa4 = global_params[8]; //linear reserv. coef aquifer storage [days]
-        double melt_factor = global_params[9]; // melting factor in mm/hour/degree
+        double melt_factor = global_params[9]; // melting factor [mm/day/degree], as the equations use it
         double temp_thres = global_params[10]; // in celsius degrees
 		vals[3] = 60.0 * v_0 * pow(A_i, lambda_2) / ((1.0 - lambda_1) * L_i);//[1/min]  invtau params[3]
 		vals[4] = (0.001 / 60.0);		//(mm/hr->m/min)  c_1
@@ -3344,7 +3344,7 @@ void Precalculations(
 		double alfa2 = global_params[6]; //surface velocity [m/s]
 		double alfa3 = global_params[7]; //linear reserv. coef gravitational storage [days]
 		double alfa4 = global_params[8]; //linear reserv. coef aquifer storage [days]
-        double melt_factor = global_params[9]; // melting factor in mm/hour/degree
+        double melt_factor = global_params[9]; // melting factor [mm/day/degree], as the equations use it
         double temp_thres = global_params[10]; // in celsius degrees
 		vals[3] = 60.0 * v_0 * pow(A_i, lambda_2) / ((1.0 - lambda_1) * L_i);//[1/min]  invtau params[3]
 		vals[4] = (0.001 / 60.0);		//(mm/hr->m/min)  c_1
@@ -3365,7 +3365,7 @@ void Precalculations(
 		double vsurf = params[9]; //surf velocity [m/s]
 		double alfa3 = params[10]; //linear reserv. coef gravitational storage [days]
 		double alfa4 = params[11]; //linear reserv. coef aquifer storage [days]
-        double melt_factor = params[12]; // melting factor in mm/hour/degree
+        double melt_factor = params[12]; // melting factor [mm/day/degree], as the equations use it
         double temp_thres = params[13]; // in celsius degrees
 	
 	}
@@ -3384,7 +3384,7 @@ else if (model_uid == 405) //tetis01 model
 		double alfa2 = global_params[6]; //surface velocity [m/s]
 		double alfa3 = global_params[7]; //linear reserv. coef gravitational storage [days]
 		double alfa4 = global_params[8]; //linear reserv. coef aquifer storage [days]
-        double melt_factor = global_params[9]; // melting factor in mm/hour/degree
+        double melt_factor = global_params[9]; // melting factor [mm/day/degree], as the equations use it
         double temp_thres = global_params[10]; // in celsius degrees
         double factor_low_threshold = global_params[11];// factor between and 0 and 1 
         double factor_high_threshold = global_params[12]; // factor between and 0 and 1 
