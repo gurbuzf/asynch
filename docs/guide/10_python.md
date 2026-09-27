@@ -76,14 +76,15 @@ in C; it is already installed if you built ASYNCH.
 
 ::::{tab-set}
 :::{tab-item} Ready-made wheel
-Nothing to build: each [release](https://github.com/gurbuzf/asynch/releases) has a wheel for Linux that carries the
-library and the `asynch` program already compiled, with the libraries they need (HDF5, ...). pip installs MPI with it
-(the `mpich` package of PyPI, which also provides `mpiexec`).
+Nothing to build: the package on [PyPI](https://pypi.org/project/asynch-hlm/) carries the library and the `asynch`
+program already compiled for Linux, with the libraries they need (HDF5, ...). pip installs MPI with it (the `mpich`
+package of PyPI, which also provides `mpiexec`). The same wheel is attached to each
+[release](https://github.com/gurbuzf/asynch/releases).
 
 ```bash
 python3 -m venv ~/asynch-venv && source ~/asynch-venv/bin/activate
 pip install --upgrade pip        # pip 20.3 or newer reads the wheel's platform tag
-pip install https://github.com/gurbuzf/asynch/releases/download/v1.5.0/asynch_hlm-1.5.0-py3-none-manylinux_2_31_x86_64.whl
+pip install asynch-hlm                     # the latest version; pip install --upgrade asynch-hlm updates it
 pip install h5py numba           # optional: read .h5 outputs; models in Python at C speed
 ```
 

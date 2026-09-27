@@ -108,5 +108,11 @@ default). For a release started by pushing a tag, set the repository variable ``
 (for instance made before PyPI was set up), run the workflow with its version and tick *Only upload an existing
 release to PyPI*: nothing is built, and the release is not changed.
 
-The next release then creates the project on PyPI, and ``pip install asynch-hlm`` installs it. A version number can
-be uploaded to PyPI only once: a release that must be redone needs a new version.
+Users install the latest version with ``pip install asynch-hlm`` (no version or file name to type), a given version
+with ``pip install asynch-hlm==x.y.z``. A version number can be uploaded to PyPI only once: a release that must be
+redone needs a new version.
+
+The description on the PyPI page is ``python/README.md`` followed by a *Changelog* section that ``python/setup.py``
+makes from ``CHANGELOG.md`` when the wheel is built: for each released version, its summary paragraph and the title of
+each change (``[Unreleased]`` is left out). Keep the summary at the top of each version short and readable on its own.
+The page also links to the full changelog and to the release notes.

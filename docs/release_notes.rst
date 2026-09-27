@@ -3,6 +3,39 @@ Releases Notes
 
 ASYNCH release notes provide information on the features and improvements in each release. This page includes release notes for major releases and minor (bugfix) releases. If you are upgrading from an earlier version of ASYNCH, you will find essential information in the Breaking Changes associated with the relevant release notes.
 
+Version 1.6
+-----------
+
+Released 2026-09-27. The units of every built-in model were checked; the errors found are fixed. Details in the
+:doc:`changelog` and in :doc:`guide/07_improvements_explained`.
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+* **Results change for models 255, 257, 258, 259, 261 and 262.** Models 257, 258, 259, 261 and 262 evaporated ponded
+  water 1000 times too fast (since 2015): surface runoff and flood peaks were too low (example 258: outlet peak
+  0.69 → 0.84 m³/s). Model 255 computed 8 to 15 times too much discharge from the water stored in the channel (since
+  2022).
+* **Baseflow outputs change** for models 249 (units), 258 and 259 (the baseflow was computed from the evaporation
+  total). Their discharge is not affected by this part.
+* **Smaller changes:** model 257's evaporation total (was 720 times too large); models 225 and 601–609 no longer give
+  NaN when the hillslope is completely dry; model 606 sets every derivative; peak-flow files of models 0–6 and 105
+  write the area in km².
+* Model 254 and every other model give the same results as 1.5.
+
+New Features
+~~~~~~~~~~~~
+
+* ``pip install asynch-hlm`` installs the ready-made package from PyPI; its page shows the changelog.
+* 21 new tests check the physics of the models: evaporation adds up to the potential evaporation, storage and
+  discharge convert back and forth, every model runs on a dry hillslope.
+
+Known Issues
+~~~~~~~~~~~~
+
+* Model 249 with reservoirs does not work (B-36). Questions for the authors of models 1–5, 21, 30, 400–405 and
+  601–606 are listed in :doc:`guide/08_known_issues` (S-08 to S-12).
+
 Version 1.5
 -----------
 

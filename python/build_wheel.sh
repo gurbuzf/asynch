@@ -23,6 +23,7 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 cp -r "$here/." "$tmp/src"
 rm -rf "$tmp/src/build" "$tmp/src"/*.egg-info "$tmp/src/asynch/__pycache__" "$tmp/src/asynch/bin"
+cp "$here/../CHANGELOG.md" "$tmp/src/"            # the changelog summary of the PyPI page (setup.py)
 cp -L "$lib" "$tmp/src/asynch/libasynch.so"
 mkdir -p "$tmp/src/asynch/bin"
 # the program: src/asynch, or src/.libs/asynch when src/asynch is a libtool wrapper script

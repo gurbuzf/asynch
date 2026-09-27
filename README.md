@@ -1,6 +1,6 @@
 # ASYNCH
 
-**Version 1.5.0** · [release notes](https://gurbuzf.github.io/asynch/release_notes.html) ·
+**Version 1.6.0** · [release notes](https://gurbuzf.github.io/asynch/release_notes.html) ·
 [download](https://github.com/gurbuzf/asynch/releases) · [documentation](https://gurbuzf.github.io/asynch/)
 
 ASYNCH solves large systems of ordinary differential equations that have the shape of a tree, such as a
@@ -71,13 +71,13 @@ mpirun -n 4 asynch clearcreek.gbl        # Clear Creek, Iowa: 6 359 links, model
 `asynch` is a regular Python package (`import asynch`): a thin layer over the C library `libasynch.so`, which does
 all the computation, the way h5py sits on top of HDF5.
 
-**Ready-made (Linux, nothing to build).** Each [release](https://github.com/gurbuzf/asynch/releases) has a wheel that
-carries the library and the `asynch` program already compiled; pip also installs MPI (the `mpich` package) with it:
+**Ready-made (Linux, nothing to build)**, from [PyPI](https://pypi.org/project/asynch-hlm/): the package carries the
+library and the `asynch` program already compiled; pip also installs MPI (the `mpich` package) with it:
 
 ```bash
 python3 -m venv ~/asynch-venv && source ~/asynch-venv/bin/activate
 pip install --upgrade pip                  # pip 20.3 or newer reads the wheel's platform tag
-pip install https://github.com/gurbuzf/asynch/releases/download/v1.5.0/asynch_hlm-1.5.0-py3-none-manylinux_2_31_x86_64.whl
+pip install asynch-hlm                     # the latest version; pip install --upgrade asynch-hlm updates it
 asynch test.gbl                            # the program; mpiexec -n 4 asynch test.gbl on 4 processes
 ```
 

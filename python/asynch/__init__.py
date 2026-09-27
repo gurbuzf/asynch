@@ -23,7 +23,7 @@ from . import io
 from ._lib import find_library
 from .parallel import run_parallel, run_script_parallel, ParallelRunError
 
-__version__ = "1.5.0"          # same as the C library (configure.ac)
+__version__ = "1.6.0"          # same as the C library (configure.ac)
 
 __all__ = ["Simulation", "AsynchError", "Model", "ModelError", "GlobalConfig", "Forcing", "Output", "PeakOutput",
            "Snapshot", "Selection", "FileRef", "io", "find_library", "library_path", "run_parallel",

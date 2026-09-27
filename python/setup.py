@@ -11,6 +11,7 @@ Two kinds of wheel come from this folder:
 """
 import glob
 import os
+import re
 
 from setuptools import setup
 from setuptools.dist import Distribution
@@ -29,6 +30,45 @@ if BUNDLED:
     SCRIPTS += ["asynch = asynch._cli:asynch"]
 
 REQUIRES = ["numpy"] + (["mpich"] if BUNDLED else [])
+
+CHANGELOG_URL = "https://github.com/gurbuzf/asynch/blob/modernization/CHANGELOG.md"
+
+
+def changelog_summary():
+    """The changelog shown on PyPI: for each released version of CHANGELOG.md (at the top of the repository, or
+    copied next to this file by build_wheel.sh), its summary paragraph and the titles of its changes."""
+    for path in (os.path.join(HERE, "CHANGELOG.md"), os.path.join(HERE, "..", "CHANGELOG.md")):
+        if os.path.exists(path):
+            break
+    else:
+        return ""
+    out, version, listed = [], None, False
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            if line.startswith("## ["):
+                version = line[4:line.index("]")]
+                if version.lower() == "unreleased":
+                    version = None
+                    continue
+                out.append("\n### " + version + line[line.index("]") + 1:].replace(" - ", " (", 1).rstrip()
+                           + (")" if " - " in line else "") + "\n\n")
+                listed = False
+            elif version is None:
+                continue
+            elif line.startswith("### "):
+                out.append(("" if listed else "\n") + "* " + line[4:])
+                listed = True
+            elif not listed and not line.startswith("#"):
+                out.append(line)
+    if not out:
+        return ""
+    text = re.sub(r"\n{3,}", "\n\n", "".join(out))
+    return ("\n## Changelog\n\nEvery version, newest first. Each change, with its effect on numerical results, is described "
+            "in [CHANGELOG.md](%s).\n" % CHANGELOG_URL + text)
+
+
+with open(os.path.join(HERE, "README.md"), encoding="utf-8") as f:
+    LONG_DESCRIPTION = f.read() + changelog_summary()
 
 
 class BinaryDistribution(Distribution):
@@ -54,4 +94,6 @@ setup(
     package_data={"asynch": ["libasynch.so*", "bin/*"]} if BUNDLED else {},
     entry_points={"console_scripts": SCRIPTS},
     install_requires=REQUIRES,
+    long_description=LONG_DESCRIPTION,
+    long_description_content_type="text/markdown",
 )

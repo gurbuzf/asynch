@@ -8,6 +8,30 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.6.0] - 2026-09-27
+
+The units of every built-in model were checked. Five models (257, 258, 259, 261, 262) evaporated ponded water 1000
+times too fast, so their flood peaks were too low; model 255 computed 8 to 15 times too much discharge from channel
+storage; the baseflow of models 249, 258 and 259 was wrong. These and four smaller errors are fixed, with 21 new tests
+that check the physics of the models. **Results change for the models above**; model 254 and every other model give the
+same results as 1.5.0. `pip install asynch-hlm` installs the ready-made package from PyPI.
+
+### PyPI: install without a version or file name; changelog on the project page
+
+*Results:* unchanged (packaging and documentation only).
+
+#### Changed
+- `README.md`, `python/README.md`, chapters 1 and 10 of the guide: the ready-made package is installed with
+  `pip install asynch-hlm` (the latest version) instead of the URL of a wheel file that contains the version.
+- `python/setup.py`: the description on PyPI is `python/README.md` followed by a *Changelog* section made from
+  `CHANGELOG.md` when the wheel is built (the summary and change titles of each released version);
+  `python/build_wheel.sh` copies `CHANGELOG.md` into the package source for this. `python/pyproject.toml`: links
+  *Changelog* and *Release notes* on the PyPI page.
+- Version 1.6.0 (`configure.ac`, `python/pyproject.toml`, `python/asynch/__init__.py`); `docs/release_notes.rst`,
+  `docs/contribute.rst` (what the PyPI page shows).
+
 ### Units checked in every built-in model: B-28 to B-35 fixed
 
 *Results:* **change for models 255, 257, 258, 259, 261, 262 (B-28, B-29), and in the cases described below for models

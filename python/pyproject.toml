@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "asynch-hlm"          # on PyPI ("asynch" is another project there); import asynch
-version = "1.5.0"
+version = "1.6.0"
 description = "Python interface to ASYNCH, an asynchronous solver of hydrological models on river networks"
-readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "GPL-2.0"}
-dynamic = ["scripts", "dependencies"]   # setup.py: numpy; plus mpich and the `asynch` command in the self-contained wheel
+dynamic = ["scripts", "dependencies", "readme"]   # setup.py: numpy; plus mpich and the `asynch` command in the
+                                                 # self-contained wheel; readme = README.md + changelog summary
 
 keywords = ["hydrology", "river network", "ODE", "Runge-Kutta", "MPI"]
 classifiers = [
@@ -28,6 +28,8 @@ all = ["h5py", "numba", "mpi4py"]
 [project.urls]
 Documentation = "https://gurbuzf.github.io/asynch/"
 Source = "https://github.com/gurbuzf/asynch"
+Changelog = "https://github.com/gurbuzf/asynch/blob/modernization/CHANGELOG.md"
+"Release notes" = "https://gurbuzf.github.io/asynch/release_notes.html"
 
 [tool.setuptools]
 packages = ["asynch"]

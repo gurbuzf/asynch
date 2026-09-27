@@ -17,14 +17,17 @@ with Simulation("test_2015.gbl") as sim:     # run in examples/
 
 Installation, tutorial and reference: <https://gurbuzf.github.io/asynch/guide/10_python.html>.
 
-**Ready-made (Linux x86-64, glibc 2.31 or newer).** The wheel attached to each release of
-<https://github.com/gurbuzf/asynch/releases> carries the library and the `asynch` program, compiled; pip installs MPI
-with it (the `mpich` package, with `mpiexec`). Nothing to build:
+**Ready-made (Linux x86-64, glibc 2.31 or newer)**, from [PyPI](https://pypi.org/project/asynch-hlm/). The package
+carries the library and the `asynch` program, compiled; pip installs MPI with it (the `mpich` package, with
+`mpiexec`). Nothing to build:
 
 ```sh
-pip install --upgrade pip && pip install asynch_hlm-<version>-py3-none-manylinux_2_31_x86_64.whl
+pip install --upgrade pip && pip install asynch-hlm      # the latest version
 asynch test.gbl               # the program; mpiexec -n 4 asynch test.gbl
 ```
+
+`pip install --upgrade asynch-hlm` updates it; `pip install asynch-hlm==<version>` installs a given version. The same
+wheels are attached to each release of <https://github.com/gurbuzf/asynch/releases>.
 
 **From the sources**, after building and installing ASYNCH (`make install` puts `libasynch.so` in `/usr/local/lib`):
 
