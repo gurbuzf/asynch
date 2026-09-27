@@ -77,6 +77,8 @@ Line numbers refer to commit `84da43a` (the state of `master` at the time of wri
 | [P-01](#p-01) | <span class="sev low">Low</span> | <span class="st fixed">fixed</span> | confirmed | CLI slept 1 s during initialisation |
 | [P-02](#p-02) | <span class="sev medium">Medium</span> | <span class="st open">open</span> | code reading | Snapshots gather every link through rank 0 one message at a time |
 | [P-03](#p-03) | <span class="st neutral">n/a</span> | <span class="st open">open</span> | hypothesis | Scheduler, barriers and step-size resets in `Advance`: needs profiling |
+| [P-04](#p-04) | <span class="sev medium">Medium</span> | <span class="st fixed">resolved</span> | confirmed | Explicit solvers are limited by stiffness: steps far smaller than accuracy needs; stiff solver added (index 4) |
+| [P-05](#p-05) | <span class="sev low">Low</span> | <span class="st open">open</span> | confirmed | Explicit solvers record peaks only at the end of a step: peak values slightly low |
 | [S-01](#s-01) | <span class="st neutral">n/a</span> | <span class="st info">open question</span> | code reading | Parent states indexed with `dim` instead of `max_dim` in the equations |
 | [S-02](#s-02) | <span class="sev high">High</span> | <span class="st fixed">resolved</span> | confirmed | Model 254 baseflow floor `max(0.001, q_b)` (added 2021) removed; original 2015 equation restored |
 | [S-03](#s-03) | <span class="st neutral">n/a</span> | <span class="st info">open question</span> | code reading | Potential evaporation assumes a 30-day month |
@@ -682,6 +684,23 @@ In `Advance` (`src/advance.c`):
 * two `MPI_Barrier`s plus a duplicated `Transfer_Data_Finish` run at every forcing
   period (the code itself says "This is sloppy");
 * `InitialStepSize` is recomputed for *every* link at every forcing period.
+
+### P-04
+**The explicit solvers are limited by stiffness.** *Medium, confirmed (profiling, model 254, 6 359 links, 100 h).* Some
+states react much faster than others (ponded water on small hillslopes drains within minutes), so the explicit
+methods must take steps of the order of the fastest reaction. Making the tolerances 100 times looser removed only 9 % of
+the steps of Dormand–Prince, and 21 % of its steps were rejected. By instruction count, 67 % of the run is the solver's
+own work and 28 % the model equations (`pow` alone 17 %); input/output and MPI are below 2 %. **Resolved** by an option
+(1.6.1): numerical solver index 4, Rodas5P, a Rosenbrock method whose steps are limited only by accuracy. With the same
+tolerances it is 16 times faster; with tolerances 100 times smaller, 6.6 times faster with similar accuracy
+(chapter 4, section 4.7). Index 2 stays the default.
+
+### P-05
+**The explicit solvers record peaks only at the end of a step.** *Low, confirmed.* The peak flow of a link is updated
+with the state at the end of each accepted step (`ExplicitRKSolver`), so a crest between two step ends is missed. The
+2015 reference peaks are lower than those of a run at tolerance 10⁻⁸ at 10 of 11 links (test) and 5 270 of 6 359 links
+(larger example), by up to 4.3·10⁻⁴ m³/s. The stiff solver (index 4) searches the crest inside each step with its dense
+output. The explicit solvers are left unchanged, so that their results stay identical to the reference results.
 
 ---
 

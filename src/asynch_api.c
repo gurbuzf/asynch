@@ -404,7 +404,7 @@ static void Spec_Routines(Link* link, unsigned int model_uid, unsigned int exp_i
     link->dense_indices = (unsigned int*)realloc(link->dense_indices, spec->num_dense * sizeof(unsigned int));
     memcpy(link->dense_indices, spec->dense_indices, spec->num_dense * sizeof(unsigned int));
 
-    link->solver = &ExplicitRKSolver;
+    link->solver = (exp_imp == 2) ? &RosenbrockSolver : &ExplicitRKSolver;  //index 4: Rosenbrock, finite-difference Jacobian
     link->differential = spec->differential;
     link->jacobian = NULL;
     link->algebraic = NULL;

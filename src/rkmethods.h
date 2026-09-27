@@ -22,6 +22,8 @@ void DOPRI5_dense(RKMethod* method);
 //void DOPRI5_bderiv(double theta, double *b);
 
 void RadauIIA3_dense(RKMethod* method);
+
+void Rodas5P_dense(RKMethod* method);
 //void RadauIIA3_b(double theta, double *b);
 
 #endif

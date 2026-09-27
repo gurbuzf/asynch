@@ -130,6 +130,38 @@ CASES += [
         "changed_vs_original": "model 254 baseflow equation restored to its 2015 form (issue S-02)",
     },
 ]
+# The same two configurations with the Rosenbrock solver for stiff equations (numerical solver index 4), tolerances
+# 100 times smaller than those of the global files. The global file is derived in the run directory ("derive":
+# source global file, solver index, tolerance factor). The 2015 references were computed by Dormand-Prince, which
+# records peaks only at the end of its steps: compared with runs at tolerance 1e-8, their hydrographs are off by up to
+# 4.2e-4 m3/s (baseflow at the outlet) and their peaks are low by up to 4.3e-4 m3/s, while this solver is within
+# 7e-5 of those runs. The comparison therefore uses 5e-4.
+CASES += [
+    {
+        "name": "test, 2015 configuration, Rosenbrock solver (model 190)",
+        "workdir": ".",
+        "gbl": "test_2015_rosenbrock.gbl",
+        "derive": ("test_2015.gbl", 4, 0.01),
+        "compare": [("out_2015/test.dat", "results/test.dat", "dat"),
+                    ("out_2015/test.pea", "results/test.pea", "pea"),
+                    ("out_2015/test.rec", "results/test.rec", "rec")],
+        "xfail": None,
+        "atol": 5e-4,
+        "skip_original": "the original code has no Rosenbrock solver",
+    },
+    {
+        "name": "clearcreek, 2015 configuration, Rosenbrock solver (model 254)",
+        "workdir": ".",
+        "gbl": "clearcreek_2015_rosenbrock.gbl",
+        "derive": ("clearcreek_2015.gbl", 4, 0.01),
+        "compare": [("out_2015/clearcreek.dat", "results/clearcreek.dat", "dat"),
+                    ("out_2015/clearcreek.pea", "results/clearcreek.pea", "pea"),
+                    ("out_2015/clearcreek.rec", "results/clearcreek.rec", "rec")],
+        "xfail": None,
+        "atol": 5e-4,
+        "skip_original": "the original code has no Rosenbrock solver",
+    },
+]
 for _m in (192, 196, 258, 259):
     CASES.append({
         "name": "model_%d" % _m,
@@ -396,6 +428,18 @@ def compare_to_original(new_root, orig_root, inputs, rtol, atol, have_h5py, verb
     return ok, [head] + lines
 
 
+def set_solver(gbl, index, factor):
+    """Rewrites a global file: numerical solver index (if index is not None), error tolerances times factor."""
+    lines = open(gbl).read().split("\n")
+    for i, line in enumerate(lines):
+        if line.startswith("%Numerical solver index") and index is not None:
+            lines[i + 1] = str(index)
+        if line.startswith("%Error tolerances") and factor != 1.0:
+            for j in range(i + 1, i + 5):
+                lines[j] = " ".join("%.6g" % (float(x) * factor) for x in lines[j].split())
+    open(gbl, "w").write("\n".join(lines))
+
+
 def find_mpirun():
     for name in ("mpirun", "mpiexec"):
         p = shutil.which(name)
@@ -425,6 +469,11 @@ def main():
                     help="with --compare-to: list every output file that is not bit-identical")
     ap.add_argument("--compare-to", metavar="ASYNCH",
                     help="also run this executable (e.g. the original code) and compare every output file")
+    ap.add_argument("--solver", type=int, metavar="INDEX",
+                    help="run every example with this numerical solver index instead of the one of its global file "
+                         "(e.g. 4, the Rosenbrock solver for stiff equations)")
+    ap.add_argument("--tol-factor", type=float, default=1.0, metavar="F",
+                    help="multiply the error tolerances of every global file by F (e.g. 0.01)")
     args = ap.parse_args()
     PEAK_TIME_ATOL = args.peak_time_atol
     if args.atol is None:
@@ -455,6 +504,19 @@ def main():
     orig_root = os.path.join(tmp, "examples_original")
     if args.compare_to:
         shutil.copytree(os.path.join(REPO, "examples"), orig_root)
+    for case in CASES:
+        if case.get("derive"):
+            source, index, factor = case["derive"]
+            for root in (run_root, orig_root if args.compare_to else None):
+                if root:
+                    gbl = os.path.join(root, case["workdir"], case["gbl"])
+                    shutil.copy(os.path.join(root, case["workdir"], source), gbl)
+                    set_solver(gbl, index, factor)
+    if args.solver is not None or args.tol_factor != 1.0:
+        for case in CASES:
+            for root in (run_root, orig_root if args.compare_to else None):
+                if root:
+                    set_solver(os.path.join(root, case["workdir"], case["gbl"]), args.solver, args.tol_factor)
 
     env = dict(os.environ)
     env.setdefault("OMPI_ALLOW_RUN_AS_ROOT", "1")          # harmless when not root

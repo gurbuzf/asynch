@@ -37,10 +37,12 @@ ASYNCH_SOURCES = \
   solvers/radau.c \
   solvers/rk3_2_dense.c \
   solvers/rk4_3_dense.c \
+  solvers/rodas5p_dense.c \
   steppers/explicit.c \
   steppers/explicit_index1.c \
   steppers/explicit_index1_dam.c \
   steppers/forced.c \
+  steppers/rosenbrock.c \
   advance.h \
   asynch_interface.h \
   asynch_api.h \

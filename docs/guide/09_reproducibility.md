@@ -66,7 +66,15 @@ python3 tests/regression/run_examples.py                  # 1 MPI process
 python3 tests/regression/run_examples.py --np 4           # 4 MPI processes
 python3 tests/regression/run_examples.py --only model_258 # a single case
 python3 tests/regression/run_examples.py --asynch /path/to/other/asynch --keep
+python3 tests/regression/run_examples.py --solver 4 --tol-factor 0.01   # every example with the stiff solver
 ```
+
+`--solver` and `--tol-factor` rewrite the global files in the temporary directory: numerical solver index, and error
+tolerances multiplied by a factor. The two 2015 configurations are also run with the stiff solver (index 4, tolerances
+× 0.01) as their own cases, "Rosenbrock solver". They are compared with the 2015 references at 5·10⁻⁴: those
+references were computed by Dormand–Prince, which records a peak only at the end of a step, and they differ from a run
+at tolerance 10⁻⁸ by up to 4.3·10⁻⁴ (peaks, nearly all too low) and 4.2·10⁻⁴ (baseflow at the outlet), while the stiff
+solver stays within 7·10⁻⁵ of that run.
 
 * The examples are copied to a temporary directory, so the repository is never modified.
   `--keep` keeps that directory so you can look at the outputs.

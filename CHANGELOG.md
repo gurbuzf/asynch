@@ -8,6 +8,28 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Stiff solver: Rosenbrock method Rodas5P (numerical solver index 4); P-04, P-05
+
+*Results:* unchanged for every existing configuration: the default solver (index 2) and the other explicit solvers are
+not modified, every example is bit-identical to the previous commit with 1 process (within tolerance with 2 and 4).
+Runs that select index 4 give new results, within their tolerances.
+
+#### Added
+- Numerical solver index 4: Rodas5P (G. Steinebach, BIT Numer. Math. 63, 27, 2023; coefficients of OrdinaryDiffEq.jl),
+  a Rosenbrock method of order 5 for stiff equations, L-stable, with error estimate and dense output of order 4
+  (`src/solvers/rodas5p_dense.c`, `src/steppers/rosenbrock.c`). It keeps the asynchronous design: each link has its own
+  step size and reads its parents' dense output at the stage times. Peaks are searched inside each step with the dense
+  output (P-05). Jacobian: analytic for model 254 (`Jmodel254`), finite differences for the other models and for models
+  defined from Python. Refused, with a message, for the models solved with algebraic equations.
+- Measured on model 254, 6 359 links, 100 hours (errors against a run at tolerance 1e-8): Dormand–Prince 11.3 s,
+  5.44 million steps, 21 % rejected, hydrograph error 4.0e-5 m³/s; Rodas5P with the same tolerances 0.69 s, 189 243
+  steps, 5.4 % rejected, error 5.6e-3; with tolerances × 0.01 1.71 s, 465 187 steps, 2.2 % rejected, error 7.8e-5, peak
+  error 6.7e-5 (Dormand–Prince 3.4e-4). On 4 processes: 0.44 s against 2.4 s.
+- Tests: Rodas5P order 5 and dense order 4 (`test_rodas5p_order`), Jacobian of model 254 against finite differences
+  (`test_model254_jacobian`); regression cases "Rosenbrock solver" for both 2015 configurations (compared with the
+  2015 references at 5e-4, their own error: P-05); `run_examples.py --solver` and `--tol-factor`.
+- Documentation: chapter 4, section 4.7; `docs/builtin_options.rst`; known issues P-04 (resolved), P-05.
+
 ### Fix P-01: no 1-second pause at start-up
 
 *Results:* unchanged. Every example is bit-identical to the previous commit with 1 process; with 2 and 4 processes the

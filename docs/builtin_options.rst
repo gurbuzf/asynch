@@ -61,9 +61,18 @@ The ASYNCH solver is based upon using Runge-Kutta methods at the link level. The
   +------------+-------------------------------+-----------------------------+
   | 3          | RadauII 3A                    | 3 / 2                       |
   +------------+-------------------------------+-----------------------------+
+  | 4          | Rodas5P (Rosenbrock, stiff)   | 5 / 4                       |
+  +------------+-------------------------------+-----------------------------+
 
 Index 3 (RadauII 3A, an implicit method) cannot be selected: its solver is not part of the build,
 and ASYNCH stops with an error message if a global file or a .rkd file asks for it.
+
+Index 4 is a linearly implicit (Rosenbrock) method for stiff equations: L-stable, 8 stages, with an error estimate of
+order 4 and a dense output of order 4 (G. Steinebach, BIT Numerical Mathematics 63, 27, 2023). Its step size is limited
+by accuracy, not by stability, so it takes far fewer steps when some links react much faster than others. It needs the
+Jacobian of the equations: model 254 provides it; for other models, and for models defined from Python, it is computed
+by finite differences. It cannot be used by the models solved with algebraic equations (21, 22, 23, 40, 261, 262 and
+dams of model 255): ASYNCH stops with a message. See :doc:`guide/04_how_the_solver_works`, section 4.7.
 
 The application of these methods is done through the *RKSolver* routine in the *UnivVars* structure. This is set with a call to the *InitRoutines* method. See the section *InitRoutines* of :doc:`custom_models`. Several choices exist for the *RKSolver*. They are given in Table  :ref:`rk-solvers`. Some solvers are only appropriate if the model uses ODEs, while others support DAEs. Similarly, some methods support discontinuity states, while others do not. Currently, only one method is equipped to handle stiff ODEs. Certainly, the routine *ExplicitRKIndex1SolverDam* could be used to solve any problem. However, using a more appropriate solver is significantly more efficient.
 
@@ -81,6 +90,8 @@ The application of these methods is done through the *RKSolver* routine in the *
   | ExplicitRKIndex1Solver      | Yes    | No                | No      |
   +-----------------------------+--------+-------------------+---------+
   | ExplicitRKSolverDiscont     | No     | Yes               | No      |
+  +-----------------------------+--------+-------------------+---------+
+  | RosenbrockSolver            | No     | No                | Yes     |
   +-----------------------------+--------+-------------------+---------+
   | RadauRKSolver               | No     | No                | Yes     |
   +-----------------------------+--------+-------------------+---------+

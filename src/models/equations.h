@@ -121,6 +121,7 @@ void Robertson(double t, const double * const y_i, unsigned int dim, const doubl
 //Jacobians
 //double NormJx_simple_river(double *y_i,double *global_params,double *param);
 void Jsimple_river(double t, const double * const y_i, unsigned int dim, const double * const y_p, unsigned short num_parents, unsigned int max_dim, const double * const global_params, const double * const params, const double * const forcing_values, double *ans);
+void Jmodel254(double t, const double * const y_i, unsigned int dim, const double * const y_p, unsigned short num_parents, unsigned int max_dim, const double * const global_params, const double * const params, const double * const forcing_values, double *ans);
 void Jsimple(double t, const double * const y_i, unsigned int dim, const double * const y_p, unsigned short num_parents, unsigned int max_dim, const double * const global_params, const double * const params, const double * const forcing_values, double *ans);
 void Jsimple_soil(double t, const double * const y_i, unsigned int dim, const double * const y_p, unsigned short num_parents, unsigned int max_dim, const double * const global_params, const double * const params, const double * const forcing_values, double *ans);
 void JRobertson(double t, const double * const y_i, unsigned int dim, const double * const y_p, unsigned short num_parents, unsigned int max_dim, const double * const global_params, const double * const params, const double * const forcing_values, double *ans);

@@ -301,6 +301,107 @@ START_TEST(test_rk_observed_order)
 }
 END_TEST
 
+// Rodas5P (numerical solver index 4): one step of the method of RosenbrockSolver, written out here for
+// y' = L y + g(t), with its dense output through the stored vectors and b(theta) of Rodas5P_dense.
+static void rodas_linear_step(const RKMethod *m, double h, double *y1, double *ymid)
+{
+    //L = [[-1, 0], [1, -0.5]], g(t) = [sin t, 0], y(0) = [1, 0.5]
+    const double L[2][2] = { { -1.0, 0.0 }, { 1.0, -0.5 } };
+    const double y0[2] = { 1.0, 0.5 };
+    const unsigned int s = m->ros_stages;
+    double k[16][2], T[2] = { 1.0, 0.0 };            //T = dg/dt at 0
+    double M[2][2];
+    for (int i = 0; i < 2; i++)
+        for (int j = 0; j < 2; j++)
+            M[i][j] = (i == j ? 1.0 / (h * m->ros_gamma) : 0.0) - L[i][j];
+    double det = M[0][0] * M[1][1] - M[0][1] * M[1][0];
+    for (unsigned int i = 0; i < s; i++)
+    {
+        double u[2], r[2];
+        for (int q = 0; q < 2; q++)
+        {
+            u[q] = y0[q];
+            for (unsigned int j = 0; j < i; j++)
+                u[q] += m->A[i * s + j] * k[j][q];
+        }
+        double ti = m->c[i] * h;
+        for (int q = 0; q < 2; q++)
+        {
+            r[q] = L[q][0] * u[0] + L[q][1] * u[1] + (q == 0 ? sin(ti) : 0.0) + h * m->ros_d[i] * T[q];
+            for (unsigned int j = 0; j < i; j++)
+                r[q] += m->ros_C[i * s + j] / h * k[j][q];
+        }
+        k[i][0] = (M[1][1] * r[0] - M[0][1] * r[1]) / det;
+        k[i][1] = (M[0][0] * r[1] - M[1][0] * r[0]) / det;
+    }
+    double bt[4], stored[4][2];
+    m->dense_b(0.5, bt);
+    for (int q = 0; q < 2; q++)
+    {
+        double K[3] = { 0.0, 0.0, 0.0 };
+        y1[q] = y0[q];
+        for (unsigned int i = 0; i < s; i++)
+        {
+            y1[q] += m->ros_b[i] * k[i][q];
+            for (int j = 0; j < 3; j++)
+                K[j] += m->ros_H[j * s + i] * k[i][q];
+        }
+        stored[0][q] = (y1[q] - y0[q]) / h;
+        for (int j = 0; j < 3; j++)
+            stored[j + 1][q] = K[j] / h;
+        ymid[q] = y0[q];
+        for (unsigned int l = 0; l < m->num_stages; l++)
+            ymid[q] += h * bt[l] * stored[l][q];
+    }
+}
+
+// Exact solution of the test problem, by many classical RK4 steps
+static void linear_exact(double t_end, double *y)
+{
+    y[0] = 1.0; y[1] = 0.5;
+    int n = 20000;
+    double h = t_end / n, t = 0.0;
+    for (int i = 0; i < n; i++)
+    {
+        double k[4][2], u[2];
+        for (int st = 0; st < 4; st++)
+        {
+            double c = (st == 0) ? 0.0 : (st == 3 ? 1.0 : 0.5);
+            for (int q = 0; q < 2; q++)
+                u[q] = y[q] + (st == 0 ? 0.0 : c * h * k[st - 1][q]);
+            k[st][0] = -u[0] + sin(t + c * h);
+            k[st][1] = u[0] - 0.5 * u[1];
+        }
+        for (int q = 0; q < 2; q++)
+            y[q] += h / 6.0 * (k[0][q] + 2.0 * k[1][q] + 2.0 * k[2][q] + k[3][q]);
+        t += h;
+    }
+}
+
+START_TEST(test_rodas5p_order)
+{
+    // The local error of one step is O(h^6) (order 5); the dense output is of order 4 (local error O(h^5)).
+    RKMethod m;
+    memset(&m, 0, sizeof(m));
+    Rodas5P_dense(&m);
+    ck_assert_uint_eq(m.exp_imp, 2);
+    double err[2], derr[2], h = 0.2;
+    for (int r = 0; r < 2; r++, h /= 2)
+    {
+        double y1[2], ymid[2], ex[2], exm[2];
+        rodas_linear_step(&m, h, y1, ymid);
+        linear_exact(h, ex);
+        linear_exact(h / 2, exm);
+        err[r] = fmax(fabs(y1[0] - ex[0]), fabs(y1[1] - ex[1]));
+        derr[r] = fmax(fabs(ymid[0] - exm[0]), fabs(ymid[1] - exm[1]));
+    }
+    double order = log2(err[0] / err[1]) - 1.0, dorder = log2(derr[0] / derr[1]) - 1.0;
+    ck_assert_msg(order > 4.5, "Rodas5P: observed order %.2f, expected 5", order);
+    ck_assert_msg(dorder > 3.6, "Rodas5P: dense output order %.2f, expected 4", dorder);
+    free(m.b); free(m.b_theta); free(m.b_theta_deriv);
+}
+END_TEST
+
 // ---------------------------------------------------------------------------------------------------
 // built-in models
 // ---------------------------------------------------------------------------------------------------
@@ -625,6 +726,47 @@ START_TEST(test_offline_baseflow_state)
 }
 END_TEST
 
+// Model 254: the Jacobian used by the Rosenbrock solver (Jmodel254) against central finite differences, in a
+// recession (more water leaves the channel than arrives: the case where it is exact) with evaporation.
+START_TEST(test_model254_jacobian)
+{
+    GlobalVars g;
+    Link link;
+    double gp[64], params[128], yp[2 * 64], forcing[16], J[64], fp[8], fm[8], y[8];
+    unsigned int dim = setup_model(254, &g, gp, params, &link);
+    ck_assert_ptr_nonnull(link.jacobian);
+    // realistic global parameters: v_0 lambda_1 lambda_2 v_h k_3 k_I_factor h_b S_L A B exponent v_B
+    const double g254[12] = { 0.33, 0.2, -0.1, 0.02, 2.0425e-6, 0.02, 0.5, 0.1, 0.0, 99.0, 3.0, 0.75 };
+    memcpy(gp, g254, sizeof(g254));
+    params[0] = 12.0; params[1] = 0.8; params[2] = 0.3;       // A_i [km2], L [km], A_h [km2]
+    ConvertParams(params, 254, NULL);
+    Precalculations(&link, gp, 12, params, 3, g.num_params, 0, 254, NULL);
+    const double y0[7] = { 0.8, 0.004, 0.03, 0.2, 0.0, 0.0, 0.05 };
+    for (unsigned int i = 0; i < 2 * 64; i++) yp[i] = 0.0;
+    yp[0] = 0.3; yp[dim] = 0.2; yp[6] = yp[dim + 6] = 0.01;
+    forcing[0] = 2.0; forcing[1] = 60.0; forcing[2] = 0.0;
+    // the state is a recession: dq/dt < 0
+    link.differential(0.0, y0, dim, yp, 2, dim, gp, params, forcing, NULL, -1, NULL, fp);
+    ck_assert_msg(fp[0] < 0.0, "test state is not a recession (dq/dt = %g)", fp[0]);
+    memset(J, 0, sizeof(J));
+    link.jacobian(0.0, y0, dim, yp, 2, dim, gp, params, forcing, J);
+    for (unsigned int j = 0; j < dim; j++)
+    {
+        double dlt = 1e-6 * fmax(fabs(y0[j]), 1e-3);
+        memcpy(y, y0, sizeof(y0)); y[j] += dlt;
+        link.differential(0.0, y, dim, yp, 2, dim, gp, params, forcing, NULL, -1, NULL, fp);
+        memcpy(y, y0, sizeof(y0)); y[j] -= dlt;
+        link.differential(0.0, y, dim, yp, 2, dim, gp, params, forcing, NULL, -1, NULL, fm);
+        for (unsigned int i = 0; i < dim; i++)
+        {
+            double fd = (fp[i] - fm[i]) / (2.0 * dlt), an = J[i * dim + j];
+            ck_assert_msg(fabs(fd - an) <= 1e-5 * fmax(fabs(fd), 1e-6),
+                "d f_%u / d y_%u: analytic %g, finite differences %g", i, j, an, fd);
+        }
+    }
+}
+END_TEST
+
 // Every model with every storage empty (a dry start): every derivative must be set and finite. Found in 2026:
 // models 225 and 601 to 609 divided by the sum of the storages (NaN), model 606 left derivative 5 unset.
 // An unset derivative keeps what the array held: two different sentinels detect it.
@@ -820,6 +962,7 @@ Suite *asynch_suite(void)
     tcase_add_loop_test(tc, test_rk_error_estimators, 0, 3);
     tcase_add_loop_test(tc, test_rk_dense_output, 0, 3);
     tcase_add_loop_test(tc, test_rk_observed_order, 0, 3);
+    tcase_add_test(tc, test_rodas5p_order);
     suite_add_tcase(s, tc);
 
     tc = tcase_create("models");
@@ -831,6 +974,7 @@ Suite *asynch_suite(void)
     tcase_add_loop_test(tc, test_evaporation_total, 0, sizeof(evap_models) / sizeof(evap_models[0]));
     tcase_add_loop_test(tc, test_storage_discharge, 0, sizeof(storage_models) / sizeof(storage_models[0]));
     tcase_add_loop_test(tc, test_offline_baseflow_state, 0, 2);
+    tcase_add_test(tc, test_model254_jacobian);
     tcase_set_timeout(tc, 120);
     suite_add_tcase(s, tc);
 

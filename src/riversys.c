@@ -679,13 +679,13 @@ int Partition_Network(
 //Reads numerical error tolerances. Builds RK methods.
 //!!!! I'm not really sure how to handle specifying the dimension here. Should the rkd file allow a variable number of tols? !!!!
 //Message listing the numerical methods that can be selected in a global file or a .rkd file.
-#define USABLE_RK_METHODS_MSG "Use 0 (RK 3(2)), 1 (RK 4(3)) or 2 (Dormand-Prince 5(4))."
+#define USABLE_RK_METHODS_MSG "Use 0 (RK 3(2)), 1 (RK 4(3)), 2 (Dormand-Prince 5(4)) or 4 (Rosenbrock Rodas5P, for stiff equations)."
 
-//Returns true if index refers to a method that can be used: it must exist and be explicit,
-//because the implicit (Radau) stepper is not compiled.
+//Returns true if index refers to a method that can be used: it must exist and be explicit or linearly implicit
+//(Rosenbrock), because the fully implicit (Radau) stepper is not compiled.
 static bool IsUsableRKMethod(const RKMethod *rk_methods, unsigned int num_methods, unsigned int index)
 {
-    return index < num_methods && rk_methods[index].exp_imp == 0;
+    return index < num_methods && rk_methods[index].exp_imp != 1;
 }
 
 int Build_RKData(
@@ -703,14 +703,15 @@ int Build_RKData(
 
     //Build all the RKMethods. Each solver owns its array (freed by Asynch_Free): with a static array,
     //several solvers in one program (e.g. Python) would share and overwrite the same tables.
-    RKMethod *rk_methods = calloc(4, sizeof(RKMethod));
+    RKMethod *rk_methods = calloc(5, sizeof(RKMethod));
     RKDense3_2(&rk_methods[0]);
     TheRKDense4_3(&rk_methods[1]);
     DOPRI5_dense(&rk_methods[2]);
-    RadauIIA3_dense(&rk_methods[3]);
+    RadauIIA3_dense(&rk_methods[3]);        //not usable (its stepper is not compiled)
+    Rodas5P_dense(&rk_methods[4]);         //Rosenbrock, for stiff equations
 
     *methods = rk_methods;
-    *num_methods = 4;
+    *num_methods = 5;
 
     globals->max_localorder = rk_methods[0].localorder;
     globals->max_rk_stages = rk_methods[0].num_stages;

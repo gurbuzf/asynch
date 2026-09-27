@@ -72,7 +72,7 @@ Your equations run in the C solver, as fast as a built-in model: [A new model](g
 <div><p>50+</p><p>built-in hydrological models</p></div>
 <div><p>400 000</p><p>links: the whole state of Iowa</p></div>
 <div><p>2.9×</p><p>faster on 4 processes (6 359 links)</p></div>
-<div><p>117</p><p>automatic tests, run on every change</p></div>
+<div><p>119</p><p>automatic tests, run on every change</p></div>
 </div>
 
 ## Find your way
@@ -148,7 +148,7 @@ Every change to the code, and whether it changes numerical results.
 2. **Two critical and ten high-severity bugs fixed**, among them wrong coefficients in solver methods 0 and 1, and
    memory overwritten by the main example: [what was fixed](guide/07_improvements_explained.md).
 3. **Networks larger than 65 535 links** are counted correctly through the library.
-4. **Every result is checked** against the reference results of the original ASYNCH: `make check` runs 96 tests (117 since 1.6),
+4. **Every result is checked** against the reference results of the original ASYNCH: `make check` runs 96 tests (119 since 1.6.1),
    and GitHub Actions run them on every change: [reproducibility](guide/09_reproducibility.md).
 5. **This website**, with search, diagrams and a light and dark theme.
 

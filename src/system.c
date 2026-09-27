@@ -234,6 +234,11 @@ void Create_Workspace(Workspace *workspace, unsigned int max_dim, unsigned short
     for (unsigned int i = 0; i < num_stages; i++)
         workspace->temp_k_slices[i] = workspace->temp_k + i * max_dim;
 
+    workspace->ros_vec = calloc((size_t)16 * max_dim, sizeof(double));
+    workspace->ros_J = calloc((size_t)max_dim * max_dim, sizeof(double));
+    workspace->ros_W = calloc((size_t)max_dim * max_dim, sizeof(double));
+    workspace->ros_piv = calloc(max_dim, sizeof(int));
+
 #if defined(ASYNCH_HAVE_IMPLICIT_SOLVER)
     workspace->ipiv = (int*)malloc(s*dim * sizeof(int));
     workspace->rhs = v_init(s*dim);
@@ -252,6 +257,10 @@ void Destroy_Workspace(Workspace* workspace, unsigned short int num_stages, unsi
     free(workspace->temp);    
     free(workspace->temp2);
     free(workspace->temp3);
+    free(workspace->ros_vec);
+    free(workspace->ros_J);
+    free(workspace->ros_W);
+    free(workspace->ros_piv);
 
     //for (unsigned int i = 0; i < num_stages; i++)
     //{

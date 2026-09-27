@@ -36,6 +36,11 @@ struct Workspace
 
     double *temp_k_slices[ASYNCH_MAX_SOLVER_STAGES];
 
+    //Memory for the Rosenbrock solver (steppers/rosenbrock.c)
+    double *ros_vec;                    //!< 16 vectors [16][max_dim]: 4 work vectors and up to 12 stages
+    double *ros_J, *ros_W;              //!< Jacobian and iteration matrix [max_dim][max_dim]
+    int *ros_piv;                       //!< Pivots of the LU decomposition [max_dim]
+
 #if defined(ASYNCH_HAVE_IMPLICIT_SOLVER)
      //Memory for Implicit Solvers
     int *ipiv;          //!< Array to hold pivots from LU decomps. length = s*dim.
@@ -73,6 +78,15 @@ struct RKMethod
     unsigned short int localorder;      //!< Local order of the method
 
     double *w;                          //!< Weights for lagrange polynomial
+
+    //Rosenbrock methods in the form of RODAS (RosenbrockSolver): A and c above have ros_stages rows
+    unsigned short int ros_stages;      //!< Number of stages of the method (num_stages is what is stored per step)
+    double ros_gamma;                   //!< gamma
+    const double *ros_C;                //!< C coefficients [ros_stages][ros_stages]
+    const double *ros_d;                //!< d coefficients (time derivative) [ros_stages]
+    const double *ros_H;                //!< dense output coefficients [3][ros_stages]
+    const double *ros_b;                //!< solution weights [ros_stages]
+    const double *ros_btilde;           //!< error estimate weights [ros_stages]
 };
 
 /// Holds the error estimation information for a link.

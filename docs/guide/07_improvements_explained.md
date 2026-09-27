@@ -12,7 +12,7 @@ The full technical record is [chapter 8](08_known_issues.md), and every change i
 <div><p>4</p><p>critical issues fixed</p></div>
 <div><p>12</p><p>high-severity issues fixed</p></div>
 <div><p>0</p><p>reference files modified</p></div>
-<div><p>117</p><p>automatic tests (C + Python)</p></div>
+<div><p>119</p><p>automatic tests (C + Python)</p></div>
 </div>
 
 ## 7.1 How every change was checked

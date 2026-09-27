@@ -1689,6 +1689,79 @@ void model254(double t, const double * const y_i, unsigned int dim, const double
 }
 
 
+//Jacobian of model254 (d ans[i] / d y[j] in J[i * dim + j], J set to 0 by the caller), for the Rosenbrock solver.
+//Exact, except in one case: when the discharge q is near 0 and more water arrives than leaves, d(dq/dt)/dq has a large
+//positive term lambda_1 invtau q^(lambda_1 - 1) (inflow - q) (infinite at q = 0); it is left out there (q rises, the
+//equation is not stiff), because it would make the method hold q near 0.
+void Jmodel254(double t, const double * const y_i, unsigned int dim, const double * const y_p, unsigned short num_parents, unsigned int max_dim, const double * const global_params, const double * const params, const double * const forcing_values, double *J)
+{
+    double lambda_1 = global_params[1];
+    double k_3 = global_params[4];	//[1/min]
+    double h_b = global_params[6];	//[m]
+    double S_L = global_params[7];	//[m]
+    double A = global_params[8];
+    double B = global_params[9];
+    double exponent = global_params[10];
+    double v_B = global_params[11];
+    double e_pot = forcing_values[1] * (1e-3 / (30.0*24.0*60.0));	//[mm/month] -> [m/min]
+
+    double L = params[1];	//[m]
+    double A_h = params[2];	//[m^2]
+    double invtau = params[3];	//[1/min]
+    double k_2 = params[4];	//[1/min]
+    double k_i = params[5];	//[1/min]
+    double c_2 = params[7];
+
+    double q = y_i[0];
+    double s_p = y_i[1];
+    double s_t = y_i[2];
+    double s_s = y_i[3];
+
+    //Evaporation: e_x = w_x s_x e_pot / Corr, Corr = s_p + s_t/S_L + s_s/(h_b - S_L)
+    double w[3] = { 1.0, 1.0 / S_L, 1.0 / (h_b - S_L) };
+    double s[3] = { s_p, s_t, s_s };
+    double de[3][3] = { { 0.0 } };      //de[x][j] = d e_x / d s_j
+    double Corr = s_p + s_t / S_L + s_s / (h_b - S_L);
+    if (e_pot > 0.0 && Corr > 1e-12)
+        for (int x = 0; x < 3; x++)
+            for (int j = 0; j < 3; j++)
+                de[x][j] = e_pot * w[x] * ((x == j ? Corr : 0.0) - s[x] * w[j]) / (Corr * Corr);
+
+    double base = 1.0 - s_t / S_L;
+    double pow_term = (base > 0.0) ? pow(base, exponent) : 0.0;
+    double k_t = (A + B * pow_term) * k_2;
+    double dkt_dst = (base > 0.0) ? -k_2 * B * exponent * pow(base, exponent - 1.0) / S_L : 0.0;
+
+    //Discharge: dq/dt = invtau q^lambda_1 G, G = -q + (k_2 s_p + k_3 s_s) c_2 + sum of parents' q
+    if (q > 0.0)
+    {
+        double qpow = pow(q, lambda_1);
+        double G = -q + (k_2 * s_p + k_3 * s_s) * c_2;
+        for (unsigned short i = 0; i < num_parents; i++)
+            G += y_p[i * max_dim];
+        J[0 * dim + 0] = invtau * (lambda_1 * qpow / q * min(G, 0.0) - qpow);
+        J[0 * dim + 1] = invtau * qpow * c_2 * k_2;
+        J[0 * dim + 3] = invtau * qpow * c_2 * k_3;
+    }
+
+    //Hillslope
+    J[1 * dim + 1] = -k_2 - k_t - de[0][0];
+    J[1 * dim + 2] = -s_p * dkt_dst - de[0][1];
+    J[1 * dim + 3] = -de[0][2];
+    J[2 * dim + 1] = k_t - de[1][0];
+    J[2 * dim + 2] = s_p * dkt_dst - k_i - de[1][1];
+    J[2 * dim + 3] = -de[1][2];
+    J[3 * dim + 1] = -de[2][0];
+    J[3 * dim + 2] = k_i - de[2][1];
+    J[3 * dim + 3] = -k_3 - de[2][2];
+
+    //Accumulated runoff V_r (state 5) and baseflow q_b (state 6)
+    J[5 * dim + 1] = k_2;
+    J[6 * dim + 3] = v_B / L * k_3 * A_h;
+    J[6 * dim + 6] = -60.0 * v_B / L;
+}
+
+
 //Type 255, before called TopLayerHillslope_variable
 //Contains 2 layers in the channel: discharge, storage. Contains 3 layers on hillslope: ponded, top layer, soil.
 //Order of the states is:              0          1                                        2        3       4

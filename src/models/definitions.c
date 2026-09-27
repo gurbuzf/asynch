@@ -1066,6 +1066,8 @@ void InitRoutines(
         link->solver = &ExplicitRKIndex1Solver;
     else if (exp_imp == 0)
         link->solver = &ExplicitRKSolver;
+    else if (exp_imp == 2)
+        link->solver = &RosenbrockSolver;       //stiff solver (numerical solver index 4)
     //	else if(link->method->exp_imp == 1)
     //		link->solver = &RadauRKSolver;
     else
@@ -1779,8 +1781,11 @@ void InitRoutines(
             link->differential = &TopLayerHillslope_Reservoirs;
             link->solver = &ForcedSolutionSolver;
         }
-        else			
+        else
+        {
             link->differential = &model254;
+            link->jacobian = &Jmodel254;        //used by the Rosenbrock solver
+        }
         link->algebraic = NULL;
         link->check_state = NULL;
         link->check_consistency = &CheckConsistency_Nonzero_AllStates_q;
@@ -2205,6 +2210,15 @@ void InitRoutines(
 	 */
 	else
 		printf("Warning: No ODE selected for link ID %u.\n", link->ID);
+
+    //The Rosenbrock method has no version for the models with algebraic equations (index 1 solvers): refused
+    //(Initialize_Model stops with a message)
+    if (exp_imp == 2 && (link->solver == &ExplicitRKIndex1Solver || link->solver == &ExplicitRKIndex1SolverDam))
+    {
+        printf("Error: numerical solver index 4 (Rosenbrock) cannot be used with model %u (algebraic equations).\n",
+            model_uid);
+        link->solver = NULL;
+    }
 }
 
 //Perform precalculations needed for the differential equation.  These should be stored in params after the DEM

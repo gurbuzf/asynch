@@ -22,5 +22,6 @@ int ExplicitRKSolverDiscont(Link* link_i, GlobalVars* globals, int* assignments,
 
 //Forced solution methods
 int ForcedSolutionSolver(Link* link_i, GlobalVars* globals, int* assignments, bool print_flag, FILE* outputfile, ConnData* conninfo, Forcing* forcings, Workspace* workspace);
+int RosenbrockSolver(Link* link_i, GlobalVars* globals, int* assignments, bool print_flag, FILE* outputfile, ConnData* conninfo, Forcing* forcings, Workspace* workspace);
 
 #endif // !defined(RKSTEPPERS_H)

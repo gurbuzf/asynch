@@ -265,7 +265,7 @@ reads them too (`asynch.io`, [chapter 10](10_python.md)).
 |---|---|
 | `Warning: X.uini is written for model 252, but the global file uses model 254.` | the model number in the initial-state file differs from the `.gbl`: check that the file is meant for this model |
 | `Warning: X.uini gives 4 initial value(s), model 254 has 7. ...` | fewer initial values than states: the others are 0, or computed by the model. Fine if intended |
-| `Error: numerical solver index 4 in the global file is not valid. Use 0 (RK 3(2)), 1 (RK 4(3)) or 2 (Dormand-Prince 5(4)).` | fix the number after `%Numerical solver index` |
+| `Error: numerical solver index 3 in the global file is not valid. Use 0 (RK 3(2)), 1 (RK 4(3)), 2 (Dormand-Prince 5(4)) or 4 (Rosenbrock Rodas5P, for stiff equations).` | fix the number after `%Numerical solver index` |
 | `Error: file X not found for .prm file.` (or `.rvr`, `.uini`, ...) | wrong name or wrong folder: file names are relative to where you run `asynch` |
 | `Error: File X appears to be in Windows format.` | the file was edited on Windows: convert it with `dos2unix X` |
 | `Error: Number of links in .str file differs from number of links in network` | the rain file does not match the network |
