@@ -2,6 +2,25 @@
 
 Newest first.
 
+## 2026-09-27: units audit fixes, 1.6.0, GPU investigation
+
+- Units audit of every model (report delivered to the owner as PDF, not in the repo). Owner: "fix all as you
+  suggested". Fixed B-28..B-35; open items recorded B-36, S-08..S-12; docs D-01..D-07 fixed. 21 new unit checks
+  (fail on old code exactly for the affected models). np=1 bit-identical except 258/259 (declared intended).
+- Owner rules added: (1) release texts (GitHub release, PyPI page, release notes, home page "what's new") give a
+  general summary only; specifics only in CHANGELOG entries. The first paragraph of each CHANGELOG version is the
+  public summary (release.yml and setup.py publish only it). (2) Do not name Clear Creek in general docs/code; only
+  in test/evaluation contexts. Use my_basin.gbl in examples.
+- PyPI 1.5.0 was published by the owner's run 3 (pypi_only). 1.6.0: pip install asynch-hlm everywhere.
+- Speed measurements (4-core sandbox, model 254, 6 359 links, 100 h): computation 6.3 s np1, 3.4 s np2, 2.0 s np4;
+  init ~1.3 s of which 1 s sleep (P-01). Callgrind: solver bookkeeping ~67 %, model equations ~28 % (pow ~17 %),
+  I/O+MPI < 2 %. -march=native / LTO: 9 % slower and not bit-identical. Tolerance 1e-4 -> 1e-2: only 9 % fewer
+  steps; 21 % of steps undone: step size limited by stiffness, not accuracy -> implicit / exponential methods are
+  the big algorithmic lever. GPU precedent: Tiger-HLM (hillslopes on GPU, routing on CPU OpenMP); HydroLegion-HLM
+  (full GPU, ensemble axis; could not open Zenodo from sandbox).
+- GPU plan (not started, owner to decide): see answer of 2026-09-27; hillslope/routing split for models where the
+  hillslope does not depend on the channel (254 and most Top Layer models); level-synchronous routing; ensemble axis.
+
 ## 2026-09-26: parallel runs from Python, PyPI (owner question)
 
 - Parallel already worked (mpiexec -n N python script.py); added asynch.run_parallel / run_script_parallel for
