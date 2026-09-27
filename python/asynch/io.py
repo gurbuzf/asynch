@@ -4,7 +4,7 @@ Read ASYNCH output files and write ASYNCH input files.
 Readers (outputs of a run) return a dictionary keyed by link id::
 
     from asynch import io
-    hydro = io.read_hydrographs("examples/out_2015/clearcreek.dat")   # .dat, .csv or .h5
+    hydro = io.read_hydrographs("outputs/my_basin.dat")   # .dat, .csv or .h5
     t, q = hydro[2527][:, 0], hydro[2527][:, 1]
     peaks = io.read_pea("examples/out_2015/test.pea")                 # {link: (area, time, peak)}
     state = io.read_snapshot("examples/out_2015/test.rec")            # .rec or .h5

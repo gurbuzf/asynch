@@ -12,11 +12,10 @@ Nothing yet.
 
 ## [1.6.0] - 2026-09-27
 
-The units of every built-in model were checked. Five models (257, 258, 259, 261, 262) evaporated ponded water 1000
-times too fast, so their flood peaks were too low; model 255 computed 8 to 15 times too much discharge from channel
-storage; the baseflow of models 249, 258 and 259 was wrong. These and four smaller errors are fixed, with 21 new tests
-that check the physics of the models. **Results change for the models above**; model 254 and every other model give the
-same results as 1.5.0. `pip install asynch-hlm` installs the ready-made package from PyPI.
+A quality release. The units and equations of every built-in model were checked systematically and the
+inconsistencies found were corrected; new tests check the physical consistency of every model. Numerical results
+change for some models (listed in the changelog); model 254 gives the same results as 1.5.0. The ready-made
+package is now installed with `pip install asynch-hlm`.
 
 ### PyPI: install without a version or file name; changelog on the project page
 
@@ -26,9 +25,14 @@ same results as 1.5.0. `pip install asynch-hlm` installs the ready-made package 
 - `README.md`, `python/README.md`, chapters 1 and 10 of the guide: the ready-made package is installed with
   `pip install asynch-hlm` (the latest version) instead of the URL of a wheel file that contains the version.
 - `python/setup.py`: the description on PyPI is `python/README.md` followed by a *Changelog* section made from
-  `CHANGELOG.md` when the wheel is built (the summary and change titles of each released version);
+  `CHANGELOG.md` when the wheel is built (the first paragraph of each released version, a general summary);
   `python/build_wheel.sh` copies `CHANGELOG.md` into the package source for this. `python/pyproject.toml`: links
   *Changelog* and *Release notes* on the PyPI page.
+- `.github/workflows/release.yml`: the text of a GitHub release is the first paragraph of its version in
+  `CHANGELOG.md` (a general summary) and links to the changelog and release notes, no longer the list of changes. The
+  first paragraph of versions 1.5.0 and 1.6.0 is written for this.
+- Examples in the documentation and docstrings use a generic `my_basin.gbl` instead of one particular example basin,
+  which is named only where the examples are run or results evaluated.
 - Version 1.6.0 (`configure.ac`, `python/pyproject.toml`, `python/asynch/__init__.py`); `docs/release_notes.rst`,
   `docs/contribute.rst` (what the PyPI page shows).
 
@@ -83,11 +87,13 @@ evidence: `docs/guide/08_known_issues.md`, issues B-28 to B-36, S-08 to S-12, D-
 
 ## [1.5.0] - 2026-09-26
 
-The first release of this branch. In short: a working Python library (`asynch`: run and change simulations, new
-models in C, Numba or Python, MPI), installable on Linux with pip without building anything, 2 critical and 10 high-severity bugs fixed, networks above 65 535 links, `make check`
-with 96 tests against the reference results, GitHub Actions, and a documentation website. The entries below list every
-change and whether it changes numerical results; only the results of model 254 (S-02, on purpose) and of models 105 and 263 (B-26: they were undefined) change. The release notes
-(`docs/release_notes.rst`) summarise what changes for a user.
+The first release of this branch: a Python library (`asynch`: run and change simulations, new models in C, Numba or
+Python, MPI), installable on Linux with pip without building anything, many reliability fixes, support for networks
+above 65 535 links, automated tests against the reference results, GitHub Actions, and a documentation website.
+
+The entries below list every change and whether it changes numerical results; only the results of model 254 (S-02, on
+purpose) and of models 105 and 263 (B-26: they were undefined) change. The release notes (`docs/release_notes.rst`)
+summarise what changes for a user.
 
 ### Parallel runs started from Python; PyPI publishing
 

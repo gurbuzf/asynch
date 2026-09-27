@@ -68,10 +68,10 @@ the **tolerance** you set, the step is redone with a smaller step size.
 A run is started from a terminal with one command:
 
 ```console
-$ mpirun -n 4 asynch clearcreek.gbl
+$ mpirun -n 4 asynch my_basin.gbl
 ```
 
-"Run `asynch` with the global file `clearcreek.gbl`, split over 4 processors."
+"Run `asynch` with the global file `my_basin.gbl`, split over 4 processors."
 
 :::{tip}
 Next: [chapter 1](01_setup.md) installs everything and runs this example; [chapter 2](02_running_the_model.md)

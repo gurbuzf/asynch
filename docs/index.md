@@ -37,7 +37,7 @@ the Iowa Flood Center, and you can add your own, in C or in Python.</p>
 
 :::{tab-item} Command line
 ```console
-$ mpirun -n 4 asynch clearcreek.gbl
+$ mpirun -n 4 asynch my_basin.gbl
 ```
 A global file (`.gbl`) names the model, the dates, the network, the rain and the outputs.
 [Running the model](guide/02_running_the_model.md) explains each part.
@@ -47,7 +47,7 @@ A global file (`.gbl`) names the model, the dates, the network, the rain and the
 ```python
 from asynch import Simulation
 
-with Simulation("clearcreek.gbl") as sim:
+with Simulation("my_basin.gbl") as sim:
     sim.run()
     peak_time, peak_q = sim.peaks          # every link, as NumPy arrays
 ```
@@ -71,7 +71,7 @@ Your equations run in the C solver, as fast as a built-in model: [A new model](g
 <div class="stats">
 <div><p>50+</p><p>built-in hydrological models</p></div>
 <div><p>400 000</p><p>links: the whole state of Iowa</p></div>
-<div><p>2.9×</p><p>faster on 4 processes (Clear Creek)</p></div>
+<div><p>2.9×</p><p>faster on 4 processes (6 359 links)</p></div>
 <div><p>117</p><p>automatic tests, run on every change</p></div>
 </div>
 
@@ -131,13 +131,11 @@ Every change to the code, and whether it changes numerical results.
 
 <div class="steps">
 
-1. **Units checked in every built-in model.** Five models evaporated ponded water 1000 times too fast and model 255
-   computed 8 to 15 times too much discharge from channel storage: both fixed, with the baseflow of models 249, 258
-   and 259 and four smaller errors: [what was fixed](guide/07_improvements_explained.md).
-2. **New tests that check the physics**: evaporation adds up to the potential evaporation, storage and discharge
-   convert back and forth, every model runs on a dry hillslope.
-3. **Results change** for models 225, 249, 255, 257, 258, 259, 261, 262, 606 and 601–609 (only in the cases
-   described); model 254 and the other models give identical results.
+1. **Every built-in model checked.** The units and equations of all models were reviewed systematically and the
+   inconsistencies found were corrected. Results change for some models; model 254 is unchanged. See the
+   [changelog](changelog.md).
+2. **New tests of the physics**: every model is checked for consistency, including from a completely dry state.
+3. **`pip install asynch-hlm`** installs the ready-made package from PyPI.
 
 </div>
 

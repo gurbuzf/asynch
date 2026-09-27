@@ -3,7 +3,7 @@
 Plot the discharge at one link from one or more ASYNCH hydrograph files, to compare runs.
 
     python3 plot_hydrographs.py --link 80 outputs.h5 run2/outputs.h5 --out compare.png
-    python3 plot_hydrographs.py --link 2527 clearcreek.h5 --column 2 --out baseflow.png
+    python3 plot_hydrographs.py --link 2527 my_basin.h5 --column 2 --out baseflow.png
 
 Accepted files: .dat, .csv and .h5 hydrograph outputs. By default the first state after the
 time column is plotted (State0 = discharge for most models); change it with --column

@@ -36,35 +36,28 @@ CHANGELOG_URL = "https://github.com/gurbuzf/asynch/blob/modernization/CHANGELOG.
 
 def changelog_summary():
     """The changelog shown on PyPI: for each released version of CHANGELOG.md (at the top of the repository, or
-    copied next to this file by build_wheel.sh), its summary paragraph and the titles of its changes."""
+    copied next to this file by build_wheel.sh), its first paragraph, which is written as a general summary. The
+    details stay in CHANGELOG.md, which the page links to."""
     for path in (os.path.join(HERE, "CHANGELOG.md"), os.path.join(HERE, "..", "CHANGELOG.md")):
         if os.path.exists(path):
             break
     else:
         return ""
-    out, version, listed = [], None, False
     with open(path, encoding="utf-8") as f:
-        for line in f:
-            if line.startswith("## ["):
-                version = line[4:line.index("]")]
-                if version.lower() == "unreleased":
-                    version = None
-                    continue
-                out.append("\n### " + version + line[line.index("]") + 1:].replace(" - ", " (", 1).rstrip()
-                           + (")" if " - " in line else "") + "\n\n")
-                listed = False
-            elif version is None:
-                continue
-            elif line.startswith("### "):
-                out.append(("" if listed else "\n") + "* " + line[4:])
-                listed = True
-            elif not listed and not line.startswith("#"):
-                out.append(line)
+        text = f.read()
+    out = []
+    for m in re.finditer(r"^## \[([^\]]+)\](?: - (\S+))?\n(.*?)(?=^## \[|\Z)", text, re.S | re.M):
+        version, date, body = m.groups()
+        if version.lower() == "unreleased":
+            continue
+        summary = body.strip().split("\n\n")[0]
+        if summary.startswith("#"):                  # no summary paragraph
+            summary = ""
+        out.append("### %s%s\n\n%s\n" % (version, " (%s)" % date if date else "", summary))
     if not out:
         return ""
-    text = re.sub(r"\n{3,}", "\n\n", "".join(out))
-    return ("\n## Changelog\n\nEvery version, newest first. Each change, with its effect on numerical results, is described "
-            "in [CHANGELOG.md](%s).\n" % CHANGELOG_URL + text)
+    return ("\n## Changelog\n\nThe details of every change, with its effect on numerical results, are in "
+            "[CHANGELOG.md](%s).\n\n" % CHANGELOG_URL + "\n".join(out))
 
 
 with open(os.path.join(HERE, "README.md"), encoding="utf-8") as f:

@@ -168,7 +168,7 @@ one more state. For each link it touched one number more than exists, writing in
 and for the last link past the end of the memory reserved for the file. The cause was a single missing word,
 `break`, in the list of models.
 
-**Why it matters.** The flagship example `clearcreek.gbl` **crashed** on one processor. On several processors it
+**Why it matters.** Runs of model 254 that write snapshots, such as the larger example `clearcreek.gbl`, **crashed** on one processor. On several processors it
 seemed to work, but memory was being overwritten, which can corrupt results in ways that cannot be predicted.
 
 :::{admonition} Now

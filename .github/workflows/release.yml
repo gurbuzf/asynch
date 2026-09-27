@@ -1,7 +1,7 @@
 # Publishes a GitHub release, either when a version tag is pushed (git tag -a v1.5.0 && git push origin v1.5.0), or
 # from the Actions tab: Release > Run workflow, with the version (the tag v<version> is then created on the chosen
-# branch's latest commit). The tag must match the version of configure.ac; ASYNCH is built and tested first; the release notes are the section
-# of CHANGELOG.md for that version. Attached: the source archive made by `make dist` (it builds without autotools:
+# branch's latest commit). The tag must match the version of configure.ac; ASYNCH is built and tested first; the release notes are the first
+# paragraph (a general summary) of the section of CHANGELOG.md for that version. Attached: the source archive made by `make dist` (it builds without autotools:
 # ./configure && make), the self-contained Linux wheel (pip install it: the Python package, the library and the
 # `asynch` program, nothing to build; workflow wheel.yml) and the documentation website as a zip file.
 # The wheel is also published on PyPI (as asynch-hlm): from the Actions tab when "Publish on PyPI" is ticked (the
@@ -88,14 +88,14 @@ jobs:
           (cd docs/_build && mv html "asynch-${VERSION}-docs" && zip -qr "../../dist/asynch-${VERSION}-docs.zip" "asynch-${VERSION}-docs")
       - name: Release notes from CHANGELOG.md
         run: |
-          # the summary of the version, then the title of each change; the details stay in CHANGELOG.md
+          # the first paragraph of the version, a general summary; the details stay in CHANGELOG.md
           awk -v v="## [${VERSION}]" '
             index($0, v) == 1 {on = 1; next}
-            on && /^## \[/ {exit}
-            on && /^### / {if (!listed) {print "\n### Changes in this release\n"; listed = 1}; sub(/^### /, "- "); print; next}
-            on && !listed {print}' CHANGELOG.md > notes.md
+            on && /^#/ {exit}
+            on && NF {started = 1; print; next}
+            on && started && !NF {exit}' CHANGELOG.md > notes.md
           test -s notes.md
-          printf '\nEvery change, with its effect on numerical results: [CHANGELOG.md](%s/blob/%s/CHANGELOG.md)\n' \
+          printf '\nDetails of every change, with its effect on numerical results: [CHANGELOG.md](%s/blob/%s/CHANGELOG.md)\n' \
               "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" "${TAG}" >> notes.md
           printf 'What changes for a user: [release notes](https://gurbuzf.github.io/asynch/release_notes.html) · Documentation: https://gurbuzf.github.io/asynch/\n' >> notes.md
       - name: Publish the release

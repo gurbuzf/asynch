@@ -2,8 +2,7 @@
 
 <div class="meta-row"><span class="audience">Modellers</span><span>Equations with units</span><span>25 minutes</span></div>
 
-Model 254 is the model used operationally by the Iowa Flood Center and in
-`examples/clearcreek.gbl`. This page maps **every equation to the line of C that
+Model 254 is the model used operationally by the Iowa Flood Center. This page maps **every equation to the line of C that
 implements it**, with units, so that you can check the code against the science
 yourself. The official description is in `docs/builtin_models.rst` (section *Top Layer
 Hydrological Model*). Where that description and the code disagree, it is noted here
@@ -38,7 +37,7 @@ Time `t` is in **minutes** everywhere inside ASYNCH.
 **Global** (same for all links, line `%Global parameters` in the `.gbl`), read in
 `model254()` from `global_params[]`:
 
-| idx | name | clearcreek value | meaning |
+| idx | name | value in the examples | meaning |
 |---|---|---|---|
 | 0 | v_0 (v_r) | 0.33 | channel reference velocity [m/s] |
 | 1 | λ₁ | 0.20 | exponent of discharge in channel velocity |

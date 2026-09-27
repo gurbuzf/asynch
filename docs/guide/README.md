@@ -43,7 +43,7 @@ With Docker installed (any system):
 git clone https://github.com/gurbuzf/asynch.git && cd asynch && git checkout modernization
 docker build -t asynch .
 docker run --rm -it asynch
-mpirun -n 2 asynch clearcreek.gbl        # inside the container
+mpirun -n 2 asynch test.gbl              # inside the container
 ```
 
 On Ubuntu 24.04 without Docker, follow [chapter 1, option A](01_setup.md#option-a-native-install-on-ubuntu-2404).

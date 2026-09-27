@@ -4,10 +4,10 @@ A Python program cannot become several MPI processes after it has started, so th
 `mpiexec`, and wait for them:
 
     import asynch
-    asynch.run_parallel("clearcreek.gbl", 4)                 # the asynch program on 4 processes
+    asynch.run_parallel("my_basin.gbl", 4)                   # the asynch program on 4 processes
     asynch.run_script_parallel("my_study.py", 4)             # a Python script on 4 processes (it uses Simulation)
 
-The same as typing `mpiexec -n 4 asynch clearcreek.gbl` or `mpiexec -n 4 python3 my_study.py` in a terminal. The
+The same as typing `mpiexec -n 4 asynch my_basin.gbl` or `mpiexec -n 4 python3 my_study.py` in a terminal. The
 output files are those the global file names, as with the program.
 """
 import os

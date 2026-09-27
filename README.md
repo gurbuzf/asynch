@@ -31,7 +31,7 @@ What you can do with it:
 git clone https://github.com/gurbuzf/asynch.git && cd asynch && git checkout modernization
 docker build -t asynch .                 # installs everything, compiles, runs all the tests (about 10 minutes)
 docker run --rm -it asynch               # a shell inside the container, in the examples folder
-mpirun -n 2 asynch clearcreek.gbl        # a 6 359-link basin, on 2 processors
+mpirun -n 2 asynch test.gbl              # an example run, on 2 processors
 python3 python/run_example.py            # the same kind of run from Python
 ```
 
@@ -63,7 +63,7 @@ Run the examples (paths inside a global file are relative to the folder you run 
 ```bash
 cd ../examples
 mpirun -n 2 asynch test.gbl              # 11 links, model 190
-mpirun -n 4 asynch clearcreek.gbl        # Clear Creek, Iowa: 6 359 links, model 254
+mpirun -n 4 asynch clearcreek.gbl        # the larger example: 6 359 links, model 254
 ```
 
 ## ASYNCH as a Python library
@@ -128,8 +128,8 @@ Python + Numba 0.13 s, plain Python 4.1 s.
 
 **MPI**: `mpirun -n 4 python3 my_script.py` (with the ready-made wheel: `mpiexec -n 4 python3 my_script.py`), or from
 a notebook `asynch.run_parallel("my_basin.gbl", 4)` and `asynch.run_script_parallel("my_script.py", 4)`; every
-process runs the script and ASYNCH shares the links (Clear Creek,
-6 359 links: 8.0 s on 1 process, 2.75 s on 4). mpi4py is optional (`Simulation(..., comm=MPI.COMM_WORLD)`).
+process runs the script and ASYNCH shares the links (a
+6 359-link network: 8.0 s on 1 process, 2.75 s on 4). mpi4py is optional (`Simulation(..., comm=MPI.COMM_WORLD)`).
 
 More in the [Python chapter](docs/guide/10_python.md), the
 [Python API reference](https://gurbuzf.github.io/asynch/python_api.html) and [`examples/python/`](examples/python).

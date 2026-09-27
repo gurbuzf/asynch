@@ -390,14 +390,11 @@ Yes, Python and MPI work together, with or without mpi4py. Start Python with `mp
 script, and ASYNCH shares the links between them.
 
 ```bash
-mpirun -n 4 python3 python/run_example.py clearcreek_2015.gbl
+mpirun -n 4 python3 my_study.py
 ```
 
-(Its largest peaks are not at the outlet, 0.56 m3/s, but at links 4086-4090, 0.58 m3/s: the flood wave flattens as it
-travels down. The 2015 reference results show the same.)
-
 <div class="stats">
-<div><p>2.9×</p><p>faster on 4 processes: Clear Creek from Python</p></div>
+<div><p>2.9×</p><p>faster on 4 processes: 6 359 links from Python</p></div>
 <div><p>2.8×</p><p>faster on 4 processes: a model in plain Python</p></div>
 <div><p>0</p><p>changes to your script: just <code>mpirun -n 4</code></p></div>
 </div>
@@ -406,7 +403,7 @@ travels down. The 2015 reference results show the same.)
 
 | Run | 1 process | 2 processes | 4 processes |
 |---|---|---|---|
-| Clear Creek, 6 359 links, model 254, 100 h (from Python) | 8.0 s | 4.3 s | 2.75 s (2.9x) |
+| 6 359 links, model 254, 100 h (from Python) | 8.0 s | 4.3 s | 2.75 s (2.9x) |
 | 50 000 links, model 190 built-in, 6 h | 1.41 s | 0.98 s | 0.70 s (2.0x) |
 | same, model 190 in Python with `jit="numba"` | 2.00 s | 1.23 s | 0.88 s (2.3x) |
 | same, model 190 in plain Python | 56.6 s | 32.5 s | 20.1 s (2.8x) |
@@ -417,7 +414,7 @@ program themselves; with the ready-made wheel both come with the installation):
 
 ```python
 import asynch
-asynch.run_parallel("clearcreek_2015.gbl", 4)            # = mpiexec -n 4 asynch clearcreek_2015.gbl
+asynch.run_parallel("my_basin.gbl", 4)                   # = mpiexec -n 4 asynch my_basin.gbl
 asynch.run_script_parallel("my_study.py", 4, "--rc", 0.5)  # = mpiexec -n 4 python my_study.py --rc 0.5
 ```
 
@@ -426,7 +423,7 @@ The output files are those the global file names; `capture=True` returns the pri
 `examples/python/sensitivity.py`, started this way.
 
 The 50 000-link network is a single long main channel with side streams, which is hard to share between processes;
-real basins such as Clear Creek branch more and gain more.
+real river networks branch more and gain more.
 
 :::{admonition} Rules for scripts run with MPI
 :class: important

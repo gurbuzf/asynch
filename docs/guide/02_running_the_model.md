@@ -40,7 +40,7 @@ All in `examples/`. Run times are for one process on a laptop-class computer.
 | `test.gbl` | 11 links, model 190 (constant runoff coefficient) | the smallest complete run; one day, rain for 200 minutes | 1 s |
 | `test_rkd.gbl` | same | tolerances and solver chosen per link, from `test.rkd` | 1 s |
 | `test_2015.gbl` | same | the configuration that produced the reference results `results/test.*`; writes `.dat`/`.rec` into `out_2015/` | 1 s |
-| `clearcreek.gbl` | Clear Creek, Iowa: 6 359 links, model 254 (top layer) | the operational model on a real basin; one day | 4 s |
+| `clearcreek.gbl` | 6 359 links, model 254 (top layer) | a larger network with the Top Layer model; one day | 4 s |
 | `clearcreek_2015.gbl` | same | reproduces the reference results `results/clearcreek.*`: 100 hours from 2014-05-01 | 8 s |
 | `more/model_*/test*.gbl` | 11 links, models 192, 196, 258, 259 | other models; run them from inside their folder (`cd more/model_192`) | 1 s |
 

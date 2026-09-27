@@ -82,8 +82,9 @@ Versions follow `semantic versioning <https://semver.org/>`__: ``x.y.z``. To rel
      created on the latest commit of that branch, after it has been built and tested.
 
 The workflow ``.github/workflows/release.yml`` then checks that the tag matches ``configure.ac``, builds ASYNCH, runs
-``make check``, and publishes the GitHub release. Its description is the summary of the version from
-``CHANGELOG.md`` with the title of every change. Three files are attached:
+``make check``, and publishes the GitHub release. Its description is the first paragraph of the version in
+``CHANGELOG.md``, with links to the changelog and the release notes. Write that paragraph as a general summary of the
+version; the details belong in the entries below it. Three files are attached:
 
 * ``asynch-x.y.z.tar.gz``, made by ``make dist``: the sources with a ready ``configure`` script, which build without
   autotools (``./configure && make && make check``);
@@ -113,6 +114,6 @@ with ``pip install asynch-hlm==x.y.z``. A version number can be uploaded to PyPI
 redone needs a new version.
 
 The description on the PyPI page is ``python/README.md`` followed by a *Changelog* section that ``python/setup.py``
-makes from ``CHANGELOG.md`` when the wheel is built: for each released version, its summary paragraph and the title of
-each change (``[Unreleased]`` is left out). Keep the summary at the top of each version short and readable on its own.
+makes from ``CHANGELOG.md`` when the wheel is built: the first paragraph of each released version (``[Unreleased]``
+is left out). Keep that paragraph general, short and readable on its own.
 The page also links to the full changelog and to the release notes.

@@ -192,7 +192,7 @@ Peakflows written to file test.pea.
 ```
 :::
 
-Then the larger example: the Clear Creek basin in Iowa, 6 359 links, model 254:
+Then the larger example: a network of 6 359 links, model 254:
 
 ```bash
 mpirun -n 2 ../build/src/asynch clearcreek.gbl
@@ -309,11 +309,11 @@ Inside the container, copy the examples into it, run, and the results stay on yo
 ```bash
 cp -r /asynch/examples /work/
 cd /work/examples
-mpirun -n 2 asynch clearcreek.gbl
+mpirun -n 2 asynch test.gbl
 exit
 ```
 
-You will find `mywork/examples/clearcreek.h5` and `clearcreek.pea` on your computer.
+You will find `mywork/examples/outputs.h5` and `test.pea` on your computer.
 
 :::{note}
 * On Windows PowerShell write `${PWD}` instead of `$PWD`.
@@ -360,7 +360,7 @@ A.2 to A.5.
 | `There are not enough slots available` | you asked for more processes than processors: use a smaller `-n`, or add `--oversubscribe` |
 | `error: externally-managed-environment` from `pip` | on Ubuntu 24.04, install Python packages with `apt` (`python3-numpy`, ...), as in A.1 |
 | `Error: file ... not found` when running | ASYNCH looks for input files relative to the folder you are in: `cd` into the folder of the `.gbl` |
-| `Fatal glibc error: malloc.c ...` with `clearcreek.gbl` | an old version of ASYNCH (bug B-01, fixed); make sure you built the `modernization` branch |
+| `Fatal glibc error: malloc.c ...` with model 254 | an old version of ASYNCH (bug B-01, fixed); make sure you built the `modernization` branch |
 
 ## Build variants (for developers)
 

@@ -6,35 +6,22 @@ ASYNCH release notes provide information on the features and improvements in eac
 Version 1.6
 -----------
 
-Released 2026-09-27. The units of every built-in model were checked; the errors found are fixed. Details in the
-:doc:`changelog` and in :doc:`guide/07_improvements_explained`.
+Released 2026-09-27. A quality release: the units and equations of every built-in model were checked systematically,
+and the inconsistencies found were corrected. The details are in the :doc:`changelog`.
 
 Breaking Changes
 ~~~~~~~~~~~~~~~~
 
-* **Results change for models 255, 257, 258, 259, 261 and 262.** Models 257, 258, 259, 261 and 262 evaporated ponded
-  water 1000 times too fast (since 2015): surface runoff and flood peaks were too low (example 258: outlet peak
-  0.69 → 0.84 m³/s). Model 255 computed 8 to 15 times too much discharge from the water stored in the channel (since
-  2022).
-* **Baseflow outputs change** for models 249 (units), 258 and 259 (the baseflow was computed from the evaporation
-  total). Their discharge is not affected by this part.
-* **Smaller changes:** model 257's evaporation total (was 720 times too large); models 225 and 601–609 no longer give
-  NaN when the hillslope is completely dry; model 606 sets every derivative; peak-flow files of models 0–6 and 105
-  write the area in km².
-* Model 254 and every other model give the same results as 1.5.
+* **Numerical results change for some built-in models**, as a consequence of these corrections. The :doc:`changelog`
+  lists the models concerned and what changed for each. Model 254 gives the same results as 1.5.
+* Peak-flow files (``.pea``) of the oldest models write the area in km², like all other models.
 
 New Features
 ~~~~~~~~~~~~
 
 * ``pip install asynch-hlm`` installs the ready-made package from PyPI; its page shows the changelog.
-* 21 new tests check the physics of the models: evaporation adds up to the potential evaporation, storage and
-  discharge convert back and forth, every model runs on a dry hillslope.
-
-Known Issues
-~~~~~~~~~~~~
-
-* Model 249 with reservoirs does not work (B-36). Questions for the authors of models 1–5, 21, 30, 400–405 and
-  601–606 are listed in :doc:`guide/08_known_issues` (S-08 to S-12).
+* New tests check the physical consistency of every model (for instance, that the water taken by evaporation matches
+  the potential evaporation, and that every model runs from a completely dry state).
 
 Version 1.5
 -----------
@@ -46,7 +33,7 @@ Breaking Changes
 ~~~~~~~~~~~~~~~~
 
 * **Model 254 results change.** The baseflow equation of 2015 is restored: a line added in 2021 kept the baseflow state
-  ``q_b`` at 0 (S-02). Total discharge changes by at most 0.0003 m³/s on Clear Creek; the baseflow output was wrong since
+  ``q_b`` at 0 (S-02). Total discharge changes by at most 0.0003 m³/s in the larger example; the baseflow output was wrong since
   2021. Apart from models 105 and 263 (below), all other models give the same results as 1.4.3.
 * **Runs stop earlier, with a message, instead of failing silently:** a missing or read-only output folder (checked
   before computing; exit code 1), a numerical solver index other than 0, 1 or 2, a model number without equations
