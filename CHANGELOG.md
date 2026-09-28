@@ -8,6 +8,12 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-09-28
+
+A speed release. A new, optional numerical solver for stiff equations makes long simulations several times faster at
+the same accuracy, and peaks are located more precisely with it. The default solver is unchanged, so existing
+configurations give the same results as 1.6.0. Runs also start about one second sooner.
+
 ### Stiff solver: Rosenbrock method Rodas5P (numerical solver index 4); P-04, P-05
 
 *Results:* unchanged for every existing configuration: the default solver (index 2) and the other explicit solvers are

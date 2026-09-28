@@ -3,6 +3,26 @@ Releases Notes
 
 ASYNCH release notes provide information on the features and improvements in each release. This page includes release notes for major releases and minor (bugfix) releases. If you are upgrading from an earlier version of ASYNCH, you will find essential information in the Breaking Changes associated with the relevant release notes.
 
+Version 1.7
+-----------
+
+Released 2026-09-28. A speed release: a new, optional numerical solver for stiff equations. The details are in the
+:doc:`changelog`.
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+* None. The default solver is unchanged; existing configurations give the same results as 1.6.
+
+New Features
+~~~~~~~~~~~~
+
+* **Numerical solver index 4** (Rodas5P, a Rosenbrock method) for stiff equations: several times faster than the
+  default solver at the same accuracy, with more precise peaks. Use it with tolerances about 100 times smaller than
+  those used with the default solver. It is not available for models solved with algebraic equations; such runs stop
+  with a message. See :doc:`guide/04_how_the_solver_works`.
+* Runs start about one second sooner.
+
 Version 1.6
 -----------
 

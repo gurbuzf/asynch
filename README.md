@@ -1,6 +1,6 @@
 # ASYNCH
 
-**Version 1.6.0** · [release notes](https://gurbuzf.github.io/asynch/release_notes.html) ·
+**Version 1.7.0** · [release notes](https://gurbuzf.github.io/asynch/release_notes.html) ·
 [download](https://github.com/gurbuzf/asynch/releases) · [documentation](https://gurbuzf.github.io/asynch/)
 
 ASYNCH solves large systems of ordinary differential equations that have the shape of a tree, such as a

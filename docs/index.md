@@ -127,6 +127,17 @@ Every change to the code, and whether it changes numerical results.
 
 ![A model run: the input files, the three stages inside ASYNCH, the output files](guide/diagrams/run_pipeline.svg)
 
+## What's new in 1.7
+
+<div class="steps">
+
+1. **A faster solver for stiff equations** (numerical solver index 4). Long simulations run several times faster at
+   the same accuracy, and flood peaks are located more precisely. It is optional: the default solver is unchanged.
+   See [how the solver works](guide/04_how_the_solver_works.md).
+2. **Runs start sooner**: a pause of about one second at start-up is gone.
+
+</div>
+
 ## What's new in 1.6
 
 <div class="steps">
@@ -148,7 +159,7 @@ Every change to the code, and whether it changes numerical results.
 2. **Two critical and ten high-severity bugs fixed**, among them wrong coefficients in solver methods 0 and 1, and
    memory overwritten by the main example: [what was fixed](guide/07_improvements_explained.md).
 3. **Networks larger than 65 535 links** are counted correctly through the library.
-4. **Every result is checked** against the reference results of the original ASYNCH: `make check` runs 96 tests (119 since 1.6.1),
+4. **Every result is checked** against the reference results of the original ASYNCH: `make check` runs 96 tests (119 since 1.7),
    and GitHub Actions run them on every change: [reproducibility](guide/09_reproducibility.md).
 5. **This website**, with search, diagrams and a light and dark theme.
 

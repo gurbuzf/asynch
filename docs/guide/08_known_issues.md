@@ -668,7 +668,7 @@ Negligible for large runs, but it makes up 99 % of the runtime of the small exam
 The pause came with the first upload (2015), right after each process prints "good to go" and before a barrier:
 most likely to let those lines reach the screen before the next message. It has no numerical role: without it every
 example gives bit-identical results with 1 process, and differences with 2 and 4 processes are of the same size as
-between two runs of the unchanged program (R-05). **Fixed** (1.6.1): the pause is removed; output is flushed before
+between two runs of the unchanged program (R-05). **Fixed** (1.7.0): the pause is removed; output is flushed before
 the barrier. Initialisation of the 6 359-link test network: 1.3 s → 0.27 s. The pauses left in
 `src/asynch_interface.c` and `src/processdata.c` are on error paths (they let process 0 print its message before the
 program aborts) and stay.
@@ -691,7 +691,7 @@ states react much faster than others (ponded water on small hillslopes drains wi
 methods must take steps of the order of the fastest reaction. Making the tolerances 100 times looser removed only 9 % of
 the steps of Dormand–Prince, and 21 % of its steps were rejected. By instruction count, 67 % of the run is the solver's
 own work and 28 % the model equations (`pow` alone 17 %); input/output and MPI are below 2 %. **Resolved** by an option
-(1.6.1): numerical solver index 4, Rodas5P, a Rosenbrock method whose steps are limited only by accuracy. With the same
+(1.7.0): numerical solver index 4, Rodas5P, a Rosenbrock method whose steps are limited only by accuracy. With the same
 tolerances it is 16 times faster; with tolerances 100 times smaller, 6.6 times faster with similar accuracy
 (chapter 4, section 4.7). Index 2 stays the default.
 
