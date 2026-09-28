@@ -2,6 +2,15 @@
 
 Newest first.
 
+## 2026-09-28: release 1.7.0, solver how-to, GitHub Pages source
+
+- 1.7.0 released (run 36394890399): stiff solver, no start-up pause. Version 1.7.0 not 1.6.1 (new feature).
+- Owner: docs never said how to switch solvers ("index 2" unexplained). Added guide section 2.4 (what the index is,
+  table, before/after .gbl, tolerances / 100, Python), links from ch. 4, references, release notes, home page.
+- Docs site broken: Pages source was "Deploy from a branch", so a Jekyll build of the raw branch raced the Sphinx
+  deployment on every push. Owner switched Source to "GitHub Actions" (not root, not /docs: the HTML is only built
+  by the Documentation workflow). Check after each push that no "pages build and deployment" run appears.
+
 ## 2026-09-27 (later): P-01, stiff solver, Tiger/HydroLegion review
 
 - P-01 removed (48b2b40): init 1.3 s -> 0.27 s, examples bit-identical np=1.
