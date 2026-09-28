@@ -72,10 +72,101 @@ The complete reference is `docs/input_output.rst` (section *Global File Structur
 | `4 60 test.h5` | snapshots | 1 = `.rec` at the end; 3 = `.h5` at the end; 4 = `.h5` every 60 min, named `test_<unix time>.h5` |
 | `tmp` | name for temporary files | |
 | `.1 10.0 .9` | step-size control (facmin, facmax, safety factor) | keep these values |
-| `0` then `2` | tolerances given below (1 = from an `.rkd` file); numerical method | **2 = Dormand–Prince** (recommended); 0 and 1 are lower-order methods; other values are refused |
+| `0` then `2` | tolerances given below (1 = from an `.rkd` file); **which numerical solver** | `2` = Dormand–Prince, the solver of all examples. See [2.4](#24-choosing-the-numerical-solver) for the other choices and how to switch |
 | 4 lines | tolerances per state: absolute, relative, absolute and relative for interpolated values | smaller = more accurate and slower |
 
-## 2.4 The other input files
+## 2.4 Choosing the numerical solver
+
+The *numerical solver* is the method ASYNCH uses to advance the equations of every link in time. You choose it with
+**one number** in the global file, the number on the line after `%Numerical solver index`. The documentation calls
+this number the *solver index*: "index 2" simply means "the solver you get when you write `2` there". There is no
+hidden default: every global file states its solver, and all examples use `2`.
+
+| Write | Solver | When to use it |
+|---|---|---|
+| `2` | **Dormand–Prince 5(4)** | the standard choice, used by all examples and by ASYNCH since 2015 |
+| `4` | **Rodas5P**, stiff solver (since 1.7) | long runs and large networks: usually several times faster at the same accuracy, with more precise peaks. Not for models 21, 22, 23, 40, 261, 262 or a model 255 with dams |
+| `0` | RK 3(2), lower order | tests and teaching; slower for the same accuracy |
+| `1` | RK 4(3), lower order | idem |
+
+Any other number (for example `3`) stops the run with a message ([2.8](#28-messages-you-may-see)).
+
+*Why a stiff solver?* In a basin some water moves in minutes (a small hillslope) and some in days (the river, the
+groundwater). Solvers `0` to `2` must then take very small steps even when nothing is happening. The stiff solver does
+not have this limit, so it takes far fewer steps. The details and measurements are in
+[chapter 4, section 4.7](04_how_the_solver_works.md#47-the-stiff-solver-index-4).
+
+### Switching from Dormand–Prince (`2`) to the stiff solver (`4`)
+
+Two changes, both in the `%Numerical solver settings` block at the end of the global file:
+
+1. change the solver number from `2` to `4`;
+2. **divide the four lines of error tolerances by 100** (for example `1e-4` becomes `1e-6`, `1e-6` becomes `1e-8`).
+
+Before (Dormand–Prince), in a global file of model 254 (7 states, so 7 numbers per line):
+
+```text
+%Solver flag (0 = data below, 1 = .rkd)
+0
+%Numerical solver index (0 = RK 3(2), 1 = RK 4(3), 2 = Dormand-Prince 5(4), 4 = Rodas5P, stiff)
+2
+%Error tolerances (abs, rel, abs dense, rel dense)
+1e-4 1e-4 1e-4 1e-4 1e-4 1e-4 1e-4
+1e-6 1e-6 1e-6 1e-6 1e-4 1e-4 1e-4
+1e-4 1e-4 1e-4 1e-4 1e-4 1e-4 1e-4
+1e-6 1e-6 1e-6 1e-6 1e-4 1e-4 1e-4
+```
+
+After (stiff solver, tolerances ÷ 100):
+
+```text
+%Solver flag (0 = data below, 1 = .rkd)
+0
+%Numerical solver index (0 = RK 3(2), 1 = RK 4(3), 2 = Dormand-Prince 5(4), 4 = Rodas5P, stiff)
+4
+%Error tolerances (abs, rel, abs dense, rel dense)
+1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6
+1e-8 1e-8 1e-8 1e-8 1e-6 1e-6 1e-6
+1e-6 1e-6 1e-6 1e-6 1e-6 1e-6 1e-6
+1e-8 1e-8 1e-8 1e-8 1e-6 1e-6 1e-6
+```
+
+Nothing else changes: same input files, same output files, same command. To go back, restore the `2` and the
+original tolerances.
+
+:::{admonition} Why divide the tolerances by 100?
+:class: tip
+The tolerances tell a solver how large an error it may make. Dormand–Prince is forced into small steps anyway, so it
+ends up much more accurate than its tolerances ask. The stiff solver uses the tolerances fully. With the same numbers
+it is about 16 times faster but its hydrographs differ by up to about 1 % of the peak flow; with tolerances ÷ 100 it is
+about 6 times faster and as accurate as Dormand–Prince (peaks even more accurate). Measured with model 254 on a
+6 359-link network ([section 4.7](04_how_the_solver_works.md#47-the-stiff-solver-index-4)).
+:::
+
+:::{admonition} Check it on your basin
+:class: note
+Speed-ups depend on the model and the basin. Before switching a production setup, run one event with both solvers and
+compare the hydrographs at your gauges ([2.6](#26-exercise-change-a-parameter-and-compare) shows how to compare two
+runs).
+:::
+
+**From Python**, the same two changes:
+
+```python
+from asynch import GlobalConfig
+
+cfg = GlobalConfig.read("my_basin.gbl")
+cfg.solver = 4                                              # stiff solver
+for tol in (cfg.abstol, cfg.reltol, cfg.abstol_dense, cfg.reltol_dense):
+    tol[:] = [v / 100 for v in tol]                         # tolerances / 100
+cfg.write("my_basin_stiff.gbl")                             # run it with asynch, or with Simulation(cfg)
+```
+
+**Different solvers on different links.** With the solver flag `1`, the solver and the tolerances are read from an
+`.rkd` file, one line per link, and the solver number is the last value of each line (`docs/input_output.rst`,
+*RK Data Files*). This is rarely needed.
+
+## 2.5 The other input files
 
 The small files of the `test` example can be read by eye. Each starts with the number of links, then one block
 per link, starting with its id:
@@ -165,7 +256,7 @@ The other files of the example:
 If the file gives fewer values than the model has states, ASYNCH warns and sets the missing ones
 to 0. For model 254, the last three are always recomputed anyway ([chapter 5](05_model_254_explained.md)).
 
-## 2.5 Exercise: change a parameter and compare
+## 2.6 Exercise: change a parameter and compare
 
 The best way to learn the model is to change one thing and look at the effect. Here: the runoff
 coefficient RC of model 190 (the fraction of rain that runs off; 4th global parameter), from 0.33 to 0.50.
@@ -181,7 +272,7 @@ coefficient RC of model 190 (the fraction of rain that runs off; 4th global para
    ```
 
    ASYNCH does not create folders: if one is missing, it stops at once with
-   `Error: cannot write the hydrographs: the folder "run_rc05" does not exist` (§2.7).
+   `Error: cannot write the hydrographs: the folder "run_rc05" does not exist` (§2.8).
 
 2. **Edit the copy.** Open `test_rc05.gbl` in a text editor (`nano test_rc05.gbl`, or any editor) and change four
    lines: the runoff coefficient, and the three output files, which go to the new folder (red: before, green: after).
@@ -224,7 +315,7 @@ A larger runoff coefficient gives a higher peak (+54 % for +52 % of RC), and the
 earlier: the channel velocity grows with discharge (the exponent λ₁ in the channel equation, chapter 5).
 The same recipe works for any change: rain in the `.str` file, dates, tolerances, or another model.
 
-## 2.6 Reading the results
+## 2.7 Reading the results
 
 | File | Content |
 |---|---|
@@ -254,12 +345,12 @@ peaks = asynch_io.read_pea("test.pea")              # {link: (area, time of peak
 print(peaks[80])
 ```
 
-and `tools/python/plot_hydrographs.py` plots one link from up to three files (§2.5). The `asynch` Python package
+and `tools/python/plot_hydrographs.py` plots one link from up to three files (§2.6). The `asynch` Python package
 reads them too (`asynch.io`, [chapter 10](10_python.md)).
 :::
 ::::
 
-## 2.7 Messages you may see
+## 2.8 Messages you may see
 
 | Message | Meaning, and what to do |
 |---|---|

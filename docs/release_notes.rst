@@ -20,7 +20,9 @@ New Features
 * **Numerical solver index 4** (Rodas5P, a Rosenbrock method) for stiff equations: several times faster than the
   default solver at the same accuracy, with more precise peaks. Use it with tolerances about 100 times smaller than
   those used with the default solver. It is not available for models solved with algebraic equations; such runs stop
-  with a message. See :doc:`guide/04_how_the_solver_works`.
+  with a message. **How to use it:** in the global file, write ``4`` instead of ``2`` on the line after
+  ``%Numerical solver index`` and divide the error tolerances by 100; see :doc:`guide/02_running_the_model`,
+  section 2.4, for a worked example (also from Python).
 * Runs start about one second sooner.
 
 Version 1.6

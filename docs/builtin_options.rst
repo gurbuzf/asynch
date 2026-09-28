@@ -44,7 +44,7 @@ Two built-in peakflow functions exist: *Classic* and *Forecast*. The two are des
 Built-In Runge-Kutta Methods
 ----------------------------
 
-The ASYNCH solver is based upon using Runge-Kutta methods at the link level. These methods are selected either in the input global file or in a Runge-Kutta data file by the *RK index* in Table :ref:`rk-methods`.
+The ASYNCH solver is based upon using Runge-Kutta methods at the link level. These methods are selected either in the input global file or in a Runge-Kutta data file by the *RK index* in Table :ref:`rk-methods`: the number written on the line after ``%Numerical solver index`` in the global file (see :ref:`Numerical Error Tolerances`), or the last value of each line of a .rkd file. How to choose a method and how to switch from Dormand and Prince's method (2) to Rodas5P (4) is explained, with an example, in :doc:`guide/02_running_the_model`, section 2.4.
 
 .. _rk-methods:
 

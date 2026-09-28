@@ -133,7 +133,8 @@ Every change to the code, and whether it changes numerical results.
 
 1. **A faster solver for stiff equations** (numerical solver index 4). Long simulations run several times faster at
    the same accuracy, and flood peaks are located more precisely. It is optional: the default solver is unchanged.
-   See [how the solver works](guide/04_how_the_solver_works.md).
+   To use it, change one number in your global file and the tolerances:
+   [how to switch](guide/02_running_the_model.md#24-choosing-the-numerical-solver).
 2. **Runs start sooner**: a pause of about one second at start-up is gone.
 
 </div>

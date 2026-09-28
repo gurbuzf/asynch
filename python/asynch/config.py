@@ -222,7 +222,7 @@ class GlobalConfig:
     dams (:class:`FileRef`, flag 0 none, 1 .dam, 2 .qvs, 3 .dbc), reservoirs (:class:`FileRef`, flag 0/1/2,
     `extra` = index of the forcing that feeds them), hydrographs (:class:`Output`), peaks (:class:`PeakOutput`),
     hydrograph_links, peak_links (:class:`Selection`), snapshot (:class:`Snapshot`), scratch (str),
-    facmin, facmax, fac (floats), rkd (path of a .rkd file, or None), solver (0, 1 or 2),
+    facmin, facmax, fac (floats), rkd (path of a .rkd file, or None), solver (0, 1, 2 or 4; 4 = stiff solver, see chapter 2.4 of the guide),
     abstol, reltol, abstol_dense, reltol_dense (lists of floats, one per state).
     """
 
@@ -311,7 +311,7 @@ class GlobalConfig:
             block("Solver flag (0 = data below, 1 = .rkd)", "1 %s" % self.rkd)
         else:
             block("Solver flag (0 = data below, 1 = .rkd)", "0")
-            block("Numerical solver index (0 = RK 3(2), 1 = RK 4(3), 2 = Dormand-Prince 5(4))", str(self.solver))
+            block("Numerical solver index (0 = RK 3(2), 1 = RK 4(3), 2 = Dormand-Prince 5(4), 4 = Rodas5P, stiff)", str(self.solver))
             block("Error tolerances (abs, rel, abs dense, rel dense)",
                   tol(self.abstol), tol(self.reltol), tol(self.abstol_dense), tol(self.reltol_dense))
         out.append("# %End of file")

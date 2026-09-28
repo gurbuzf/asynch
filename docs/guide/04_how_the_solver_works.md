@@ -119,7 +119,8 @@ In the code:
    the forcing index if a rain change was reached, free the parents' old nodes.
    If rejected: discard the node and retry with the smaller `h`.
 
-Available methods (index in the `.gbl`):
+Available methods. The *index* is the number written in the global file on the line after `%Numerical solver index`;
+how to choose one and how to switch is explained in [chapter 2, section 2.4](02_running_the_model.md#24-choosing-the-numerical-solver).
 
 | index | method | stages | order (step / dense) |
 |---|---|---|---|
@@ -139,6 +140,13 @@ to switch to `max(1e-6, h0·1e-3)`. This only changes the first trial step, whic
 error control then corrects.
 
 ## 4.7 The stiff solver (index 4)
+
+:::{admonition} How to use it
+:class: tip
+Write `4` instead of `2` on the line after `%Numerical solver index` in the global file, and divide the four lines of
+error tolerances by 100. A worked example, also from Python, is in
+[chapter 2, section 2.4](02_running_the_model.md#24-choosing-the-numerical-solver).
+:::
 
 **Why.** The equations of a basin are *stiff*: some quantities react much faster than others. In model 254 the water
 ponded on a small hillslope drains into the soil within minutes, while the river responds over hours. An explicit method

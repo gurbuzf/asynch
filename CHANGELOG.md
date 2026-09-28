@@ -8,6 +8,22 @@ Every entry says **whether numerical results change**. Results are checked with
 
 ## [Unreleased]
 
+### Documentation: how to choose the numerical solver and switch to the stiff solver
+
+*Results:* unchanged (documentation, and the comment line above the solver number in the example global files).
+
+#### Added
+- Guide, chapter 2, new section 2.4 *Choosing the numerical solver*: what the "solver index" is (the number after
+  `%Numerical solver index` in the global file), a table of the choices and when to use each, and a worked example of
+  switching from Dormand–Prince (2) to Rodas5P (4): the number, and the tolerances divided by 100, before and after,
+  in a global file and from Python (`GlobalConfig`). Sections 2.4 to 2.7 become 2.5 to 2.8.
+- Links to this section from chapter 4 (4.4 and 4.7), `docs/builtin_options.rst`, `docs/input_output.rst`, the
+  release notes and the home page.
+
+#### Changed
+- The comment `%Numerical solver index (...)` of the example global files, of the files written by
+  `GlobalConfig.write` and by `tests/data_generators/make_synthetic_network.py` lists `4 = Rodas5P, stiff`.
+
 ## [1.7.0] - 2026-09-28
 
 A speed release. A new, optional numerical solver for stiff equations makes long simulations several times faster at
